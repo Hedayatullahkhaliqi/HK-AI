@@ -1,396 +1,393 @@
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#080d19">
-<title>HK-AI | Hedayatullah Khaliqi AI</title>
+<title>HK AI - Smart Assistant</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <style>
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html {
+:root {
+  --bg: #080d19;
+  --panel: #101827;
+  --panel2: #172235;
+  --border: rgba(255,255,255,.09);
+  --text: #edf3ff;
+  --muted: #91a0b8;
+  --blue: #438cff;
+  --blue2: #2563eb;
+}
+
+html, body {
+  margin: 0;
   min-height: 100%;
-  background: #080d19;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
 body {
-  margin: 0;
-  min-height: 100vh;
   min-height: 100dvh;
-  background: #080d19;
-  color: #f1f5ff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+}
+
+button, textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
 }
 
 .app {
-  min-height: 100vh;
-  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  min-height: 100dvh;
+  max-width: 1100px;
+  margin: auto;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* HEADER */
-
 header {
-  min-height: 72px;
-  padding: 0 24px;
+  height: 70px;
+  padding: 0 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #0d1424;
-  border-bottom: 1px solid #202b40;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,13,25,.95);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
 }
 
 .logo {
-  position: relative;
-  width: 52px;
-  height: 52px;
-  flex-shrink: 0;
-  border-radius: 15px;
-  background: radial-gradient(circle at 35% 25%, #263b61, #080d19 75%);
-  border: 1px solid #398cff88;
+  width: 43px;
+  height: 43px;
+  border-radius: 14px;
+  background: linear-gradient(145deg,#254b83,#10223d);
+  border: 1px solid rgba(112,174,255,.4);
   display: grid;
   place-items: center;
-  overflow: hidden;
-  box-shadow: 0 0 22px #168bff55, inset 0 0 12px #ffffff12;
-}
-
-.logo svg {
-  width: 100%;
-  height: 100%;
-  display: block;
+  font-size: 19px;
+  font-weight: 900;
+  color: #dceaff;
+  box-shadow: 0 0 22px rgba(55,130,255,.17);
 }
 
 .brand-name {
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 800;
-  letter-spacing: .5px;
+  letter-spacing: .4px;
 }
 
-.brand-name span { color: #45a5ff; }
-
-.brand-subtitle {
-  font-size: 10px;
-  color: #8ca9d5;
+.brand-sub {
+  color: var(--muted);
+  font-size: 11px;
   margin-top: 3px;
 }
 
-.status {
+.new-chat {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 10px 13px;
   font-size: 12px;
-  color: #65e6a3;
-  background: #102a27;
-  border: 1px solid #1d5143;
-  padding: 7px 12px;
-  border-radius: 30px;
 }
 
-/* MAIN */
+.new-chat:active {
+  transform: scale(.97);
+}
 
 main {
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 30px 20px 0;
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  width: 100%;
+  padding: 20px 16px 12px;
 }
-
-/* WELCOME */
 
 .welcome {
+  margin: auto;
+  width: 100%;
+  max-width: 620px;
   text-align: center;
-  margin: auto auto 35px;
-  max-width: 600px;
-  padding-top: 25px;
+  padding: 30px 5px;
 }
 
-.welcome-icon {
-  width: 105px;
-  height: 105px;
-  border-radius: 28px;
+.welcome-logo {
+  width: 76px;
+  height: 76px;
   margin: 0 auto 20px;
+  border-radius: 25px;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 35% 25%, #263b61, #080d19 75%);
-  border: 1px solid #398cff88;
-  box-shadow: 0 0 38px #168bff55, inset 0 0 15px #ffffff12;
-  overflow: hidden;
-}
-
-.welcome-icon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
+  background: linear-gradient(145deg,#244e88,#101e36);
+  border: 1px solid rgba(112,174,255,.4);
+  color: #e5f0ff;
+  font-size: 30px;
+  font-weight: 900;
+  box-shadow: 0 0 45px rgba(48,125,255,.18);
 }
 
 .welcome h1 {
-  font-size: clamp(28px, 6vw, 40px);
-  margin: 0 0 12px;
-}
-
-.welcome h1 span {
-  background: linear-gradient(90deg, #5ba5ff, #b17aff);
-  -webkit-background-clip: text;
-  color: transparent;
+  font-size: 27px;
+  margin: 0 0 10px;
 }
 
 .welcome p {
-  color: #94a3b8;
+  color: var(--muted);
   line-height: 1.9;
-  font-size: 15px;
+  font-size: 14px;
+  margin: 0 auto 24px;
 }
 
 .suggestions {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-top: 28px;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 10px;
+  text-align: right;
 }
 
 .suggestion {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  color: var(--text);
+  padding: 14px 12px;
+  font-size: 12px;
+  line-height: 1.7;
   text-align: right;
-  padding: 16px;
-  color: #dce6fa;
-  background: #111c30;
-  border: 1px solid #263650;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 13px;
 }
 
-.suggestion:active { background: #182844; }
-
-.suggestion small {
-  display: block;
-  color: #8498b9;
-  margin-top: 7px;
+.suggestion:active {
+  background: var(--panel2);
 }
-
-/* CHAT */
 
 #chat {
-  display: none;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 15px 0 25px;
-  min-width: 0;
+  padding: 12px 0 25px;
 }
 
 .message {
   display: flex;
-  gap: 11px;
-  align-items: flex-start;
-  min-width: 0;
+  flex-direction: column;
+  max-width: 90%;
+  gap: 7px;
 }
 
-.message.user { flex-direction: row-reverse; }
-
-.avatar {
-  flex-shrink: 0;
-  width: 35px;
-  height: 35px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #2779ff, #963eff);
-  display: grid;
-  place-items: center;
-  font-size: 13px;
-  font-weight: bold;
+.message.user {
+  align-self: flex-start;
 }
 
-.user .avatar { background: #263750; }
+.message.assistant {
+  align-self: flex-end;
+}
 
-.bubble {
-  max-width: 82%;
-  min-width: 0;
-  padding: 13px 17px;
-  border-radius: 16px;
-  background: #121e32;
-  border: 1px solid #263750;
-  color: #e6edfa;
-  line-height: 1.9;
-  font-size: 14px;
+.message-label {
+  color: var(--muted);
+  font-size: 11px;
+  padding: 0 5px;
+}
+
+.message-content {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  line-height: 1.9;
+  font-size: 14px;
+  padding: 12px 15px;
+  border-radius: 16px;
 }
 
-.user .bubble {
-  background: #263b70;
-  border-color: #3d5c9b;
+.user .message-content {
+  background: #18345a;
+  border: 1px solid rgba(85,150,255,.2);
+  border-bottom-left-radius: 5px;
+}
+
+.assistant .message-content {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-bottom-right-radius: 5px;
+}
+
+.message-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.copy-btn {
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  font-size: 11px;
+  padding: 5px;
 }
 
 .typing {
-  color: #93a8cc;
+  color: var(--muted);
   font-size: 13px;
   padding: 10px;
 }
 
-/* INPUT */
-
-.composer {
+.composer-area {
   position: sticky;
   bottom: 0;
-  z-index: 10;
-  width: 100%;
-  margin-top: auto;
-  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
-  background: linear-gradient(transparent, #080d19 20%);
+  padding: 10px 14px 12px;
+  background: linear-gradient(transparent,var(--bg) 18%);
+  z-index: 5;
 }
 
-.input-box {
-  width: 100%;
-  min-width: 0;
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 19px;
-  background: #111c30;
-  border: 1px solid #30415e;
-  box-shadow: 0 10px 35px #0005;
+.composer {
+  max-width: 760px;
+  margin: auto;
 }
 
-textarea {
-  display: block;
-  flex: 1;
-  width: 0;
-  min-width: 0;
-  max-height: 120px;
-  resize: none;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: white;
-  font-family: inherit;
-  font-size: 16px;
-  padding: 10px;
-  line-height: 1.6;
-  overflow-y: auto;
-}
-
-textarea::placeholder { color: #788ba8; }
-
-.attach {
-  width: 43px;
-  min-width: 43px;
-  height: 43px;
-  flex-shrink: 0;
-  border: 1px solid #30415e;
-  border-radius: 13px;
-  background: #1a2942;
-  color: #b9cefa;
-  font-size: 21px;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-
-.attach:disabled {
-  opacity: .45;
-  cursor: not-allowed;
-}
-
-.send {
-  width: 44px;
-  min-width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border: 0;
-  border-radius: 13px;
-  background: linear-gradient(135deg, #287aff, #8650ff);
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-
-.send:disabled {
-  opacity: .45;
-  cursor: not-allowed;
-}
-
-/* PDF */
-
-.file-status {
+.file-preview {
   display: none;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 9px;
-  padding: 10px 13px;
-  background: #14233b;
-  border: 1px solid #36527d;
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  color: #c9dcff;
+  padding: 9px 12px;
+  margin-bottom: 8px;
   font-size: 12px;
+  color: var(--muted);
 }
 
-.file-status.show { display: flex; }
-
-.file-info {
-  min-width: 0;
-  overflow-wrap: anywhere;
+.file-preview.show {
+  display: flex;
 }
 
 .remove-file {
-  flex-shrink: 0;
+  color: #ff8585;
   border: 0;
   background: transparent;
-  color: #ff8e9b;
   font-size: 18px;
-  cursor: pointer;
-  padding: 3px 7px;
 }
 
-/* FOOTER */
+.input-box {
+  direction: rtl;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 9px;
+  background: #111c2d;
+  border: 1px solid rgba(125,160,210,.2);
+  border-radius: 18px;
+  box-shadow: 0 8px 35px rgba(0,0,0,.2);
+}
 
-footer {
+.input-box:focus-within {
+  border-color: rgba(67,140,255,.65);
+}
+
+#messageInput {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  max-height: 150px;
+  resize: none;
+  outline: none;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  padding: 10px 4px;
+  font-size: 14px;
+  line-height: 1.6;
+  direction: auto;
+}
+
+#messageInput::placeholder {
+  color: #78869e;
+}
+
+.attach-btn, .send-btn {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  border: 0;
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+}
+
+.send-btn {
+  background: var(--blue);
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.send-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.attach-btn {
+  background: var(--panel2);
+  color: #b9c9e2;
+}
+
+#fileInput {
+  display: none;
+}
+
+.footer-note {
   text-align: center;
-  color: #62728c;
-  font-size: 11px;
-  padding: 12px 10px 15px;
-  line-height: 1.8;
+  color: #64728a;
+  font-size: 10px;
+  padding-top: 9px;
 }
 
-footer span {
-  color: #8eb8ff;
-}
-
-/* MOBILE */
-
-@media (max-width: 520px) {
+@media (max-width: 480px) {
   header {
-    min-height: 64px;
-    padding: 0 14px;
+    height: 62px;
+    padding: 0 12px;
   }
 
-  .logo {
-    width: 46px;
-    height: 46px;
+  main {
+    padding: 12px 12px;
   }
 
-  main { padding: 20px 12px 0; }
+  .welcome h1 {
+    font-size: 23px;
+  }
 
-  .suggestions { grid-template-columns: 1fr; }
+  .message {
+    max-width: 95%;
+  }
 
-  .welcome { margin-bottom: 25px; }
+  .composer-area {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+}
 
-  .bubble { max-width: 88%; }
-
-  .composer { padding-top: 10px; }
-
-  .welcome-icon {
-    width: 95px;
-    height: 95px;
+@media (max-width: 350px) {
+  .suggestions {
+    grid-template-columns: 1fr;
   }
 }
 </style>
@@ -401,416 +398,275 @@ footer span {
 
 <header>
   <div class="brand">
-
-    <!-- NEW HK SILVER LOGO -->
-    <div class="logo">
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="hkSilver" x1="0" y1="0" x2="0.9" y2="1">
-            <stop offset="0%" stop-color="#ffffff"/>
-            <stop offset="25%" stop-color="#aebbd0"/>
-            <stop offset="48%" stop-color="#ffffff"/>
-            <stop offset="72%" stop-color="#71839e"/>
-            <stop offset="100%" stop-color="#eaf3ff"/>
-          </linearGradient>
-
-          <linearGradient id="hkBlue" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#00d9ff"/>
-            <stop offset="100%" stop-color="#2865ff"/>
-          </linearGradient>
-
-          <filter id="hkGlow">
-            <feGaussianBlur stdDeviation="2.5" result="blur"/>
-            <feMerge>
-              <feMergeNode in="blur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-
-        <ellipse cx="50" cy="51" rx="44" ry="21"
-          fill="none" stroke="url(#hkBlue)" stroke-width="3"
-          transform="rotate(-32 50 50)" filter="url(#hkGlow)"/>
-
-        <path d="M12 63 Q25 82 48 78"
-          fill="none" stroke="#42caff" stroke-width="2"/>
-
-        <text x="50" y="65" text-anchor="middle"
-          font-family="Arial" font-size="43"
-          font-weight="900" letter-spacing="-4"
-          fill="url(#hkSilver)" stroke="#d9eaff"
-          stroke-width=".5">HK</text>
-
-        <circle cx="84" cy="20" r="3" fill="#37d8ff"
-          filter="url(#hkGlow)"/>
-      </svg>
-    </div>
-
+    <div class="logo">HK</div>
     <div>
-      <div class="brand-name">HK <span>AI</span></div>
-      <div class="brand-subtitle">Hedayatullah Khaliqi AI</div>
+      <div class="brand-name">HK AI</div>
+      <div class="brand-sub">Hedayatullah Khaliqi</div>
     </div>
-
   </div>
 
-  <div class="status">● Online</div>
+  <button class="new-chat" id="newChatBtn">＋ گفتگوی جدید</button>
 </header>
 
 <main>
+  <section class="welcome" id="welcome">
+    <div class="welcome-logo">HK</div>
+    <h1>به HK AI خوش آمدید</h1>
+    <p>
+      دستیار هوشمند شما برای یادگیری، نوشتن، ترجمه،
+      برنامه‌نویسی، تحلیل و پاسخ به پرسش‌ها.
+    </p>
 
-<section class="welcome" id="welcome">
+    <div class="suggestions">
+      <button class="suggestion" data-prompt="هوش مصنوعی چیست؟ به زبان ساده توضیح بده.">
+        ✨ هوش مصنوعی چیست؟
+      </button>
 
-  <!-- NEW WELCOME LOGO -->
-  <div class="welcome-icon">
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="welcomeSilverNew" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#ffffff"/>
-          <stop offset="30%" stop-color="#9eafc8"/>
-          <stop offset="55%" stop-color="#ffffff"/>
-          <stop offset="80%" stop-color="#7186a5"/>
-          <stop offset="100%" stop-color="#eaf4ff"/>
-        </linearGradient>
+      <button class="suggestion" data-prompt="یک برنامه برای یادگیری زبان انگلیسی برایم بساز.">
+        📚 یادگیری زبان انگلیسی
+      </button>
 
-        <linearGradient id="welcomeBlueNew" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#00e5ff"/>
-          <stop offset="50%" stop-color="#168bff"/>
-          <stop offset="100%" stop-color="#315cff"/>
-        </linearGradient>
+      <button class="suggestion" data-prompt="یک کد ساده HTML برای ساخت وب‌سایت بنویس.">
+        💻 کمک در برنامه‌نویسی
+      </button>
 
-        <filter id="welcomeGlowNew">
-          <feGaussianBlur stdDeviation="2.5" result="blur"/>
-          <feMerge>
-            <feMergeNode in="blur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
+      <button class="suggestion" data-prompt="امکانات و کاربردهای مهم هوش مصنوعی را توضیح بده.">
+        🧠 پرسش عمومی
+      </button>
+    </div>
+  </section>
 
-      <ellipse cx="50" cy="51" rx="43" ry="20"
-        fill="none"
-        stroke="url(#welcomeBlueNew)"
-        stroke-width="3"
-        transform="rotate(-32 50 50)"
-        filter="url(#welcomeGlowNew)"/>
-
-      <text x="50" y="65"
-        text-anchor="middle"
-        font-family="Arial"
-        font-size="43"
-        font-weight="900"
-        letter-spacing="-4"
-        fill="url(#welcomeSilverNew)"
-        stroke="#d9eaff"
-        stroke-width=".5">HK</text>
-
-      <circle cx="84" cy="20" r="3"
-        fill="#37d8ff"
-        filter="url(#welcomeGlowNew)"/>
-    </svg>
-  </div>
-
-  <h1>سلام! من <span>HK AI</span> هستم</h1>
-
-  <p>
-    دستیار هوشمند شما برای پاسخ به پرسش‌ها،
-    یادگیری، خلاقیت و حل مشکلات.
-    هر چیزی می‌خواهید از من بپرسید.
-  </p>
-
-  <div class="suggestions">
-
-    <button class="suggestion" onclick="useSuggestion('برایم یک برنامه یادگیری زبان انگلیسی بساز')">
-      📚 یادگیری
-      <small>یادگیری زبان و مهارت‌های جدید</small>
-    </button>
-
-    <button class="suggestion" onclick="useSuggestion('یک ایده خلاقانه برای کسب درآمد آنلاین بده')">
-      💡 ایده‌های خلاقانه
-      <small>ایده‌های جدید و کاربردی</small>
-    </button>
-
-    <button class="suggestion" onclick="useSuggestion('هوش مصنوعی را به زبان ساده برایم توضیح بده')">
-      🤖 هوش مصنوعی
-      <small>پرسش درباره تکنولوژی</small>
-    </button>
-
-    <button class="suggestion" onclick="useSuggestion('یک داستان کوتاه و جالب برایم بنویس')">
-      ✍️ نویسندگی
-      <small>داستان و محتوای خلاقانه</small>
-    </button>
-
-  </div>
-</section>
-
-<section id="chat"></section>
-
-<div class="composer">
-
-  <div class="file-status" id="fileStatus">
-    <div class="file-info" id="fileInfo"></div>
-    <button class="remove-file" id="removeFile" type="button" aria-label="حذف فایل">✕</button>
-  </div>
-
-  <div class="input-box">
-
-    <input
-      type="file"
-      id="pdfInput"
-      accept=".pdf,application/pdf"
-      hidden
-    >
-
-    <button
-      class="attach"
-      id="attachButton"
-      type="button"
-      onclick="document.getElementById('pdfInput').click()"
-      title="انتخاب فایل PDF"
-      aria-label="انتخاب فایل PDF"
-    >📎</button>
-
-    <textarea id="messageInput" rows="1"
-      placeholder="پیام خود را برای HK بنویسید..."></textarea>
-
-    <button class="send" id="sendButton" onclick="sendMessage()">➤</button>
-
-  </div>
-</div>
-
+  <section id="chat"></section>
 </main>
 
-<footer>
-  <span>HK-AI</span> — Hedayatullah Khaliqi AI
-  <br>
-  HK AI can make mistakes. Please verify important information.
-</footer>
+<div class="composer-area">
+  <div class="composer">
+
+    <div class="file-preview" id="filePreview">
+      <span id="fileName">فایل انتخاب شد</span>
+      <button class="remove-file" id="removeFile" title="حذف فایل">×</button>
+    </div>
+
+    <div class="input-box">
+
+      <button class="send-btn" id="sendBtn" title="ارسال پیام">➤</button>
+
+      <textarea
+        id="messageInput"
+        rows="1"
+        placeholder="پیام خود را بنویسید..."
+      ></textarea>
+
+      <button class="attach-btn" id="attachBtn" title="افزودن PDF">＋</button>
+
+      <input
+        type="file"
+        id="fileInput"
+        accept=".pdf,application/pdf"
+      >
+
+    </div>
+
+    <div class="footer-note">
+      HK AI ممکن است گاهی اشتباه کند؛ پاسخ‌های مهم را بررسی کنید.
+    </div>
+
+  </div>
+</div>
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
 <script>
-const input = document.getElementById("messageInput");
-const chat = document.getElementById("chat");
-const welcome = document.getElementById("welcome");
-const sendButton = document.getElementById("sendButton");
-const pdfInput = document.getElementById("pdfInput");
-const attachButton = document.getElementById("attachButton");
-const fileStatus = document.getElementById("fileStatus");
-const fileInfo = document.getElementById("fileInfo");
-const removeFileButton = document.getElementById("removeFile");
-
-let messages = [];
-let busy = false;
-let documentContext = null;
-let readingPDF = false;
-
-const MAX_PDF_SIZE = 10 * 1024 * 1024;
-const MAX_PDF_PAGES = 30;
-const MAX_PDF_TEXT = 35000;
-
 if (window.pdfjsLib) {
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 }
 
-function useSuggestion(text) {
-  input.value = text;
-  sendMessage();
-}
+const chat = document.getElementById("chat");
+const welcome = document.getElementById("welcome");
+const input = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const attachBtn = document.getElementById("attachBtn");
+const fileInput = document.getElementById("fileInput");
+const filePreview = document.getElementById("filePreview");
+const fileName = document.getElementById("fileName");
+const removeFileBtn = document.getElementById("removeFile");
 
-function addMessage(text, role) {
-  const row = document.createElement("div");
-  row.className = "message " + (role === "user" ? "user" : "");
+let messages = [];
+let busy = false;
+let selectedDocument = "";
+let selectedFile = null;
 
-  const avatar = document.createElement("div");
-  avatar.className = "avatar";
-  avatar.textContent = role === "user" ? "You" : "HK";
+function addMessage(role, content) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "message " + role;
 
-  const bubble = document.createElement("div");
-  bubble.className = "bubble";
-  bubble.textContent = text;
+  const label = document.createElement("div");
+  label.className = "message-label";
+  label.textContent = role === "user" ? "شما" : "HK AI";
 
-  row.appendChild(avatar);
-  row.appendChild(bubble);
-  chat.appendChild(row);
+  const text = document.createElement("div");
+  text.className = "message-content";
+  text.textContent = content;
 
-  row.scrollIntoView({ behavior: "smooth", block: "end" });
-  return row;
-}
+  wrapper.appendChild(label);
+  wrapper.appendChild(text);
 
-function showFileStatus(message) {
-  fileInfo.textContent = message;
-  fileStatus.classList.add("show");
-}
+  if (role === "assistant") {
+    const actions = document.createElement("div");
+    actions.className = "message-actions";
 
-function clearPDF() {
-  documentContext = null;
-  pdfInput.value = "";
-  fileStatus.classList.remove("show");
-  fileInfo.textContent = "";
-}
+    const copy = document.createElement("button");
+    copy.className = "copy-btn";
+    copy.textContent = "کاپی پاسخ";
 
-removeFileButton.addEventListener("click", () => {
-  if (busy || readingPDF) return;
-  clearPDF();
-});
-
-async function handlePDF(file) {
-  if (!file) return;
-
-  if (busy || readingPDF) {
-    pdfInput.value = "";
-    return;
-  }
-
-  if (!file.name.toLowerCase().endsWith(".pdf") &&
-      file.type !== "application/pdf") {
-    alert("لطفاً فقط فایل PDF انتخاب کنید.");
-    pdfInput.value = "";
-    return;
-  }
-
-  if (file.size > MAX_PDF_SIZE) {
-    alert("حجم فایل بیشتر از ۱۰ مگابایت است.");
-    pdfInput.value = "";
-    return;
-  }
-
-  if (!window.pdfjsLib) {
-    alert("کتابخانه خواندن PDF بارگذاری نشده است. صفحه را دوباره باز کنید.");
-    pdfInput.value = "";
-    return;
-  }
-
-  readingPDF = true;
-  attachButton.disabled = true;
-  showFileStatus("⏳ در حال خواندن فایل PDF...");
-
-  try {
-    const buffer = await file.arrayBuffer();
-
-    const pdf = await pdfjsLib.getDocument({
-      data: new Uint8Array(buffer)
-    }).promise;
-
-    if (pdf.numPages > MAX_PDF_PAGES) {
-      throw new Error("این نسخه فعلاً فقط فایل‌های تا ۳۰ صفحه را می‌خواند.");
-    }
-
-    let extractedText = "";
-
-    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-      const page = await pdf.getPage(pageNumber);
-      const content = await page.getTextContent();
-
-      const pageText = content.items
-        .map(item => item.str || "")
-        .join(" ");
-
-      extractedText += `\n\n--- صفحه ${pageNumber} ---\n${pageText}`;
-
-      if (extractedText.length >= MAX_PDF_TEXT) {
-        extractedText = extractedText.slice(0, MAX_PDF_TEXT);
-        break;
+    copy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(content);
+        copy.textContent = "کاپی شد ✓";
+      } catch {
+        copy.textContent = "کاپی نشد";
       }
-    }
+    });
 
-    extractedText = extractedText.trim();
-
-    if (!extractedText) {
-      throw new Error(
-        "از این PDF متن قابل خواندن پیدا نشد. شاید فایل اسکن‌شده یا تصویری باشد."
-      );
-    }
-
-    documentContext = {
-      name: file.name,
-      pages: pdf.numPages,
-      text: extractedText
-    };
-
-    showFileStatus(
-      `📄 ${file.name} — آماده ارسال و تحلیل`
-    );
-
-  } catch (error) {
-    clearPDF();
-    alert("خواندن PDF موفق نشد: " + error.message);
-
-  } finally {
-    readingPDF = false;
-    attachButton.disabled = false;
-    pdfInput.value = "";
+    actions.appendChild(copy);
+    wrapper.appendChild(actions);
   }
+
+  chat.appendChild(wrapper);
+  wrapper.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
-pdfInput.addEventListener("change", () => {
-  const file = pdfInput.files[0];
-  handlePDF(file);
-});
+function showTyping() {
+  const element = document.createElement("div");
+  element.className = "typing";
+  element.id = "typing";
+  element.textContent = "HK AI در حال نوشتن پاسخ است...";
+  chat.appendChild(element);
+}
 
-async function sendMessage() {
-  const typedText = input.value.trim();
+function removeTyping() {
+  const element = document.getElementById("typing");
+  if (element) element.remove();
+}
 
-  if (busy || readingPDF) return;
+function setBusy(value) {
+  busy = value;
+  sendBtn.disabled = value;
+  input.disabled = value;
+  attachBtn.disabled = value;
+  sendBtn.textContent = value ? "…" : "➤";
+}
 
-  if (!typedText && !documentContext) return;
+function clearSelectedFile() {
+  selectedDocument = "";
+  selectedFile = null;
+  fileInput.value = "";
+  filePreview.classList.remove("show");
+  fileName.textContent = "";
+}
 
-  const text = typedText ||
-    "لطفاً این فایل PDF را خلاصه کن و نکات مهم آن را توضیح بده.";
+async function extractPDF(file) {
+  if (!window.pdfjsLib) {
+    throw new Error("ابزار خواندن PDF بارگذاری نشد. اینترنت را بررسی کنید.");
+  }
 
-  const selectedDocument = documentContext
-    ? { ...documentContext }
-    : null;
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error("حجم فایل PDF نباید بیشتر از ۱۰ مگابایت باشد.");
+  }
 
-  busy = true;
-  sendButton.disabled = true;
-  attachButton.disabled = true;
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({
+    data: new Uint8Array(buffer)
+  }).promise;
+
+  if (pdf.numPages > 30) {
+    throw new Error("فایل PDF نباید بیشتر از ۳۰ صفحه باشد.");
+  }
+
+  let fullText = "";
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+
+    const pageText = content.items
+      .map(item => item.str)
+      .join(" ");
+
+    fullText += pageText + "\n";
+
+    if (fullText.length > 30000) {
+      fullText = fullText.slice(0, 30000);
+      break;
+    }
+  }
+
+  if (!fullText.trim()) {
+    throw new Error("متنی در این PDF پیدا نشد. شاید فایل اسکن‌شده باشد.");
+  }
+
+  return fullText;
+}
+
+async function sendMessage(customText = null) {
+  if (busy) return;
+
+  const text = (customText || input.value).trim();
+
+  if (!text && !selectedFile) return;
+
+  let userMessage = text;
+
+  if (selectedFile && selectedDocument) {
+    userMessage = text
+      ? text + "\n\nفایل PDF: " + selectedFile.name
+      : "لطفاً محتوای فایل PDF پیوست‌شده را بررسی کن: " + selectedFile.name;
+  }
+
+  if (!userMessage) return;
 
   welcome.style.display = "none";
-  chat.style.display = "flex";
 
-  const userDisplayText = selectedDocument
-    ? `${text}\n\n📎 فایل: ${selectedDocument.name}`
-    : text;
+  addMessage("user", userMessage);
 
-  addMessage(userDisplayText, "user");
-  messages.push({ role: "user", content: text });
+  messages.push({
+    role: "user",
+    content: userMessage
+  });
 
   input.value = "";
-  input.style.height = "auto";
+  input.style.height = "42px";
 
-  const loading = document.createElement("div");
-  loading.className = "typing";
-  loading.textContent = selectedDocument
-    ? "HK در حال خواندن و بررسی فایل است..."
-    : "HK در حال فکر کردن است...";
-
-  chat.appendChild(loading);
+  setBusy(true);
+  showTyping();
 
   try {
-    const requestBody = {
-      messages
-    };
-
-    if (selectedDocument) {
-      requestBody.document = selectedDocument;
-    }
-
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify({
+        messages: messages.slice(-20),
+        document: selectedDocument
+      })
     });
 
-    const data = await response.json();
+    let data;
 
-    if (!response.ok || !data.reply) {
-      throw new Error(data.error || "ارتباط با HK برقرار نشد.");
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("پاسخ سرور قابل خواندن نیست.");
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error || "خطا در ارتباط با سرور.");
+    }
+
+    if (!data.reply) {
+      throw new Error("پاسخ خالی از سرور دریافت شد.");
     }
 
     messages.push({
@@ -818,40 +674,95 @@ async function sendMessage() {
       content: data.reply
     });
 
-    addMessage(data.reply, "assistant");
+    addMessage("assistant", data.reply);
 
-    if (
-      selectedDocument &&
-      documentContext &&
-      documentContext.name === selectedDocument.name
-    ) {
-      clearPDF();
-    }
+    clearSelectedFile();
 
   } catch (error) {
+    const errorText = error.message ||
+      "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.";
+
+    addMessage("assistant", "متأسفم، مشکلی پیش آمد:\n" + errorText);
+
     messages.pop();
-    addMessage("خطا: " + error.message, "assistant");
 
   } finally {
-    loading.remove();
-    busy = false;
-    sendButton.disabled = false;
-    attachButton.disabled = false;
+    removeTyping();
+    setBusy(false);
+    input.focus();
   }
 }
 
-input.addEventListener("input", () => {
-  input.style.height = "auto";
-  input.style.height = Math.min(input.scrollHeight, 120) + "px";
+sendBtn.addEventListener("click", () => {
+  sendMessage();
 });
 
-input.addEventListener("keydown", (event) => {
+input.addEventListener("keydown", event => {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
   }
 });
-</script>
 
+input.addEventListener("input", () => {
+  input.style.height = "42px";
+  input.style.height =
+    Math.min(input.scrollHeight, 150) + "px";
+});
+
+attachBtn.addEventListener("click", () => {
+  fileInput.click();
+});
+
+fileInput.addEventListener("change", async () => {
+  const file = fileInput.files[0];
+
+  if (!file) return;
+
+  if (file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")) {
+    alert("لطفاً فقط فایل PDF انتخاب کنید.");
+    clearSelectedFile();
+    return;
+  }
+
+  selectedFile = file;
+  fileName.textContent = "در حال خواندن: " + file.name;
+  filePreview.classList.add("show");
+
+  try {
+    selectedDocument = await extractPDF(file);
+    fileName.textContent = "✓ " + file.name + " آماده ارسال است";
+  } catch (error) {
+    alert(error.message);
+    clearSelectedFile();
+  }
+});
+
+removeFileBtn.addEventListener("click", () => {
+  clearSelectedFile();
+});
+
+document.querySelectorAll(".suggestion").forEach(button => {
+  button.addEventListener("click", () => {
+    const prompt = button.dataset.prompt;
+    input.value = prompt;
+    sendMessage(prompt);
+  });
+});
+
+document.getElementById("newChatBtn").addEventListener("click", () => {
+  if (busy) return;
+
+  messages = [];
+  chat.innerHTML = "";
+  clearSelectedFile();
+
+  welcome.style.display = "block";
+  input.value = "";
+  input.focus();
+});
+
+</script>
 </body>
 </html>
