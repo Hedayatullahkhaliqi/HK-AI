@@ -15,6 +15,103 @@ function json(data, status = 200) {
   });
 }
 
+// تبدیل اعداد فارسی و عربی به انگلیسی
+function normalizeDigits(text) {
+  const digits = {
+    "۰": "0", "۱": "1", "۲": "2", "۳": "3",
+    "۴": "4", "۵": "5", "۶": "6", "۷": "7",
+    "۸": "8", "۹": "9",
+    "٠": "0", "١": "1", "٢": "2", "٣": "3",
+    "٤": "4", "٥": "5", "٦": "6", "٧": "7",
+    "٨": "8", "٩": "9"
+  };
+
+  return text.replace(/[۰-۹٠-٩]/g, digit => digits[digit]);
+}
+
+// تبدیل نتیجه به ارقام فارسی
+function persianNumber(number) {
+  return String(number).replace(/\d/g, digit =>
+    "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]
+  );
+}
+
+// ماشین حساب پایه
+function calculateMath(text) {
+  const normalized = normalizeDigits(text)
+    .replace(/,/g, "")
+    .replace(/٬/g, "")
+    .replace(/٫/g, ".");
+
+  const multiplication =
+    /ضرب|مضروب|multiply|multiplied|times|×|\*/i.test(normalized);
+
+  const addition =
+    /جمع|بعلاوه|به علاوه|اضافه|plus|add|added|\+/i.test(normalized);
+
+  const subtraction =
+    /تفریق|منهای|کم کن|minus|subtract|−|-/i.test(normalized);
+
+  const division =
+    /تقسیم|تقسیم بر|divide|divided|برابر تقسیم|÷|\//i.test(normalized);
+
+  const operations = [
+    multiplication,
+    addition,
+    subtraction,
+    division
+  ].filter(Boolean).length;
+
+  if (operations !== 1) return null;
+
+  const numbers = normalized.match(/-?\d+(?:\.\d+)?/g);
+
+  if (!numbers || numbers.length !== 2) return null;
+
+  const a = Number(numbers[0]);
+  const b = Number(numbers[1]);
+
+  if (!Number.isFinite(a) || !Number.isFinite(b)) {
+    return null;
+  }
+
+  let result;
+  let symbol;
+
+  if (multiplication) {
+    result = a * b;
+    symbol = "×";
+  } else if (addition) {
+    result = a + b;
+    symbol = "+";
+  } else if (subtraction) {
+    result = a - b;
+    symbol = "−";
+  } else {
+    if (b === 0) {
+      return {
+        reply: "تقسیم بر صفر امکان‌پذیر نیست."
+      };
+    }
+
+    result = a / b;
+    symbol = "÷";
+  }
+
+  if (!Number.isFinite(result)) return null;
+
+  // حذف خطاهای اعشاری معمول جاوااسکریپت
+  result = Number(result.toPrecision(12));
+
+  return {
+    reply:
+      `محاسبه دقیق:\n\n` +
+      `${persianNumber(a)} ${symbol} ${persianNumber(b)} ` +
+      `= ${persianNumber(result)}\n\n` +
+      `حاصل: **${persianNumber(result)}**`
+  };
+}
+
 async function searchWeb(query, env) {
   if (!env.FIRECRAWL_API_KEY) return "";
 
@@ -165,6 +262,15 @@ export async function onRequestPost({ request, env }) {
       return json({
         error: "پیام کاربر پیدا نشد."
       }, 400);
+    }
+
+    // محاسبه مستقیم با ماشین حساب، بدون حدس مدل
+    const mathResult = calculateMath(lastMessage.content);
+
+    if (mathResult) {
+      return json({
+        reply: mathResult.reply
+      });
     }
 
     const document = typeof body.document === "string"
