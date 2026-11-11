@@ -13,11 +13,11 @@ export async function onRequestPost({ request, env }) {
 
     const systemPrompt = {
       role: "system",
-      content: "You are HK AI, a helpful and intelligent multilingual assistant. Reply in the same language as the user. You support Dari, Persian, English and Uzbek. Be friendly, clear and accurate."
+      content: "You are HK AI, a helpful multilingual assistant. Reply in the same language as the user. Support Dari, Persian, English and Uzbek. Be friendly and accurate."
     };
 
     const result = await env.AI.run(
-      "@cf/meta/llama-3.1-8b-instruct",
+      "@cf/zai-org/glm-4.7-flash",
       {
         messages: [systemPrompt, ...messages]
       }
@@ -27,7 +27,7 @@ export async function onRequestPost({ request, env }) {
       reply: result.response || "HK could not generate a response."
     });
 
-    } catch (error) {
+  } catch (error) {
     return Response.json({
       reply: "HK AI error: " + String(error.message || error)
     });
