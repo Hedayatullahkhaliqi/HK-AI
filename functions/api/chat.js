@@ -27,7 +27,7 @@ export async function onRequestPost({ request, env }) {
       reply: result.response || "HK could not generate a response."
     });
 
-    } catch (error) {
+      } catch (error) {
     return Response.json({
       reply: "HK AI error: " + String(error.message || error)
     });
