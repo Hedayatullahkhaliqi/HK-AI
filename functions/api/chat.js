@@ -2,23 +2,18 @@
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json();
-
     const messages = body.messages;
 
     if (!Array.isArray(messages) || messages.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "Messages are required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+      return Response.json(
+        { error: "Please send a message." },
+        { status: 400 }
       );
     }
 
     const systemPrompt = {
       role: "system",
-      content: `You are HK, a helpful multilingual AI assistant.
-Your default language is English.
-You support English, Dari, Persian and Uzbek.
-Understand the user's language and reply in that language.
-Be friendly, accurate and helpful.`
+      content: "You are HK AI, a helpful and intelligent multilingual assistant. Reply in the same language as the user. You support Dari, Persian, English and Uzbek. Be friendly, clear and accurate."
     };
 
     const result = await env.AI.run(
@@ -28,20 +23,14 @@ Be friendly, accurate and helpful.`
       }
     );
 
-    return new Response(
-      JSON.stringify({ reply: result.response }),
-      {
-        headers: { "Content-Type": "application/json" }
-      }
-    );
+    return Response.json({
+      reply: result.response || "HK could not generate a response."
+    });
 
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: "HK AI service error" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      }
+    return Response.json(
+      { error: "HK AI error: " + String(error.message || error) },
+      { status: 500 }
     );
   }
 }
