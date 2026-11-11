@@ -32,4 +32,4 @@ export async function onRequestPost({ request, env }) {
       reply: "HK AI error: " + String(error.message || error)
     });
   }
-}
+}"@cf/zai-org/glm-4.7-flash",
