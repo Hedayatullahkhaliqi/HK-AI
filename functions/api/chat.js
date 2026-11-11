@@ -19,17 +19,32 @@ export async function onRequestPost({ request, env }) {
     const result = await env.AI.run(
       "@cf/zai-org/glm-4.7-flash",
       {
-        messages: [systemPrompt, ...messages]
+        messages: [systemPrompt, ...messages],
+        max_completion_tokens: 1024,
+        reasoning_effort: "low"
       }
     );
 
-    return Response.json({
-      reply: result.response || "HK could not generate a response."
-    });
+    const reply =
+      result?.response ||
+      result?.choices?.[0]?.message?.content ||
+      result?.result?.response;
+
+    if (!reply) {
+      return Response.json(
+        { error: "The AI returned an empty response." },
+        { status: 502 }
+      );
+    }
+
+    return Response.json({ reply });
 
   } catch (error) {
-    return Response.json({
-      reply: "HK AI error: " + String(error.message || error)
-    });
+    return Response.json(
+      {
+        error: "HK AI error: " + String(error.message || error)
+      },
+      { status: 500 }
+    );
   }
 }
