@@ -15,7 +15,7 @@ function json(data, status = 200) {
   });
 }
 
-// تبدیل اعداد فارسی و عربی به انگلیسی
+// تبدیل اعداد فارسی و عربی
 function normalizeDigits(text) {
   const digits = {
     "۰": "0", "۱": "1", "۲": "2", "۳": "3",
@@ -29,87 +29,267 @@ function normalizeDigits(text) {
   return text.replace(/[۰-۹٠-٩]/g, digit => digits[digit]);
 }
 
-// تبدیل نتیجه به ارقام فارسی
-function persianNumber(number) {
-  return String(number).replace(/\d/g, digit =>
+// تبدیل اعداد انگلیسی به فارسی
+function persianNumber(value) {
+  return String(value).replace(/\d/g, digit =>
     "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]
   );
 }
 
-// ماشین حساب پایه
-function calculateMath(text) {
-  const normalized = normalizeDigits(text)
-    .replace(/,/g, "")
+// آماده‌سازی عبارت ریاضی
+function prepareMath(text) {
+  let value = normalizeDigits(text)
     .replace(/٬/g, "")
-    .replace(/٫/g, ".");
+    .replace(/,/g, "")
+    .replace(/٫/g, ".")
+    .replace(/−/g, "-")
+    .replace(/×/g, "*")
+    .replace(/÷/g, "/");
 
-  const multiplication =
-    /ضرب|مضروب|multiply|multiplied|times|×|\*/i.test(normalized);
+  // درصد از یک عدد
+  value = value.replace(
+    /(\d+(?:\.\d+)?)\s*(?:درصد|فیصد|percent|%)\s*(?:از|of)\s*(\d+(?:\.\d+)?)/gi,
+    "(($1/100)*$2)"
+  );
 
-  const addition =
-    /جمع|بعلاوه|به علاوه|اضافه|plus|add|added|\+/i.test(normalized);
+  // عملیات نوشتاری
+  const replacements = [
+    [/تقسیم\s*بر|تقسیم|divided\s*by|divide/gi, "/"],
+    [/ضرب\s*در|مضروب\s*در|ضرب|multiplied\s*by|multiply|times/gi, "*"],
+    [/بعلاوه|به\s*علاوه|جمع\s*با|plus/gi, "+"],
+    [/منهای|تفریق|minus|subtract/gi, "-"],
+    [/منفی|negative/gi, "-"],
+    [/مثبت|positive/gi, "+"]
+  ];
 
-  const subtraction =
-    /تفریق|منهای|کم کن|minus|subtract|−|-/i.test(normalized);
+  for (const [pattern, replacement] of replacements) {
+    value = value.replace(pattern, ` ${replacement} `);
+  }
 
-  const division =
-    /تقسیم|تقسیم بر|divide|divided|برابر تقسیم|÷|\//i.test(normalized);
+  return value;
+}
 
-  const operations = [
-    multiplication,
-    addition,
-    subtraction,
-    division
-  ].filter(Boolean).length;
+// تبدیل عبارت به توکن‌های ریاضی
+function tokenize(expression) {
+  const tokens = [];
+  const regex = /\d+(?:\.\d+)?|[()+\-*/^%]/g;
 
-  if (operations !== 1) return null;
+  let match;
+  let lastIndex = 0;
 
-  const numbers = normalized.match(/-?\d+(?:\.\d+)?/g);
+  while ((match = regex.exec(expression)) !== null) {
+    const skipped = expression.slice(lastIndex, match.index);
 
-  if (!numbers || numbers.length !== 2) return null;
+    if (skipped.trim() !== "") {
+      return null;
+    }
 
-  const a = Number(numbers[0]);
-  const b = Number(numbers[1]);
+    tokens.push(match[0]);
+    lastIndex = regex.lastIndex;
+  }
 
-  if (!Number.isFinite(a) || !Number.isFinite(b)) {
+  if (expression.slice(lastIndex).trim() !== "") {
     return null;
   }
 
-  let result;
-  let symbol;
+  return tokens.length ? tokens : null;
+}
 
-  if (multiplication) {
-    result = a * b;
-    symbol = "×";
-  } else if (addition) {
-    result = a + b;
-    symbol = "+";
-  } else if (subtraction) {
-    result = a - b;
-    symbol = "−";
-  } else {
-    if (b === 0) {
-      return {
-        reply: "تقسیم بر صفر امکان‌پذیر نیست."
-      };
-    }
+// ماشین حساب امن با رعایت ترتیب عملیات
+function evaluateExpression(tokens) {
+  let position = 0;
 
-    result = a / b;
-    symbol = "÷";
+  function current() {
+    return tokens[position];
   }
 
-  if (!Number.isFinite(result)) return null;
+  function consume(expected) {
+    if (current() !== expected) {
+      throw new Error("ساختار عبارت ریاضی درست نیست.");
+    }
 
-  // حذف خطاهای اعشاری معمول جاوااسکریپت
-  result = Number(result.toPrecision(12));
+    position++;
+  }
 
-  return {
-    reply:
-      `محاسبه دقیق:\n\n` +
-      `${persianNumber(a)} ${symbol} ${persianNumber(b)} ` +
-      `= ${persianNumber(result)}\n\n` +
-      `حاصل: **${persianNumber(result)}**`
-  };
+  function primary() {
+    const token = current();
+
+    if (token === "(") {
+      position++;
+
+      const value = addition();
+
+      consume(")");
+
+      return value;
+    }
+
+    if (token !== undefined && /^\d+(?:\.\d+)?$/.test(token)) {
+      position++;
+
+      const value = Number(token);
+
+      if (!Number.isFinite(value)) {
+        throw new Error("عدد معتبر نیست.");
+      }
+
+      return value;
+    }
+
+    throw new Error("عدد یا پرانتز معتبر نیست.");
+  }
+
+  function postfix() {
+    let value = primary();
+
+    while (current() === "%") {
+      position++;
+      value = value / 100;
+    }
+
+    return value;
+  }
+
+  function power() {
+    let left = postfix();
+
+    if (current() === "^") {
+      position++;
+
+      const right = unary();
+
+      if (Math.abs(right) > 1000) {
+        throw new Error("توان بیش از حد بزرگ است.");
+      }
+
+      left = Math.pow(left, right);
+    }
+
+    return left;
+  }
+
+  function unary() {
+    if (current() === "-") {
+      position++;
+      return -unary();
+    }
+
+    if (current() === "+") {
+      position++;
+      return unary();
+    }
+
+    return power();
+  }
+
+  function multiplication() {
+    let value = unary();
+
+    while (current() === "*" || current() === "/") {
+      const operator = current();
+      position++;
+
+      const right = unary();
+
+      if (operator === "*") {
+        value *= right;
+      } else {
+        if (right === 0) {
+          throw new Error("تقسیم بر صفر امکان‌پذیر نیست.");
+        }
+
+        value /= right;
+      }
+    }
+
+    return value;
+  }
+
+  function addition() {
+    let value = multiplication();
+
+    while (current() === "+" || current() === "-") {
+      const operator = current();
+      position++;
+
+      const right = multiplication();
+
+      if (operator === "+") {
+        value += right;
+      } else {
+        value -= right;
+      }
+    }
+
+    return value;
+  }
+
+  const result = addition();
+
+  if (position !== tokens.length) {
+    throw new Error("عبارت ریاضی کامل نیست.");
+  }
+
+  if (!Number.isFinite(result)) {
+    throw new Error("نتیجه محاسبه معتبر نیست.");
+  }
+
+  return Number(result.toPrecision(12));
+}
+
+// تشخیص و محاسبه ریاضی
+function calculateMath(text) {
+  try {
+    const prepared = prepareMath(text);
+
+    // پیدا کردن بخش‌های احتمالی ریاضی در متن
+    const candidates = prepared.match(
+      /[0-9().+\-*/^% \t]+/g
+    ) || [];
+
+    const validCandidates = candidates
+      .map(item => item.trim())
+      .filter(item => {
+        const numbers = item.match(/\d+(?:\.\d+)?/g);
+
+        return (
+          numbers &&
+          numbers.length >= 2 &&
+          /[+\-*/^%()]/.test(item)
+        );
+      })
+      .sort((a, b) => b.length - a.length);
+
+    for (const expression of validCandidates) {
+      const tokens = tokenize(expression);
+
+      if (!tokens) continue;
+
+      try {
+        const result = evaluateExpression(tokens);
+
+        const displayExpression = expression
+          .replace(/\*/g, "×")
+          .replace(/\//g, "÷");
+
+        return {
+          reply:
+            `محاسبه دقیق:\n\n` +
+            `${persianNumber(displayExpression)} = ` +
+            `${persianNumber(result)}\n\n` +
+            `حاصل: **${persianNumber(result)}**`
+        };
+
+      } catch {
+        continue;
+      }
+    }
+
+    return null;
+
+  } catch {
+    return null;
+  }
 }
 
 async function searchWeb(query, env) {
@@ -264,7 +444,7 @@ export async function onRequestPost({ request, env }) {
       }, 400);
     }
 
-    // محاسبه مستقیم با ماشین حساب، بدون حدس مدل
+    // اول محاسبه مستقیم را امتحان می‌کنیم
     const mathResult = calculateMath(lastMessage.content);
 
     if (mathResult) {
