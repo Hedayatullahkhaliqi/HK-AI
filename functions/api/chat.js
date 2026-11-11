@@ -27,10 +27,9 @@ export async function onRequestPost({ request, env }) {
       reply: result.response || "HK could not generate a response."
     });
 
-  } catch (error) {
-    return Response.json(
-      { error: "HK AI error: " + String(error.message || error) },
-      { status: 500 }
-    );
+    } catch (error) {
+    return Response.json({
+      reply: "HK AI error: " + String(error.message || error)
+    });
   }
 }
