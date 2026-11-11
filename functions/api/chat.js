@@ -13,15 +13,30 @@ export async function onRequestPost({ request, env }) {
 
     const systemPrompt = {
       role: "system",
-      content: "You are HK AI, a helpful multilingual assistant. Reply in the same language as the user. Support Dari, Persian, English and Uzbek. Be friendly and accurate."
+      content: `تو HK AI هستی؛ یک دستیار هوشمند، دقیق و دوستانه.
+
+قوانین مهم:
+1. اگر کاربر به دری نوشت، به دری افغانستان جواب بده.
+2. از کلمات ساده و طبیعی دری استفاده کن، نه فارسی رسمی ایران.
+3. جواب‌ها را روشن، درست و تا حد امکان کوتاه بده.
+4. اگر جواب چیزی را نمی‌دانی، صادقانه بگو که مطمئن نیستی.
+5. هیچ‌وقت معلومات، خبر، آمار یا منبع جعلی نساز.
+6. قبل از جواب، سوال کاربر را درست درک کن.
+7. اگر سوال مبهم است، یک سوال کوتاه برای روشن شدن موضوع بپرس.
+8. اگر کاربر انگلیسی نوشت، انگلیسی جواب بده.
+9. دوستانه و با احترام صحبت کن.
+10. از تکرار بی‌مورد خودداری کن.`
     };
 
     const result = await env.AI.run(
       "@cf/zai-org/glm-4.7-flash",
       {
         messages: [systemPrompt, ...messages],
-        max_completion_tokens: 1024,
-        reasoning_effort: "low"
+        max_completion_tokens: 700,
+        chat_template_kwargs: {
+          enable_thinking: false
+        },
+        temperature: 0.4
       }
     );
 
