@@ -232,7 +232,13 @@ function detectLanguagePreference(messages) {
 function detectAutomaticLanguage(text) {
   const value = String(text || "").trim().toLowerCase();
 
-  if (!value) return "AUTO";
+  if (!value) return "English";
+
+  // Detect Pashto by its distinctive letters before treating Arabic-script
+  // messages as Dari. A plain "سلام" is treated as Dari.
+  if (/[ټډړږښږڅځګڼ]/u.test(value)) {
+    return "Pashto";
+  }
 
   if (/[ўғқҳ]/i.test(value)) {
     return "Uzbek";
@@ -276,7 +282,14 @@ function detectAutomaticLanguage(text) {
     return "Uzbek";
   }
 
-  return "AUTO";
+  // Most other short Latin-script messages default to English.
+  if (/[a-z]/i.test(value)) return "English";
+
+  // Arabic-script greetings and text without Pashto-specific letters:
+  // default to Afghan Dari.
+  if (/[\u0600-\u06FF]/u.test(value)) return "Dari";
+
+  return "English";
 }
 
 function handleSimpleConversation(text) {
@@ -284,13 +297,17 @@ function handleSimpleConversation(text) {
     .replace(/[؟?!.,،؛:]+/g,"")
     .replace(/\\s+/g," ");
 
-  const dariGreetings=/^(سلام|سلام علیکم|السلام علیکم|صبح بخیر|عصر بخیر|شب بخیر|hi|hello|hey)$/i;
+  const dariGreetings=/^(سلام|سلام علیکم|صبح بخیر|عصر بخیر|شب بخیر)$/i;
+  const englishGreetings=/^(hi|hello|hey|good morning|good afternoon|good evening)$/i;
   const dariWellbeing=/^(خوبی|خوب هستی|چطوری|حالت چطور است|حالت چطوره|حال شما چطور است|خوب هستید|چطور هستی|چه خبر)$/i;
   const dariThanks=/^(تشکر|ممنون|سپاس|مرسی|متشکرم)$/i;
-  const pashtoGreetings=/^(سلام|السلام علیکم|ستړی مه شې|څنګه یې)$/i;
+  const pashtoGreetings=/^(السلام علیکم|ستړی مه شې|څنګه یې|وعلیکم سلام)$/i;
   const pashtoWellbeing=/^(ښه یې|ښه یی|څنګه یې|ته څنګه یې|جوړ یې)$/i;
   const englishWellbeing=/^(how are you|how are you doing|are you well|you good)$/i;
 
+  if(englishGreetings.test(value)) {
+    return "Hello! How can I help you today?";
+  }
   if(dariWellbeing.test(value)){
     return "تشکر، خوب هستم! 😊 تو چطوری؟ چه کمکی از دستم ساخته است؟";
   }
@@ -560,6 +577,8 @@ LANGUAGE RULES:
 
 1. Automatically identify the language of the latest user message.
 2. If the user has explicitly selected a response language, use that language until they change it.
+2a. If the message language is unclear or unsupported, use English by default.
+2b. Treat a plain "سلام" or "سلام علیکم" as Afghan Dari unless Pashto-specific words or letters clearly identify Pashto.
 3. A newer language instruction replaces an older language instruction.
 4. If the language preference is AUTO, answer in the same language as the latest user message.
 5. Do not confuse Dari, Persian and Pashto.
