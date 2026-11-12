@@ -787,6 +787,30 @@ body:before{
   .suggestion:after{transition:none}
 }
 
+
+/* Functional tools: image generation, voice and planner */
+.feature-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0 4px}
+.feature-btn{min-height:48px;border:1px solid rgba(157,198,226,.34);border-radius:14px;color:#e6f2fa;background:linear-gradient(145deg,rgba(57,83,104,.9),rgba(17,29,41,.98));font-size:12px;font-weight:700;box-shadow:0 7px 18px #0003,inset 0 1px #ffffff12}
+.feature-btn:active,.tool-primary:active{transform:scale(.98)}
+.tool-panel{margin:12px 0;padding:16px;border:1px solid rgba(157,198,226,.3);border-radius:18px;background:linear-gradient(145deg,#1c3040,#101a25);box-shadow:0 12px 30px #0004}
+.tool-panel[hidden]{display:none}
+.tool-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;color:#edf6fc}
+.tool-close{border:0;background:#ffffff12;color:#eaf4fa;border-radius:8px;width:30px;height:30px;font-size:20px}
+#imagePrompt{width:100%;resize:vertical;border:1px solid #536c80;border-radius:12px;background:#0d1721;color:#f2f7fb;padding:12px;line-height:1.8;font:inherit}
+.tool-primary{border:1px solid #b5d0e3;border-radius:11px;padding:10px 16px;margin-top:10px;background:linear-gradient(145deg,#d9eaf5,#829eb2);color:#10202c;font-weight:800}
+.tool-status,.tool-hint{color:#a9bfce;font-size:12px;line-height:1.8;margin:9px 0 0}
+.generated-image{display:block;max-width:100%;max-height:520px;object-fit:contain;border-radius:13px;margin:13px auto 0;border:1px solid #7993a8}
+.planner-entry{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.planner-entry input{min-width:0;flex:1;border:1px solid #536c80;border-radius:10px;padding:10px;background:#0d1721;color:#f2f7fb;font:inherit}
+.planner-entry .tool-primary{margin:0}
+.task-list{list-style:none;padding:0;margin:12px 0 0}
+.task-list li{display:flex;align-items:center;gap:8px;padding:10px 2px;border-bottom:1px solid #ffffff16;color:#e4eef5;font-size:13px}
+.task-list li label{flex:1}
+.task-list li.done label{text-decoration:line-through;opacity:.55}
+.task-list button{border:0;border-radius:8px;padding:5px 9px;background:#ffffff12;color:#e6c4c4}
+@media(max-width:480px){.feature-bar{gap:6px}.feature-btn{font-size:11px;padding:7px 3px}.planner-entry input{flex-basis:40%}}
+@media(prefers-reduced-motion:reduce){.feature-btn,.tool-primary{transition:none}}
+
 </style>
 </head>
 
@@ -809,6 +833,26 @@ body:before{
     <span class="status-dot"></span>
     HK AI آماده پاسخ‌گویی است
   </div>
+
+  
+  <nav class="feature-bar" aria-label="قابلیت‌های HK.AI">
+    <button class="feature-btn" id="openImageTool">✦ ساخت تصویر</button>
+    <button class="feature-btn" id="voiceBtn">🎙 صحبت کردن</button>
+    <button class="feature-btn" id="openPlanner">▦ برنامه‌ریزی</button>
+  </nav>
+  <section class="tool-panel" id="imageTool" hidden>
+    <div class="tool-heading"><strong>ساخت تصویر با هوش مصنوعی</strong><button class="tool-close" data-close="imageTool">×</button></div>
+    <textarea id="imagePrompt" rows="2" placeholder="تصویری را که می‌خواهی بساز، توصیف کن..."></textarea>
+    <button class="tool-primary" id="generateImage">ساخت تصویر</button>
+    <div id="imageStatus" class="tool-status" aria-live="polite"></div>
+    <img id="generatedImage" class="generated-image" alt="تصویر ساخته‌شده" hidden>
+  </section>
+  <section class="tool-panel" id="plannerTool" hidden>
+    <div class="tool-heading"><strong>برنامه‌ریز شخصی</strong><button class="tool-close" data-close="plannerTool">×</button></div>
+    <div class="planner-entry"><input id="taskInput" placeholder="کار امروزت چیست؟"><input id="taskTime" type="time" aria-label="زمان یادآوری"><button class="tool-primary" id="addTask">افزودن</button></div>
+    <ul id="taskList" class="task-list"></ul>
+    <p class="tool-hint">برنامه‌ها روی همین دستگاه ذخیره می‌شوند. برای اعلان یادآوری، اجازهٔ اعلان مرورگر را فعال کن.</p>
+  </section>
 
   <main class="chat" id="chat">
 
@@ -1439,6 +1483,75 @@ function restoreHistory(){
     console.warn("Could not restore history",e);
   }
 }
+
+
+/* HK.AI tools */
+const imageTool=$("imageTool");
+const plannerTool=$("plannerTool");
+$("openImageTool").addEventListener("click",()=>{imageTool.hidden=!imageTool.hidden;plannerTool.hidden=true;});
+$("openPlanner").addEventListener("click",()=>{plannerTool.hidden=!plannerTool.hidden;imageTool.hidden=true;renderTasks();});
+document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>$(b.dataset.close).hidden=true));
+
+$("generateImage").addEventListener("click",async()=>{
+  const prompt=$("imagePrompt").value.trim();
+  const status=$("imageStatus");
+  const result=$("generatedImage");
+  if(!prompt){status.textContent="اول توضیح تصویر را بنویس.";return;}
+  const button=$("generateImage");button.disabled=true;status.textContent="در حال ساخت تصویر…";result.hidden=true;
+  try{
+    const response=await fetch("/api/image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
+    if(!response.ok){let error={};try{error=await response.json()}catch{};throw new Error(error.error||"ساخت تصویر موفق نشد.");}
+    const blob=await response.blob();
+    result.src=URL.createObjectURL(blob);result.hidden=false;status.textContent="تصویر آماده شد.";
+  }catch(error){status.textContent=error.message||"ارتباط برقرار نشد.";}
+  finally{button.disabled=false;}
+});
+
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recognition=null;
+$("voiceBtn").addEventListener("click",()=>{
+  if(!SpeechRecognition){$("voiceBtn").textContent="🎙 صدا در این مرورگر پشتیبانی نمی‌شود";return;}
+  if(recognition){try{recognition.stop()}catch{} recognition=null;$("voiceBtn").textContent="🎙 صحبت کردن";return;}
+  recognition=new SpeechRecognition();recognition.lang="fa-AF";recognition.interimResults=false;recognition.maxAlternatives=1;
+  $("voiceBtn").textContent="🔴 گوش می‌دهد…";
+  recognition.onresult=e=>{input.value=(input.value+" "+e.results[0][0].transcript).trim();input.dispatchEvent(new Event("input"));};
+  recognition.onerror=()=>{$("voiceBtn").textContent="🎙 دوباره تلاش کن";recognition=null;};
+  recognition.onend=()=>{$("voiceBtn").textContent="🎙 صحبت کردن";recognition=null;};
+  try{recognition.start()}catch{$("voiceBtn").textContent="🎙 دوباره تلاش کن";recognition=null;}
+});
+
+const TASK_KEY="hk_ai_planner_tasks_v1";
+function getTasks(){try{return JSON.parse(localStorage.getItem(TASK_KEY)||"[]")}catch{return []}}
+function renderTasks(){
+  const list=$("taskList");list.innerHTML="";
+  getTasks().forEach((task,index)=>{
+    const li=document.createElement("li");if(task.done)li.classList.add("done");
+    const check=document.createElement("input");check.type="checkbox";check.checked=!!task.done;
+    check.addEventListener("change",()=>{const tasks=getTasks();tasks[index].done=check.checked;localStorage.setItem(TASK_KEY,JSON.stringify(tasks));renderTasks();});
+    const label=document.createElement("label");label.textContent=task.text+(task.time?" · "+task.time:"");
+    const del=document.createElement("button");del.textContent="حذف";del.addEventListener("click",()=>{const tasks=getTasks();tasks.splice(index,1);localStorage.setItem(TASK_KEY,JSON.stringify(tasks));renderTasks();});
+    li.append(check,label,del);list.append(li);
+  });
+}
+$("addTask").addEventListener("click",()=>{
+  const field=$("taskInput"),text=field.value.trim(),time=$("taskTime").value;
+  if(!text)return;
+  const tasks=getTasks();tasks.push({text,time,done:false,reminded:false,created:Date.now()});
+  localStorage.setItem(TASK_KEY,JSON.stringify(tasks));field.value="";renderTasks();
+  if(time&&"Notification" in window&&Notification.permission==="default")Notification.requestPermission();
+});
+function checkPlannerReminders(){
+  if(!("Notification" in window)||Notification.permission!=="granted")return;
+  const now=new Date(),clock=now.toTimeString().slice(0,5),today=now.toDateString();
+  const tasks=getTasks();let changed=false;
+  tasks.forEach(task=>{
+    if(task.time===clock&&!task.done&&task.remindedDay!==today){
+      new Notification("یادآوری HK.AI",{body:task.text});task.remindedDay=today;changed=true;
+    }
+  });
+  if(changed)localStorage.setItem(TASK_KEY,JSON.stringify(tasks));
+}
+renderTasks();checkPlannerReminders();setInterval(checkPlannerReminders,30000);
 
 restoreHistory();
 
