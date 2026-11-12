@@ -279,6 +279,39 @@ function detectAutomaticLanguage(text) {
   return "AUTO";
 }
 
+function handleSimpleConversation(text) {
+  const value=String(text||"").trim().toLowerCase()
+    .replace(/[؟?!.,،؛:]+/g,"")
+    .replace(/\\s+/g," ");
+
+  const dariGreetings=/^(سلام|سلام علیکم|السلام علیکم|صبح بخیر|عصر بخیر|شب بخیر|hi|hello|hey)$/i;
+  const dariWellbeing=/^(خوبی|خوب هستی|چطوری|حالت چطور است|حالت چطوره|حال شما چطور است|خوب هستید|چطور هستی|چه خبر)$/i;
+  const dariThanks=/^(تشکر|ممنون|سپاس|مرسی|متشکرم)$/i;
+  const pashtoGreetings=/^(سلام|السلام علیکم|ستړی مه شې|څنګه یې)$/i;
+  const pashtoWellbeing=/^(ښه یې|ښه یی|څنګه یې|ته څنګه یې|جوړ یې)$/i;
+  const englishWellbeing=/^(how are you|how are you doing|are you well|you good)$/i;
+
+  if(dariWellbeing.test(value)){
+    return "تشکر، خوب هستم! 😊 تو چطوری؟ چه کمکی از دستم ساخته است؟";
+  }
+  if(englishWellbeing.test(value)){
+    return "I'm doing well, thank you! How are you? What can I help you with?";
+  }
+  if(pashtoWellbeing.test(value)){
+    return "مننه، ښه یم! ته څنګه یې؟ څه مرسته درسره وکړم؟";
+  }
+  if(dariThanks.test(value)){
+    return "خواهش می‌کنم! 😊";
+  }
+  if(pashtoGreetings.test(value)){
+    return "وعلیکم سلام! څنګه یې؟";
+  }
+  if(dariGreetings.test(value)){
+    return "سلام! 😊 خوش آمدی. چطور می‌توانم کمکت کنم؟";
+  }
+  return null;
+}
+
 function isTranslationRequest(text) {
   return /ترجمه کن|ترجمه به|translate|ترجم|ژباړه|çevir|übersetzen/i.test(text);
 }
@@ -445,6 +478,13 @@ export async function onRequestPost({ request, env }) {
       }
     }
 
+    if (!hasImage) {
+      const simpleReply = handleSimpleConversation(latestUserMessage.content);
+      if (simpleReply !== null) {
+        return json({ reply: simpleReply });
+      }
+    }
+
     const explicitLanguage = detectLanguagePreference(messages);
 
     const languagePreference =
@@ -547,6 +587,9 @@ ANSWER QUALITY:
 8. Keep answers focused on the user's question.
 9. Use readable formatting.
 10. Adapt the explanation to the user's language.
+11. Do not answer every message with a greeting.
+12. Only greet when the user greets you. If the user asks whether you are well, answer that question directly.
+13. Continue the conversation naturally; do not repeat the same greeting on every turn.
 
 MATHEMATICS:
 
