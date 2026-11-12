@@ -27,30 +27,24 @@ export async function onRequestPost({request,env}){
         return json({error:"فرمت تصویر برای ویرایش پشتیبانی نمی‌شود."},400);
       }
 
-      const result=await env.AI.run("black-forest-labs/flux-1-kontext-pro",{
+      const result=await env.AI.run("@cf/runwayml/stable-diffusion-v1-5-img2img",{
         prompt,
-        input_image:inputImage.split(",")[1],
-        output_format:"jpeg"
+        image_b64:inputImage.split(",")[1],
+        strength:0.25,
+        num_steps:12,
+        guidance:7.5
       });
 
-      const imageUrl=result?.image||result?.result?.image;
-      if(typeof imageUrl!=="string"||!imageUrl){
-        throw new Error("مدل ویرایش تصویر خروجی معتبری برنگرداند.");
+      if(result instanceof Response){
+        return new Response(result.body,{headers:{"Content-Type":result.headers.get("content-type")||"image/png","Cache-Control":"no-store"}});
       }
-
-      if(imageUrl.startsWith("data:image/")){
-        const match=imageUrl.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/i);
-        if(!match)throw new Error("فرمت تصویر خروجی معتبر نیست.");
-        const binary=atob(match[2]);
-        const bytes=new Uint8Array(binary.length);
-        for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-        return new Response(bytes,{headers:{"Content-Type":"image/"+(match[1]==="jpg"?"jpeg":match[1]),"Cache-Control":"no-store"}});
+      if(result instanceof ReadableStream){
+        return new Response(result,{headers:{"Content-Type":"image/png","Cache-Control":"no-store"}});
       }
-
-      const imageResponse=await fetch(imageUrl);
-      if(!imageResponse.ok)throw new Error("دریافت تصویر ویرایش‌شده از سرویس ناموفق بود.");
-      const contentType=imageResponse.headers.get("content-type")||"image/jpeg";
-      return new Response(imageResponse.body,{headers:{"Content-Type":contentType,"Cache-Control":"no-store"}});
+      if(result instanceof ArrayBuffer||ArrayBuffer.isView(result)){
+        return new Response(result,{headers:{"Content-Type":"image/png","Cache-Control":"no-store"}});
+      }
+      throw new Error("مدل رایگان ویرایش تصویر خروجی قابل استفاده برنگرداند.");
     }
 
     const image=await env.AI.run("@cf/black-forest-labs/flux-1-schnell",{
