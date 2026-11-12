@@ -1,220 +1,119 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#080d19">
-<meta name="description" content="HK AI - Hedayatullah Khaliqi AI">
-<title>HK AI | Smart Assistant</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--bg:#080d19;--panel:#101a2b;--panel2:#17263c;--border:rgba(160,190,235,.15);--text:#edf4ff;--muted:#91a3bd;--blue:#438cff;--cyan:#55d6ff;--gold:#f4c64e}
-html,body{margin:0;width:100%;max-width:100%;min-height:100%;overflow-x:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif}
-body{min-height:100vh;min-height:100svh}
-button,textarea{font:inherit}
-button{cursor:pointer}
-.app{width:100%;max-width:1100px;min-height:100vh;min-height:100svh;margin:auto;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom);position:relative}
-.app:before{content:"";position:fixed;width:280px;height:280px;top:12%;left:-160px;border-radius:50%;background:rgba(34,105,220,.08);filter:blur(90px);pointer-events:none}
-header{min-height:72px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(8,13,25,.94);position:sticky;top:0;z-index:20;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{width:49px;height:49px;border-radius:14px;object-fit:cover;border:1px solid rgba(131,190,255,.5);box-shadow:0 0 22px rgba(53,137,255,.2)}
-.brand-name{font-size:19px;font-weight:900;letter-spacing:.5px}
-.brand-sub{color:var(--muted);font-size:10px;margin-top:4px;letter-spacing:.5px}
-.header-actions{display:flex;align-items:center;gap:9px}
-.status{display:flex;align-items:center;gap:6px;color:#83dcb3;font-size:10px;margin-left:7px}
-.status-dot{width:7px;height:7px;border-radius:50%;background:#4cda98;box-shadow:0 0 9px #4cda98}
-.new-chat{background:linear-gradient(145deg,#1c304b,#142238);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:10px 13px;font-size:12px;font-weight:600}
-.new-chat:active{transform:scale(.97)}
-main{flex:1;display:flex;flex-direction:column;width:100%;padding:20px 16px 14px}
-.welcome{margin:auto;width:100%;max-width:660px;text-align:center;padding:32px 5px}
-.welcome-logo{width:112px;height:112px;margin:0 auto 22px;border-radius:27px;object-fit:cover;box-shadow:0 0 42px rgba(48,125,255,.2)}
-.welcome h1{font-size:28px;font-weight:900;margin:0 0 12px;background:linear-gradient(90deg,#f5f9ff,#83baff,#ffe29a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.welcome p{color:var(--muted);line-height:2;font-size:14px;margin:0 auto 27px;max-width:480px}
-.welcome-tag{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;margin-bottom:19px;border:1px solid rgba(75,145,255,.22);border-radius:30px;color:#c5dfff;background:rgba(45,105,190,.1);font-size:11px}
-.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;text-align:right}
-.suggestion{min-height:72px;display:flex;align-items:center;gap:11px;background:linear-gradient(145deg,#142238,#101a2a);border:1px solid var(--border);border-radius:15px;color:var(--text);padding:13px;font-size:12px;line-height:1.8;text-align:right}
-.suggestion:active{transform:scale(.98);border-color:rgba(67,140,255,.5)}
-.suggestion-icon{width:35px;height:35px;flex:0 0 35px;display:grid;place-items:center;border-radius:11px;background:rgba(65,135,255,.13);font-size:17px}
-#chat{width:100%;max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:19px;padding:12px 0 25px}
-.message{display:flex;flex-direction:column;max-width:91%;gap:7px;min-width:0}
-.message.user{align-self:flex-start}
-.message.assistant{align-self:flex-end}
-.message-label{color:var(--muted);font-size:11px;padding:0 5px}
-.message-content{overflow-wrap:anywhere;word-break:break-word;line-height:1.95;font-size:14px;padding:13px 16px;border-radius:17px;white-space:normal}
-.user .message-content{background:linear-gradient(145deg,#1b3b65,#142d4d);border:1px solid rgba(85,150,255,.22);border-bottom-left-radius:5px}
-.assistant .message-content{background:linear-gradient(145deg,#142136,#101a2a);border:1px solid var(--border);border-bottom-right-radius:5px}
-.message-content p{margin:0 0 10px}
-.message-content p:last-child{margin-bottom:0}
-.message-content pre{direction:ltr;text-align:left;white-space:pre;overflow-x:auto;background:#080f1d;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:12px}
-.message-content code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:rgba(120,160,220,.12);padding:2px 5px;border-radius:5px}
-.message-content pre code{background:none;padding:0}
-.message-content a{color:#82c7ff;text-decoration:underline}
-.message-content ul,.message-content ol{padding-right:23px;line-height:2}
-.message-actions{display:flex;justify-content:flex-end;gap:8px}
-.copy-btn{color:#9cb0cb;background:transparent;border:0;font-size:11px;padding:6px 8px}
-.typing{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px;padding:12px}
-.typing-dots{display:flex;gap:4px}
-.typing-dots span{width:5px;height:5px;border-radius:50%;background:#69aaff;animation:dot 1s infinite ease-in-out}
-.typing-dots span:nth-child(2){animation-delay:.15s}
-.typing-dots span:nth-child(3){animation-delay:.3s}
-@keyframes dot{0%,80%,100%{transform:translateY(0);opacity:.45}40%{transform:translateY(-5px);opacity:1}}
-.composer-area{position:sticky;bottom:0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 20%);z-index:10}
-.composer{max-width:780px;margin:auto}
-.file-preview{display:none;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:9px;font-size:12px;color:var(--muted)}
-.file-preview.show{display:flex}
-.remove-file{color:#ff8585;border:0;background:transparent;font-size:20px}
-.input-box{direction:rtl;display:flex;align-items:flex-end;gap:8px;padding:9px;background:linear-gradient(145deg,#142238,#101a2b);border:1px solid rgba(125,160,210,.2);border-radius:19px;box-shadow:0 9px 35px rgba(0,0,0,.25)}
-.input-box:focus-within{border-color:rgba(67,140,255,.7);box-shadow:0 0 0 3px rgba(67,140,255,.07),0 9px 35px rgba(0,0,0,.25)}
-#messageInput{flex:1;min-width:0;min-height:44px;max-height:140px;resize:none;outline:none;border:0;background:transparent;color:var(--text);padding:11px 5px;font-size:16px;line-height:1.6;direction:auto;appearance:none;-webkit-appearance:none}
-#messageInput::placeholder{color:#788ba7}
-.attach-btn,.send-btn{flex:0 0 43px;width:43px;height:43px;border-radius:14px;border:0;display:grid;place-items:center}
-.send-btn{background:linear-gradient(145deg,#55a1ff,#2563d9);color:white;font-size:20px;font-weight:bold;box-shadow:0 4px 14px rgba(37,99,235,.25)}
-.send-btn:disabled{opacity:.45;cursor:not-allowed}
-.attach-btn{background:#1b2d46;color:#b9cce8;font-size:22px}
-#fileInput{display:none}
-.footer-note{text-align:center;color:#657690;font-size:10px;padding-top:10px}
-.error-note{color:#ffaaaa}
-.message-content blockquote{border-right:3px solid #579dff;margin:8px 0;padding:4px 12px;color:#c5d7ee}
-@media(max-width:480px){
-header{min-height:63px;padding:0 12px}
-.logo{width:43px;height:43px}
-.brand-name{font-size:17px}
-.brand-sub{font-size:9px}
-.status{font-size:9px}
-.new-chat{padding:9px 10px;font-size:11px}
-main{padding:12px}
-.welcome h1{font-size:24px}
-.welcome p{font-size:13px}
-.welcome-logo{width:94px;height:94px}
-.message{max-width:96%}
-.composer-area{padding-left:9px;padding-right:9px}
-.suggestions{gap:8px}
-.suggestion{padding:10px;min-height:66px;font-size:11px}
-}
-@media(max-width:350px){
-.suggestions{grid-template-columns:1fr}
-.status{display:none}
-}
-</style>
-</head>
-<body>
-<div class="app">
-<header>
-<div class="brand">
-<img class="logo" alt="HK AI logo" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23071a38%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23050b18%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22silver%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fff%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%239db8df%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22blue%22%3E%3Cstop%20stop-color%3D%22%2342d9ff%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%232675ff%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22gold%22%3E%3Cstop%20stop-color%3D%22%23ffe98a%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23e9a51e%22%2F%3E%3C%2FlinearGradient%3E%3Cfilter%20id%3D%22glow%22%3E%3CfeGaussianBlur%20stdDeviation%3D%227%22%20result%3D%22b%22%2F%3E%3CfeMerge%3E%3CfeMergeNode%20in%3D%22b%22%2F%3E%3CfeMergeNode%20in%3D%22SourceGraphic%22%2F%3E%3C%2FfeMerge%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3Crect%20x%3D%2212%22%20y%3D%2212%22%20width%3D%22488%22%20height%3D%22488%22%20rx%3D%2292%22%20fill%3D%22url%28%23bg%29%22%20stroke%3D%22%23398cff%22%20stroke-width%3D%228%22%2F%3E%3Cpath%20d%3D%22M100%20250%20Q255%2038%20430%20250%20Q260%20470%2082%20270%22%20fill%3D%22none%22%20stroke%3D%22url%28%23gold%29%22%20stroke-width%3D%2217%22%20stroke-linecap%3D%22round%22%20filter%3D%22url%28%23glow%29%22%2F%3E%3Cpath%20d%3D%22M125%20155%20V350%20M125%20252%20L220%20155%20M125%20252%20L220%20350%22%20fill%3D%22none%22%20stroke%3D%22url%28%23silver%29%22%20stroke-width%3D%2234%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M265%20155%20V350%20M265%20252%20H370%20M370%20155%20V350%22%20fill%3D%22none%22%20stroke%3D%22url%28%23blue%29%22%20stroke-width%3D%2234%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%2339d8ff%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22%20filter%3D%22url%28%23glow%29%22%3E%3Cpath%20d%3D%22M212%20105%20C190%2078%20220%2055%20242%2072%20C260%2042%20300%2054%20302%2080%20C333%2073%20347%20110%20326%20128%20C336%20155%20300%20170%20281%20151%20C260%20172%20224%20157%20230%20132%20C207%20132%20198%20117%20212%20105Z%22%2F%3E%3Cpath%20d%3D%22M264%2069%20V151%20M230%20100%20L251%20112%20L230%20132%20M299%2092%20L278%20112%20L300%20132%22%2F%3E%3C%2Fg%3E%3Ctext%20x%3D%22256%22%20y%3D%22430%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2248%22%20font-weight%3D%22900%22%20fill%3D%22%23f4f7ff%22%3EHK-AI%3C%2Ftext%3E%3C%2Fsvg%3E">
-<div>
-<div class="brand-name">HK AI</div>
-<div class="brand-sub">Hedayatullah Khaliqi</div>
-</div>
-</div>
-<div class="header-actions">
-<div class="status"><span class="status-dot"></span> دستیار هوشمند</div>
-<button class="new-chat" id="newChatBtn">＋ گفتگوی جدید</button>
-</div>
-</header>
-<main>
-<section class="welcome" id="welcome">
-<img class="welcome-logo" alt="HK AI" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23071a38%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23050b18%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22silver%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fff%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%239db8df%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22blue%22%3E%3Cstop%20stop-color%3D%22%2342d9ff%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%232675ff%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22gold%22%3E%3Cstop%20stop-color%3D%22%23ffe98a%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23e9a51e%22%2F%3E%3C%2FlinearGradient%3E%3Cfilter%20id%3D%22glow%22%3E%3CfeGaussianBlur%20stdDeviation%3D%227%22%20result%3D%22b%22%2F%3E%3CfeMerge%3E%3CfeMergeNode%20in%3D%22b%22%2F%3E%3CfeMergeNode%20in%3D%22SourceGraphic%22%2F%3E%3C%2FfeMerge%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3Crect%20x%3D%2212%22%20y%3D%2212%22%20width%3D%22488%22%20height%3D%22488%22%20rx%3D%2292%22%20fill%3D%22url%28%23bg%29%22%20stroke%3D%22%23398cff%22%20stroke-width%3D%228%22%2F%3E%3Cpath%20d%3D%22M100%20250%20Q255%2038%20430%20250%20Q260%20470%2082%20270%22%20fill%3D%22none%22%20stroke%3D%22url%28%23gold%29%22%20stroke-width%3D%2217%22%20stroke-linecap%3D%22round%22%20filter%3D%22url%28%23glow%29%22%2F%3E%3Cpath%20d%3D%22M125%20155%20V350%20M125%20252%20L220%20155%20M125%20252%20L220%20350%22%20fill%3D%22none%22%20stroke%3D%22url%28%23silver%29%22%20stroke-width%3D%2234%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M265%20155%20V350%20M265%20252%20H370%20M370%20155%20V350%22%20fill%3D%22none%22%20stroke%3D%22url%28%23blue%29%22%20stroke-width%3D%2234%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%2339d8ff%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22%20filter%3D%22url%28%23glow%29%22%3E%3Cpath%20d%3D%22M212%20105%20C190%2078%20220%2055%20242%2072%20C260%2042%20300%2054%20302%2080%20C333%2073%20347%20110%20326%20128%20C336%20155%20300%20170%20281%20151%20C260%20172%20224%20157%20230%20132%20C207%20132%20198%20117%20212%20105Z%22%2F%3E%3Cpath%20d%3D%22M264%2069%20V151%20M230%20100%20L251%20112%20L230%20132%20M299%2092%20L278%20112%20L300%20132%22%2F%3E%3C%2Fg%3E%3Ctext%20x%3D%22256%22%20y%3D%22430%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2Csans-serif%22%20font-size%3D%2248%22%20font-weight%3D%22900%22%20fill%3D%22%23f4f7ff%22%3EHK-AI%3C%2Ftext%3E%3C%2Fsvg%3E">
-<div class="welcome-tag">✦ هوش مصنوعی برای دانش و انسان</div>
-<h1>به HK AI خوش آمدید</h1>
-<p>همراه هوشمند شما برای یادگیری، نوشتن، ترجمه، برنامه‌نویسی، تحلیل و پاسخ به پرسش‌ها.</p>
-<div class="suggestions">
-<button class="suggestion" data-prompt="هوش مصنوعی چیست؟ به زبان ساده توضیح بده."><span class="suggestion-icon">✨</span><span>هوش مصنوعی چیست؟</span></button>
-<button class="suggestion" data-prompt="یک برنامه برای یادگیری زبان انگلیسی برایم بساز."><span class="suggestion-icon">📚</span><span>یادگیری زبان انگلیسی</span></button>
-<button class="suggestion" data-prompt="یک کد ساده HTML برای ساخت وب‌سایت بنویس."><span class="suggestion-icon">💻</span><span>کمک در برنامه‌نویسی</span></button>
-<button class="suggestion" data-prompt="امکانات و کاربردهای مهم هوش مصنوعی را توضیح بده."><span class="suggestion-icon">🧠</span><span>پرسش عمومی</span></button>
-</div>
-</section>
-<section id="chat" aria-live="polite"></section>
-</main>
-<div class="composer-area">
-<div class="composer">
-<div class="file-preview" id="filePreview">
-<span id="fileName">فایل انتخاب شد</span>
-<button class="remove-file" id="removeFile" title="حذف فایل">×</button>
-</div>
-<div class="input-box">
-<button class="send-btn" id="sendBtn" title="ارسال پیام">➤</button>
-<textarea id="messageInput" rows="1" placeholder="پیام خود را بنویسید..."></textarea>
-<button class="attach-btn" id="attachBtn" title="افزودن PDF">＋</button>
-<input type="file" id="fileInput" accept=".pdf,application/pdf">
-</div>
-<div class="footer-note">HK AI ممکن است گاهی اشتباه کند؛ پاسخ‌های مهم را بررسی کنید.</div>
-</div>
-</div>
-</div>
-<script>
+
 if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 const $=id=>document.getElementById(id);
 const chat=$("chat"),welcome=$("welcome"),input=$("messageInput"),sendBtn=$("sendBtn"),attachBtn=$("attachBtn"),fileInput=$("fileInput"),filePreview=$("filePreview"),fileName=$("fileName");
-const STORAGE_KEY="hk_ai_chat_history_v2";
+
+const STORAGE_KEY="hk_ai_chat_history_v3";
+const MAX_AGE=24*60*60*1000;
+
 let messages=[],busy=false,selectedDocument="",selectedFile=null;
 
+function isRecent(message){
+return Number.isFinite(message.timestamp)&&
+(Date.now()-message.timestamp>=0)&&
+(Date.now()-message.timestamp<MAX_AGE);
+}
+
 function saveHistory(){
-try{localStorage.setItem(STORAGE_KEY,JSON.stringify(messages.slice(-40)))}catch(e){console.warn("History storage unavailable",e)}
+try{
+localStorage.setItem(
+STORAGE_KEY,
+JSON.stringify(messages.slice(-40))
+);
+}catch(e){
+console.warn("History storage unavailable",e);
+}
 }
 
 function escapeHTML(s){
-return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))
+return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
 function safeURL(url){
-try{const u=new URL(url);return ["http:","https:"].includes(u.protocol)?u.href:""}catch{return ""}
+try{
+const u=new URL(url);
+return ["http:","https:"].includes(u.protocol)?u.href:"";
+}catch{
+return "";
+}
 }
 
 function renderMarkdown(raw){
 let s=escapeHTML(raw);
 const blocks=[];
+
 s=s.replace(/```([\w+-]*)\n?([\s\S]*?)```/g,(_,lang,code)=>{
 const n=blocks.length;
 blocks.push(`<pre><code>${code.trim()}</code></pre>`);
-return `@@BLOCK${n}@@`
+return `@@BLOCK${n}@@`;
 });
+
 s=s.replace(/`([^`]+)`/g,"<code>$1</code>");
 s=s.replace(/^### (.+)$/gm,"<h4>$1</h4>").replace(/^## (.+)$/gm,"<h3>$1</h3>").replace(/^# (.+)$/gm,"<h3>$1</h3>");
 s=s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>");
+
 s=s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(_,label,url)=>{
 const safe=safeURL(url);
-return safe?`<a href="${safe}" target="_blank" rel="noopener noreferrer">${label}</a>`:label
+return safe?`<a href="${safe}" target="_blank" rel="noopener noreferrer">${label}</a>`:label;
 });
+
 s=s.replace(/^\s*[-*] (.+)$/gm,"<li>$1</li>").replace(/(?:<li>[\s\S]*?<\/li>\n?)+/g,m=>`<ul>${m}</ul>`);
+
 s=s.split(/\n{2,}/).map(part=>{
 if(/^@@BLOCK\d+@@$/.test(part))return part;
 if(part.startsWith("<h")||part.startsWith("<ul>"))return part;
-return `<p>${part.replace(/\n/g,"<br>")}</p>`
+return `<p>${part.replace(/\n/g,"<br>")}</p>`;
 }).join("");
+
 s=s.replace(/@@BLOCK(\d+)@@/g,(_,n)=>blocks[Number(n)]);
-return s
+return s;
 }
 
-function addMessage(role,content,save=true){
+function addMessage(role,content,save=true,timestamp=Date.now()){
 const wrap=document.createElement("div");
 wrap.className="message "+role;
+
 const label=document.createElement("div");
 label.className="message-label";
 label.textContent=role==="user"?"شما":"HK AI";
+
 const body=document.createElement("div");
 body.className="message-content";
+
 if(role==="assistant")body.innerHTML=renderMarkdown(content);
 else body.textContent=content;
+
 wrap.append(label,body);
+
 if(role==="assistant"){
 const actions=document.createElement("div");
 actions.className="message-actions";
+
 const copy=document.createElement("button");
 copy.className="copy-btn";
 copy.textContent="کاپی پاسخ";
+
 copy.addEventListener("click",async()=>{
-try{await navigator.clipboard.writeText(content);copy.textContent="کاپی شد ✓"}catch{copy.textContent="کاپی نشد"}
-});
-actions.append(copy);
-wrap.append(actions)
+try{
+await navigator.clipboard.writeText(content);
+copy.textContent="کاپی شد ✓";
+}catch{
+copy.textContent="کاپی نشد";
 }
+});
+
+actions.append(copy);
+wrap.append(actions);
+}
+
 chat.append(wrap);
-if(save)saveHistory();
-return wrap
+
+if(save){
+saveHistory();
+}
+
+return wrap;
 }
 
 function showTyping(){
@@ -222,12 +121,12 @@ const el=document.createElement("div");
 el.className="typing";
 el.id="typing";
 el.innerHTML='HK AI در حال نوشتن پاسخ است <span class="typing-dots"><span></span><span></span><span></span></span>';
-chat.append(el)
+chat.append(el);
 }
 
 function removeTyping(){
 const el=$("typing");
-if(el)el.remove()
+if(el)el.remove();
 }
 
 function setBusy(v){
@@ -235,7 +134,7 @@ busy=v;
 sendBtn.disabled=v;
 input.disabled=v;
 attachBtn.disabled=v;
-sendBtn.textContent=v?"…":"➤"
+sendBtn.textContent=v?"…":"➤";
 }
 
 function clearSelectedFile(){
@@ -243,126 +142,234 @@ selectedDocument="";
 selectedFile=null;
 fileInput.value="";
 filePreview.classList.remove("show");
-fileName.textContent=""
+fileName.textContent="";
 }
 
 async function extractPDF(file){
 if(!window.pdfjsLib)throw new Error("ابزار خواندن PDF بارگذاری نشد؛ اینترنت را بررسی کنید.");
 if(file.size>10*1024*1024)throw new Error("حجم فایل PDF نباید بیشتر از ۱۰ مگابایت باشد.");
+
 const pdf=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+
 if(pdf.numPages>30)throw new Error("فایل PDF نباید بیشتر از ۳۰ صفحه باشد.");
+
 let text="";
+
 for(let n=1;n<=pdf.numPages;n++){
-const page=await pdf.getPage(n),content=await page.getTextContent();
+const page=await pdf.getPage(n);
+const content=await page.getTextContent();
+
 text+=content.items.map(x=>x.str).join(" ")+"\n";
-if(text.length>30000){text=text.slice(0,30000);break}
+
+if(text.length>30000){
+text=text.slice(0,30000);
+break;
 }
+}
+
 if(!text.trim())throw new Error("متنی در این PDF پیدا نشد؛ شاید فایل اسکن‌شده باشد.");
-return text
+
+return text;
 }
 
 async function sendMessage(customText=null){
 if(busy)return;
+
 const text=(customText!==null?customText:input.value).trim();
+
 if(!text&&!selectedFile)return;
+
 let userText=text;
-if(selectedFile&&selectedDocument)userText=(text?text+"\n\n":"لطفاً محتوای فایل PDF پیوست‌شده را بررسی کن: ")+"فایل PDF: "+selectedFile.name;
+
+if(selectedFile&&selectedDocument){
+userText=(text?text+"\n\n":"لطفاً محتوای فایل PDF پیوست‌شده را بررسی کن: ")+"فایل PDF: "+selectedFile.name;
+}
+
 if(!userText)return;
+
 welcome.style.display="none";
+
+const userTimestamp=Date.now();
+
+messages.push({
+role:"user",
+content:userText,
+timestamp:userTimestamp
+});
+
 addMessage("user",userText,false);
-messages.push({role:"user",content:userText});
 saveHistory();
+
 input.value="";
 input.style.height="44px";
+
 setBusy(true);
 showTyping();
+
 try{
-const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),90000);
+const controller=new AbortController();
+const timeout=setTimeout(()=>controller.abort(),90000);
+
 let response;
+
 try{
 response=await fetch("/api/chat",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
-body:JSON.stringify({messages:messages.slice(-20),document:selectedDocument}),
+body:JSON.stringify({
+messages:messages.slice(-20).map(m=>({
+role:m.role,
+content:m.content
+})),
+document:selectedDocument
+}),
 signal:controller.signal
-})
-}finally{clearTimeout(timeout)}
+});
+}finally{
+clearTimeout(timeout);
+}
+
 let data;
-try{data=await response.json()}catch{throw new Error("پاسخ سرور قابل خواندن نیست.")}
+
+try{
+data=await response.json();
+}catch{
+throw new Error("پاسخ سرور قابل خواندن نیست.");
+}
+
 if(!response.ok)throw new Error(data.error||"خطا در ارتباط با سرور.");
-if(typeof data.reply!=="string"||!data.reply.trim())throw new Error("پاسخ خالی از سرور دریافت شد.");
-messages.push({role:"assistant",content:data.reply});
+
+if(typeof data.reply!=="string"||!data.reply.trim()){
+throw new Error("پاسخ خالی از سرور دریافت شد.");
+}
+
+const assistantTimestamp=Date.now();
+
+messages.push({
+role:"assistant",
+content:data.reply,
+timestamp:assistantTimestamp
+});
+
 removeTyping();
-addMessage("assistant",data.reply);
-clearSelectedFile()
+addMessage("assistant",data.reply,false);
+saveHistory();
+
+clearSelectedFile();
+
 }catch(error){
+
 messages.pop();
 saveHistory();
 removeTyping();
-const msg=error.name==="AbortError"?"زمان پاسخ‌گویی سرور تمام شد؛ دوباره تلاش کنید.":(error.message||"ارتباط با سرور برقرار نشد.");
+
+const msg=error.name==="AbortError"
+?"زمان پاسخ‌گویی سرور تمام شد؛ دوباره تلاش کنید."
+:(error.message||"ارتباط با سرور برقرار نشد.");
+
 const node=addMessage("assistant","متأسفم، مشکلی پیش آمد:\n"+msg,false);
-node.querySelector(".message-content").classList.add("error-note")
+node.querySelector(".message-content").classList.add("error-note");
+
 }finally{
 removeTyping();
-setBusy(false)
+setBusy(false);
 }
 }
 
 sendBtn.addEventListener("click",()=>sendMessage());
+
 input.addEventListener("keydown",e=>{
-if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage()}
+if(e.key==="Enter"&&!e.shiftKey){
+e.preventDefault();
+sendMessage();
+}
 });
+
 input.addEventListener("input",()=>{
 input.style.height="44px";
-input.style.height=Math.min(input.scrollHeight,140)+"px"
+input.style.height=Math.min(input.scrollHeight,140)+"px";
 });
+
 attachBtn.addEventListener("click",()=>fileInput.click());
 
 fileInput.addEventListener("change",async()=>{
 const file=fileInput.files[0];
 if(!file)return;
+
 if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf")){
 alert("لطفاً فقط فایل PDF انتخاب کنید.");
 clearSelectedFile();
-return
+return;
 }
+
 selectedFile=file;
 fileName.textContent="در حال خواندن: "+file.name;
 filePreview.classList.add("show");
+
 try{
 selectedDocument=await extractPDF(file);
-fileName.textContent="✓ "+file.name+" آماده ارسال است"
-}catch(e){alert(e.message);clearSelectedFile()}
+fileName.textContent="✓ "+file.name+" آماده ارسال است";
+}catch(e){
+alert(e.message);
+clearSelectedFile();
+}
 });
 
 $("removeFile").addEventListener("click",clearSelectedFile);
-document.querySelectorAll(".suggestion").forEach(b=>b.addEventListener("click",()=>sendMessage(b.dataset.prompt)));
+
+document.querySelectorAll(".suggestion").forEach(b=>{
+b.addEventListener("click",()=>sendMessage(b.dataset.prompt));
+});
 
 $("newChatBtn").addEventListener("click",()=>{
 if(busy)return;
+
 messages=[];
 chat.innerHTML="";
 clearSelectedFile();
-try{localStorage.removeItem(STORAGE_KEY)}catch(e){console.warn(e)}
+
+try{
+localStorage.removeItem(STORAGE_KEY);
+}catch(e){
+console.warn(e);
+}
+
 welcome.style.display="block";
 input.value="";
-input.style.height="44px"
+input.style.height="44px";
 });
 
 function restoreHistory(){
 try{
+
 const raw=localStorage.getItem(STORAGE_KEY);
+
 if(!raw)return;
+
 const list=JSON.parse(raw);
+
 if(!Array.isArray(list))return;
-messages=list.slice(-40).filter(m=>m&&(m.role==="user"||m.role==="assistant")&&typeof m.content==="string");
+
+messages=list.filter(m=>
+m&&
+(m.role==="user"||m.role==="assistant")&&
+typeof m.content==="string"&&
+isRecent(m)
+).slice(-40);
+
+saveHistory();
+
 if(messages.length){
 welcome.style.display="none";
-messages.forEach(m=>addMessage(m.role,m.content,false))
+
+messages.forEach(m=>{
+addMessage(m.role,m.content,false,m.timestamp);
+});
 }
-}catch(e){console.warn("Could not restore history",e)}
+
+}catch(e){
+console.warn("Could not restore history",e);
 }
+}
+
 restoreHistory();
-</script>
-</body>
-</html>
