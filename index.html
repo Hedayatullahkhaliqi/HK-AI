@@ -720,6 +720,73 @@ body:before{
   .message{animation:none}
 }
 
+
+/* HK.AI — stronger visual identity pass */
+.header{
+  border-color:rgba(180,211,235,.42);
+  box-shadow:0 20px 55px rgba(0,0,0,.42),0 0 34px rgba(93,157,202,.10),inset 0 1px rgba(255,255,255,.12);
+}
+.brand-sub{color:#b9cddd}
+.logo,.welcome-logo{
+  position:relative;
+  overflow:visible;
+}
+.logo:after{
+  content:"";
+  position:absolute;
+  inset:-5px;
+  border:1px solid rgba(174,215,245,.24);
+  border-radius:21px;
+  pointer-events:none;
+}
+.welcome{
+  border-color:rgba(166,207,235,.34);
+  box-shadow:0 30px 90px rgba(0,0,0,.46),0 0 55px rgba(79,143,188,.10),inset 0 1px rgba(255,255,255,.09);
+}
+.welcome-logo{
+  animation:hkGlow 4s ease-in-out infinite;
+}
+@keyframes hkGlow{
+  0%,100%{box-shadow:0 0 0 8px rgba(166,202,228,.055),0 0 35px rgba(115,177,218,.16),0 18px 42px rgba(0,0,0,.4),inset 0 2px 6px #fff}
+  50%{box-shadow:0 0 0 11px rgba(166,202,228,.075),0 0 58px rgba(115,177,218,.30),0 18px 42px rgba(0,0,0,.4),inset 0 2px 6px #fff}
+}
+.welcome h1{ text-shadow:0 5px 28px rgba(142,190,222,.12) }
+.suggestion{
+  overflow:hidden;
+  min-height:82px;
+  border-color:rgba(158,198,225,.34);
+  background:linear-gradient(145deg,rgba(62,91,113,.78),rgba(14,27,40,.96));
+}
+.suggestion:after{
+  content:"";
+  position:absolute;
+  top:-65%;
+  left:-35%;
+  width:38%;
+  height:220%;
+  transform:rotate(25deg);
+  background:linear-gradient(90deg,transparent,rgba(220,241,255,.09),transparent);
+  transition:left .45s ease;
+}
+.suggestion:active:after{left:110%}
+.input-box:focus-within{
+  border-color:rgba(173,216,244,.72);
+  box-shadow:0 0 0 3px rgba(116,174,213,.10),0 14px 38px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.08);
+}
+.attach-btn,.send-btn{transition:transform .18s ease,filter .18s ease,box-shadow .18s ease}
+.attach-btn:active,.send-btn:active{filter:brightness(1.16)}
+.message-content{backdrop-filter:blur(10px)}
+.footer{letter-spacing:.35px}
+@media(max-width:560px){
+  .welcome{min-height:470px}
+  .suggestion{min-height:78px}
+  .status{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .welcome-logo{animation:none}
+  .suggestion:after{transition:none}
+}
+
 </style>
 </head>
 
