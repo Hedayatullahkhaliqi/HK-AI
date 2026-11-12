@@ -59,8 +59,7 @@ export async function onRequestPost({ request, env }) {
     let result = {};
     try { result = responseText ? JSON.parse(responseText) : {}; } catch {}
     if (!upstream.ok) {
-      const detail = result.error?.message || result.message || result.detail || responseText || "بدون جزئیات از Gemini";
-      const message = "Gemini API (" + upstream.status + "): " + String(detail).slice(0, 350);
+      const message = "Gemini درخواست تبدیل صدا را نپذیرفت (HTTP " + upstream.status + ").";
       return json({ error: message }, upstream.status >= 500 ? 502 : upstream.status);
     }
 
