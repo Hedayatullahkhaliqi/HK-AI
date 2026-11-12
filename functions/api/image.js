@@ -27,12 +27,23 @@ export async function onRequestPost({request,env}){
         return json({error:"فرمت تصویر برای ویرایش پشتیبانی نمی‌شود."},400);
       }
 
-      const result=await env.AI.run("@cf/runwayml/stable-diffusion-v1-5-inpainting",{
-        prompt,
-        image_b64:inputImage.split(",")[1],
-        strength:0.25,
-        num_steps:12,
-        guidance:7.5
+      const imageMatch=inputImage.match(/^data:image\\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/i);
+      const mime="image/"+(imageMatch[1].toLowerCase()==="jpg"?"jpeg":imageMatch[1].toLowerCase());
+      const binary=atob(imageMatch[2]);
+      const imageBytes=new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++)imageBytes[i]=binary.charCodeAt(i);
+
+      const form=new FormData();
+      form.append("prompt",prompt);
+      form.append("input_image_0",new Blob([imageBytes],{type:mime}),"input-image");
+      form.append("width","1024");
+      form.append("height","1024");
+      const serialized=new Response(form);
+      const result=await env.AI.run("@cf/black-forest-labs/flux-2-klein-4b",{
+        multipart:{
+          body:serialized.body,
+          contentType:serialized.headers.get("content-type")
+        }
       });
 
       if(result instanceof Response){
@@ -44,7 +55,13 @@ export async function onRequestPost({request,env}){
       if(result instanceof ArrayBuffer||ArrayBuffer.isView(result)){
         return new Response(result,{headers:{"Content-Type":"image/png","Cache-Control":"no-store"}});
       }
-      throw new Error("مدل رایگان ویرایش تصویر خروجی قابل استفاده برنگرداند.");
+      if(result?.image&&typeof result.image==="string"){
+        const raw=atob(result.image);
+        const bytes=new Uint8Array(raw.length);
+        for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+        return new Response(bytes,{headers:{"Content-Type":"image/png","Cache-Control":"no-store"}});
+      }
+      throw new Error("مدل رایگان/سهمیه‌ای ویرایش تصویر خروجی قابل استفاده برنگرداند.");
     }
 
     const image=await env.AI.run("@cf/black-forest-labs/flux-1-schnell",{
