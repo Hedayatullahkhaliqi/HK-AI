@@ -1594,7 +1594,7 @@ function setComposerMicRecording(active){
   button.setAttribute("aria-label",active?"پایان ضبط صدا":"شروع ضبط صدا");
 }
 
-function finishVoiceTurn(){
+function finishVoiceTurn(finalMessage=null){
   // Voice mode is one turn only: never reopen the microphone automatically.
   voiceMode=false;
   setComposerMicRecording(false);
@@ -1603,7 +1603,8 @@ function finishVoiceTurn(){
   if(voiceRecorder&&voiceRecorder.state!=="inactive"){
     try{voiceRecorder.stop()}catch{}
   }
-  setVoiceStatus("🎙 برای صحبت دوباره میکروفون را بزن");
+  // Keep useful errors visible instead of immediately overwriting them.
+  setVoiceStatus(finalMessage||"🎙 برای صحبت دوباره میکروفون را بزن");
 }
 
 async function speakReply(text){
@@ -1697,8 +1698,7 @@ async function startVoiceInput(){
         sendMessage(transcript);
       }catch(error){
         console.warn("Gemini Dari transcription:",error);
-        setVoiceStatus("🎙 "+(error.message||"تبدیل صدا به متن ناموفق شد."));
-        finishVoiceTurn();
+        finishVoiceTurn("⚠️ خطای تشخیص گفتار: "+(error.message||"تبدیل صدا به متن ناموفق شد."));
       }
     };
     // Request periodic audio chunks for more reliable capture on iOS Safari.
