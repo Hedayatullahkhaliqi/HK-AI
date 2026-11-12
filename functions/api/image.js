@@ -27,7 +27,7 @@ export async function onRequestPost({request,env}){
         return json({error:"فرمت تصویر برای ویرایش پشتیبانی نمی‌شود."},400);
       }
 
-      const result=await env.AI.run("@cf/black-forest-labs/flux-1-kontext-pro",{
+      const result=await env.AI.run("black-forest-labs/flux-1-kontext-pro",{
         prompt,
         input_image:inputImage.split(",")[1],
         output_format:"jpeg"
