@@ -1,0 +1,84 @@
+const MODEL = "gemini-3.8-flash-tts";
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store"
+    }
+  });
+}
+
+export async function onRequestPost({ request, env }) {
+  try {
+    if (!env.GEMINI_API_KEY) {
+      return json({ error: "کلید Gemini در تنظیمات امن Cloudflare تنظیم نشده است." }, 503);
+    }
+
+    const body = await request.json();
+    const text = typeof body.text === "string" ? body.text.trim() : "";
+
+    if (!text) return json({ error: "متنی برای خواندن فرستاده نشده است." }, 400);
+    if (text.length > 1800) {
+      return json({ error: "متن برای صداسازی بیش از حد طولانی است." }, 413);
+    }
+
+    const prompt =
+      "Read the following text aloud in natural Persian as spoken in Afghanistan (Afghan Dari). " +
+      "Use an authentic Afghan Dari accent and pronunciation, not an Iranian Persian accent. " +
+      "Speak warmly, clearly, and conversationally at a natural pace. " +
+      "Do not translate, summarize, or add any words. Read only the supplied text:\n\n" +
+      text;
+
+    const upstream = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": env.GEMINI_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        input: prompt,
+        response_format: { type: "audio" },
+        generation_config: {
+          speech_config: [{ voice: "Kore" }]
+        }
+      })
+    });
+
+    const result = await upstream.json().catch(() => ({}));
+
+    if (!upstream.ok) {
+      const message = result.error?.message || "سرویس صداسازی Gemini پاسخ موفق نداد.";
+      return json({ error: message.slice(0, 500) }, upstream.status >= 500 ? 502 : upstream.status);
+    }
+
+    const audioBase64 =
+      result.interaction?.output_audio?.data ||
+      result.output_audio?.data ||
+      result.interaction?.outputAudio?.data ||
+      result.outputAudio?.data;
+
+    if (typeof audioBase64 !== "string" || !audioBase64) {
+      return json({ error: "Gemini فایل صوتی برنگرداند. لطفاً دوباره تلاش کن." }, 502);
+    }
+
+    const binary = atob(audioBase64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+    return new Response(bytes, {
+      status: 200,
+      headers: {
+        "Content-Type": "audio/wav",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff"
+      }
+    });
+  } catch (error) {
+    return json({
+      error: error?.message || "در صداسازی خطایی رخ داد."
+    }, 500);
+  }
+}
