@@ -23,7 +23,7 @@ export async function onRequestPost({request,env}){
       if(inputImage.length>MAX_IMAGE_LENGTH){
         return json({error:"حجم تصویر زیاد است. لطفاً عکس کوچک‌تری انتخاب کن."},413);
       }
-      if(!/^data:image\\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/i.test(inputImage)){
+      if(!/^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/i.test(inputImage)){
         return json({error:"فرمت تصویر برای ویرایش پشتیبانی نمی‌شود."},400);
       }
 
@@ -39,7 +39,7 @@ export async function onRequestPost({request,env}){
       }
 
       if(imageUrl.startsWith("data:image/")){
-        const match=imageUrl.match(/^data:image\\/(png|jpeg|jpg|webp);base64,(.+)$/i);
+        const match=imageUrl.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/i);
         if(!match)throw new Error("فرمت تصویر خروجی معتبر نیست.");
         const binary=atob(match[2]);
         const bytes=new Uint8Array(binary.length);
@@ -63,7 +63,7 @@ export async function onRequestPost({request,env}){
       return new Response(image,{headers:{"Content-Type":"image/png","Cache-Control":"no-store"}});
     }
     if(typeof image==="string"&&image.startsWith("data:image/")){
-      const match=image.match(/^data:image\\/(png|jpeg|jpg|webp);base64,(.+)$/i);
+      const match=image.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/i);
       if(!match)throw new Error("فرمت تصویر خروجی معتبر نیست.");
       const binary=atob(match[2]),bytes=new Uint8Array(binary.length);
       for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
