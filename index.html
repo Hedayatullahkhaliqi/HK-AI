@@ -1536,16 +1536,19 @@ $("generateImage").addEventListener("click",async()=>{
   finally{button.disabled=false;}
 });
 
-const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-let recognition=null;
 let voiceMode=false;
 let voiceAudio=null;
 let voiceAudioUrl=null;
+let voiceRecorder=null;
+let voiceStream=null;
+let voiceChunks=[];
+
 function finishVoiceTurn(){
   if(!voiceMode)return;
   $("voiceBtn").textContent="🎙 پاسخ تمام شد؛ دوباره گوش می‌دهد…";
-  setTimeout(()=>{if(voiceMode&&!recognition)startVoiceInput();},350);
+  setTimeout(()=>{if(voiceMode&&!voiceRecorder)startVoiceInput();},500);
 }
+
 async function speakReply(text){
   if(!voiceMode)return;
   const spokenText=String(text||"").replace(/```[\\s\\S]*?```/g,"کد در پاسخ نوشته شده است").slice(0,1800);
@@ -1576,38 +1579,101 @@ async function speakReply(text){
       $("voiceBtn").textContent="🔊 صدای جایگزین مرورگر";
     }else{
       $("voiceBtn").textContent="🎙 صداسازی در دسترس نیست";
+      finishVoiceTurn();
     }
   }
 }
-function startVoiceInput(){
-  if(!SpeechRecognition){$("voiceBtn").textContent="🎙 گفتار در این مرورگر پشتیبانی نمی‌شود";voiceMode=false;return;}
-  if(recognition)return;
-  recognition=new SpeechRecognition();
-  recognition.lang="fa-AF";recognition.continuous=false;recognition.interimResults=false;recognition.maxAlternatives=1;
-  $("voiceBtn").textContent="🔴 گوش می‌دهد… (برای توقف بزن)";
-  recognition.onresult=e=>{
-    const transcript=e.results?.[0]?.[0]?.transcript||"";
-    if(!transcript.trim())return;
-    input.value=transcript;input.dispatchEvent(new Event("input"));sendMessage();
-  };
-  recognition.onerror=e=>{
-    console.warn("Speech recognition:",e.error);
-    if(e.error==="not-allowed"||e.error==="service-not-allowed"){voiceMode=false;$("voiceBtn").textContent="🎙 اجازهٔ میکروفون داده نشد";return;}
-  };
-  recognition.onend=()=>{recognition=null;if(voiceMode&&!busy)$("voiceBtn").textContent="🎙 آمادهٔ شنیدن";}
-  try{recognition.start()}catch{recognition=null;$("voiceBtn").textContent="🎙 دوباره تلاش کن";}
+
+async function startVoiceInput(){
+  if(voiceRecorder)return;
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
+    voiceMode=false;
+    $("voiceBtn").textContent="🎙 ضبط صدا در این مرورگر پشتیبانی نمی‌شود";
+    return;
+  }
+  try{
+    voiceStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    if(!voiceMode){voiceStream.getTracks().forEach(track=>track.stop());voiceStream=null;return;}
+    const mimeChoices=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus"];
+    const mimeType=mimeChoices.find(type=>MediaRecorder.isTypeSupported(type));
+    voiceRecorder=mimeType?new MediaRecorder(voiceStream,{mimeType}):new MediaRecorder(voiceStream);
+    voiceChunks=[];
+    voiceRecorder.ondataavailable=event=>{if(event.data&&event.data.size)voiceChunks.push(event.data);};
+    voiceRecorder.onerror=event=>{
+      console.warn("Audio recording:",event.error);
+      $("voiceBtn").textContent="🎙 در ضبط صدا مشکل پیش آمد";
+    };
+    voiceRecorder.onstop=async()=>{
+      const recorderMime=voiceRecorder?.mimeType||voiceChunks[0]?.type||"audio/mp4";
+      const audioBlob=new Blob(voiceChunks,{type:recorderMime});
+      voiceStream?.getTracks().forEach(track=>track.stop());
+      voiceStream=null;
+      voiceRecorder=null;
+      voiceChunks=[];
+      if(!voiceMode)return;
+      if(!audioBlob.size){
+        $("voiceBtn").textContent="🎙 صدایی ضبط نشد؛ دوباره بزن";
+        finishVoiceTurn();
+        return;
+      }
+      $("voiceBtn").textContent="⌛ در حال تشخیص گفتار دری…";
+      try{
+        const reader=new FileReader();
+        const audioBase64=await new Promise((resolve,reject)=>{
+          reader.onload=()=>resolve(String(reader.result).split(",")[1]||"");
+          reader.onerror=()=>reject(new Error("خواندن فایل صوتی ناموفق شد."));
+          reader.readAsDataURL(audioBlob);
+        });
+        const response=await fetch("/api/transcribe",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({audio:audioBase64,mimeType:audioBlob.type||"audio/mp4"})
+        });
+        const data=await response.json().catch(()=>({}));
+        if(!response.ok)throw new Error(data.error||"تشخیص گفتار انجام نشد.");
+        const transcript=String(data.transcript||"").trim();
+        if(!transcript)throw new Error("گفتاری تشخیص داده نشد؛ دوباره کوشش کن.");
+        if(!voiceMode)return;
+        $("messageInput").value=transcript;
+        $("messageInput").dispatchEvent(new Event("input"));
+        sendMessage(transcript);
+      }catch(error){
+        console.warn("Gemini Dari transcription:",error);
+        $("voiceBtn").textContent="🎙 "+(error.message||"تبدیل صدا به متن ناموفق شد.");
+        finishVoiceTurn();
+      }
+    };
+    voiceRecorder.start();
+    $("voiceBtn").textContent="🔴 گوش می‌دهد… برای پایان صحبت دوباره بزن";
+  }catch(error){
+    console.warn("Microphone access:",error);
+    voiceStream?.getTracks().forEach(track=>track.stop());
+    voiceStream=null;
+    voiceRecorder=null;
+    voiceMode=false;
+    $("voiceBtn").textContent=error.name==="NotAllowedError"?"🎙 اجازهٔ میکروفون داده نشد":"🎙 میکروفون فعال نشد؛ دوباره تلاش کن";
+  }
 }
+
 $("voiceBtn").addEventListener("click",()=>{
   if(voiceMode){
+    if(voiceRecorder&&voiceRecorder.state==="recording"){
+      $("voiceBtn").textContent="⌛ در حال تبدیل صدا به متن…";
+      voiceRecorder.stop();
+      return;
+    }
     voiceMode=false;
-    if(recognition){try{recognition.stop()}catch{}recognition=null;}
+    if(voiceRecorder&&voiceRecorder.state!=="inactive"){try{voiceRecorder.stop()}catch{}}
+    voiceStream?.getTracks().forEach(track=>track.stop());
+    voiceStream=null;
     if("speechSynthesis" in window)window.speechSynthesis.cancel();
     if(voiceAudio){voiceAudio.pause();voiceAudio=null;}
     if(voiceAudioUrl){URL.revokeObjectURL(voiceAudioUrl);voiceAudioUrl=null;}
-    $("voiceBtn").textContent="🎙 گفت‌وگوی صوتی";
+    $("voiceBtn").textContent="🎙 صحبت کردن";
     return;
   }
-  voiceMode=true;startVoiceInput();
+  voiceMode=true;
+  startVoiceInput();
 });
 
 const TASK_KEY="hk_ai_planner_tasks_v1";
