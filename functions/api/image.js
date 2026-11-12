@@ -87,6 +87,6 @@ export async function onRequestPost({request,env}){
     }
     throw new Error("مدل ساخت تصویر خروجی قابل استفاده برنگرداند.");
   }catch(error){
-    return json({error:"عملیات تصویر انجام نشد: "+String(error?.message||error)},500);
+    return json({error:"عملیات تصویر فعلاً انجام نشد. لطفاً بعداً دوباره کوشش کن."},500);
   }
 }
