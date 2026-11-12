@@ -1689,7 +1689,8 @@ async function startVoiceInput(){
         finishVoiceTurn();
       }
     };
-    voiceRecorder.start();
+    // Request periodic audio chunks for more reliable capture on iOS Safari.
+    voiceRecorder.start(250);
     setComposerMicRecording(true);
     $("voiceBtn").textContent="🔴 گوش می‌دهد… برای پایان صحبت دوباره بزن";
   }catch(error){
@@ -1703,9 +1704,7 @@ async function startVoiceInput(){
   }
 }
 
-$("composerMicBtn").addEventListener("click",()=>$("voiceBtn").click());
-
-$("voiceBtn").addEventListener("click",()=>{
+async function handleVoiceButton(){
   if(voiceMode){
     if(voiceRecorder&&voiceRecorder.state==="recording"){
       $("voiceBtn").textContent="⌛ در حال تبدیل صدا به متن…";
@@ -1724,8 +1723,13 @@ $("voiceBtn").addEventListener("click",()=>{
     return;
   }
   voiceMode=true;
-  startVoiceInput();
-});
+  await startVoiceInput();
+}
+
+// Both microphone buttons use the same direct user action.
+// Avoid a synthetic click, which can lose iOS Safari's microphone permission gesture.
+$("composerMicBtn").addEventListener("click",handleVoiceButton);
+$("voiceBtn").addEventListener("click",handleVoiceButton);
 
 const TASK_KEY="hk_ai_planner_tasks_v1";
 function getTasks(){try{return JSON.parse(localStorage.getItem(TASK_KEY)||"[]")}catch{return []}}
