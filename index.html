@@ -285,6 +285,16 @@ button{cursor:pointer}
   color:#ffdada;
 }
 
+.message-image{
+  display:block;
+  max-width:100%;
+  max-height:280px;
+  margin-top:10px;
+  border-radius:12px;
+  border:1px solid #87939e;
+  object-fit:contain;
+}
+
 .typing{
   width:max-content;
   margin:12px auto;
@@ -324,6 +334,7 @@ button{cursor:pointer}
   display:none;
   align-items:center;
   justify-content:space-between;
+  gap:10px;
   padding:10px 13px;
   margin-bottom:9px;
   border:1px solid #626f7a;
@@ -335,11 +346,34 @@ button{cursor:pointer}
 
 .file-preview.show{display:flex}
 
+.preview-info{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+#fileName{
+  overflow-wrap:anywhere;
+}
+
+.preview-image{
+  display:none;
+  width:55px;
+  height:55px;
+  object-fit:cover;
+  border-radius:9px;
+  border:1px solid #8995a0;
+}
+
+.preview-image.show{display:block}
+
 .remove-file{
+  flex-shrink:0;
   border:0;
   background:transparent;
   color:#f0a0a0;
-  font-size:18px;
+  font-size:22px;
 }
 
 /* Input direction and button positions */
@@ -471,13 +505,15 @@ button{cursor:pointer}
   <section class="composer">
 
     <div class="file-preview" id="filePreview">
-      <span id="fileName"></span>
-      <button class="remove-file" id="removeFile">×</button>
+      <div class="preview-info">
+        <img id="imagePreview" class="preview-image" alt="پیش‌نمایش عکس">
+        <span id="fileName"></span>
+      </div>
+      <button class="remove-file" id="removeFile" title="حذف فایل">×</button>
     </div>
 
     <div class="input-box">
 
-      <!-- Send button is first so it appears on the right in RTL -->
       <button class="send-btn" id="sendBtn" title="ارسال">➤</button>
 
       <textarea
@@ -486,11 +522,15 @@ button{cursor:pointer}
         placeholder="پیامت را برای HK بنوی..."
       ></textarea>
 
-      <button class="attach-btn" id="attachBtn" title="افزودن PDF">＋</button>
+      <button class="attach-btn" id="attachBtn" title="افزودن عکس یا PDF">＋</button>
 
     </div>
 
-    <input type="file" id="fileInput" accept=".pdf,application/pdf">
+    <input
+      type="file"
+      id="fileInput"
+      accept=".pdf,application/pdf,image/jpeg,image/png,image/webp"
+    >
 
     <div class="footer">
       HK.AI · Hedayatullah Khaliqi
@@ -518,14 +558,17 @@ const attachBtn=$("attachBtn");
 const fileInput=$("fileInput");
 const filePreview=$("filePreview");
 const fileName=$("fileName");
+const imagePreview=$("imagePreview");
 
 const STORAGE_KEY="hk_ai_chat_history_v3";
 const MAX_AGE=12*60*60*1000;
+const MAX_IMAGE_SIZE=8*1024*1024;
 
 let messages=[];
 let busy=false;
 let selectedDocument="";
 let selectedFile=null;
+let selectedImageData="";
 
 function isRecent(message){
   return Number.isFinite(message.timestamp)&&
@@ -692,8 +735,11 @@ function setBusy(value){
 function clearSelectedFile(){
   selectedDocument="";
   selectedFile=null;
+  selectedImageData="";
   fileInput.value="";
   filePreview.classList.remove("show");
+  imagePreview.classList.remove("show");
+  imagePreview.removeAttribute("src");
   fileName.textContent="";
 }
 
@@ -735,6 +781,64 @@ async function extractPDF(file){
   return text;
 }
 
+// Convert selected image to a smaller JPEG
+function prepareImage(file){
+  return new Promise((resolve,reject)=>{
+    const objectURL=URL.createObjectURL(file);
+    const img=new Image();
+
+    img.onload=()=>{
+      try{
+        const maxDimension=1600;
+        const ratio=Math.min(
+          1,
+          maxDimension/Math.max(img.naturalWidth,img.naturalHeight)
+        );
+
+        const canvas=document.createElement("canvas");
+        canvas.width=Math.max(1,Math.round(img.naturalWidth*ratio));
+        canvas.height=Math.max(1,Math.round(img.naturalHeight*ratio));
+
+        const context=canvas.getContext("2d");
+
+        if(!context){
+          throw new Error("پردازش تصویر در این مرورگر ممکن نیست.");
+        }
+
+        context.drawImage(img,0,0,canvas.width,canvas.height);
+
+        let quality=0.82;
+        let data=canvas.toDataURL("image/jpeg",quality);
+
+        while(data.length>MAX_IMAGE_SIZE&&quality>0.4){
+          quality-=0.1;
+          data=canvas.toDataURL("image/jpeg",quality);
+        }
+
+        if(data.length>MAX_IMAGE_SIZE){
+          throw new Error("حجم تصویر هنوز زیاد است. لطفاً عکس کوچک‌تری انتخاب کن.");
+        }
+
+        URL.revokeObjectURL(objectURL);
+        resolve(data);
+
+      }catch(error){
+        URL.revokeObjectURL(objectURL);
+        reject(error);
+      }
+    };
+
+    img.onerror=()=>{
+      URL.revokeObjectURL(objectURL);
+      reject(new Error(
+        "این تصویر باز نشد. لطفاً عکس را به JPG یا PNG تبدیل کن و دوباره انتخاب کن."
+      ));
+    };
+
+    img.src=objectURL;
+  });
+}
+
 async function sendMessage(customText=null){
   if(busy)return;
 
@@ -749,6 +853,10 @@ async function sendMessage(customText=null){
       "فایل PDF: "+selectedFile.name;
   }
 
+  if(selectedImageData&&!userText){
+    userText="لطفاً این تصویر را بررسی و توضیح بده.";
+  }
+
   if(!userText)return;
 
   welcome.style.display="none";
@@ -761,7 +869,17 @@ async function sendMessage(customText=null){
     timestamp:userTimestamp
   });
 
-  addMessage("user",userText,false);
+  const userNode=addMessage("user",userText,false);
+
+  // Show image in the conversation without saving its data in history
+  if(selectedImageData){
+    const img=document.createElement("img");
+    img.className="message-image";
+    img.src=selectedImageData;
+    img.alt="تصویر ارسال‌شده";
+    userNode.querySelector(".message-content").append(img);
+  }
+
   saveHistory();
 
   input.value="";
@@ -785,7 +903,8 @@ async function sendMessage(customText=null){
             role:m.role,
             content:m.content
           })),
-          document:selectedDocument
+          document:selectedDocument,
+          image:selectedImageData||undefined
         }),
         signal:controller.signal
       });
@@ -802,7 +921,9 @@ async function sendMessage(customText=null){
     }
 
     if(!response.ok){
-      throw new Error(data.error||"خطا در ارتباط با سرور.");
+      throw new Error(
+        data.details||data.error||"خطا در ارتباط با سرور."
+      );
     }
 
     if(typeof data.reply!=="string"||!data.reply.trim()){
@@ -868,19 +989,52 @@ fileInput.addEventListener("change",async()=>{
 
   if(!file)return;
 
-  if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf")){
-    alert("لطفاً فقط فایل PDF انتخاب کنید.");
+  const isPDF=
+    file.type==="application/pdf"||
+    file.name.toLowerCase().endsWith(".pdf");
+
+  const isImage=[
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ].includes(file.type);
+
+  if(!isPDF&&!isImage){
+    alert("لطفاً یک فایل PDF یا عکس JPG، PNG و WebP انتخاب کن.");
     clearSelectedFile();
     return;
   }
 
+  clearSelectedFile();
+
   selectedFile=file;
-  fileName.textContent="در حال خواندن: "+file.name;
   filePreview.classList.add("show");
 
+  if(isPDF){
+    fileName.textContent="در حال خواندن: "+file.name;
+
+    try{
+      selectedDocument=await extractPDF(file);
+      fileName.textContent="✓ PDF آماده ارسال است: "+file.name;
+    }catch(e){
+      alert(e.message);
+      clearSelectedFile();
+    }
+
+    return;
+  }
+
+  // Image processing
+  fileName.textContent="در حال آماده‌سازی تصویر...";
+
   try{
-    selectedDocument=await extractPDF(file);
-    fileName.textContent="✓ "+file.name+" آماده ارسال است";
+    selectedImageData=await prepareImage(file);
+
+    imagePreview.src=selectedImageData;
+    imagePreview.classList.add("show");
+
+    fileName.textContent="✓ عکس آماده ارسال است: "+file.name;
+
   }catch(e){
     alert(e.message);
     clearSelectedFile();
