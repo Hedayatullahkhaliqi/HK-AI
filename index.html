@@ -1583,9 +1583,15 @@ function setComposerMicRecording(active){
 }
 
 function finishVoiceTurn(){
-  if(!voiceMode)return;
-  $("voiceBtn").textContent="🎙 پاسخ تمام شد؛ دوباره گوش می‌دهد…";
-  setTimeout(()=>{if(voiceMode&&!voiceRecorder)startVoiceInput();},500);
+  // Voice mode is one turn only: never reopen the microphone automatically.
+  voiceMode=false;
+  setComposerMicRecording(false);
+  voiceStream?.getTracks().forEach(track=>track.stop());
+  voiceStream=null;
+  if(voiceRecorder&&voiceRecorder.state!=="inactive"){
+    try{voiceRecorder.stop()}catch{}
+  }
+  $("voiceBtn").textContent="🎙 برای صحبت دوباره میکروفون را بزن";
 }
 
 async function speakReply(text){
