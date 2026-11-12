@@ -27,7 +27,7 @@ export async function onRequestPost({request,env}){
         return json({error:"فرمت تصویر برای ویرایش پشتیبانی نمی‌شود."},400);
       }
 
-      const result=await env.AI.run("@cf/runwayml/stable-diffusion-v1-5-img2img",{
+      const result=await env.AI.run("@cf/runwayml/stable-diffusion-v1-5-inpainting",{
         prompt,
         image_b64:inputImage.split(",")[1],
         strength:0.25,
