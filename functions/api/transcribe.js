@@ -17,7 +17,8 @@ export async function onRequestPost({ request, env }) {
     const body = await request.json();
     const audio = typeof body.audio === "string" ? body.audio : "";
     const rawMime = typeof body.mimeType === "string" ? body.mimeType : "";
-    const mimeType = rawMime.split(";")[0].trim().toLowerCase();
+    const detectedMime = rawMime.split(";")[0].trim().toLowerCase();
+    const mimeType = detectedMime === "audio/mp4" ? "audio/m4a" : detectedMime;
 
     if (!audio) return json({ error: "صدایی دریافت نشد. دوباره ضبط کن." }, 400);
     if (audio.length > 12 * 1024 * 1024) {
@@ -25,7 +26,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     const supported = new Set([
-      "audio/mp4", "audio/m4a", "audio/aac", "audio/webm",
+      "audio/m4a", "audio/aac", "audio/webm",
       "audio/ogg", "audio/wav", "audio/mpeg", "audio/mp3"
     ]);
     if (!supported.has(mimeType)) {
