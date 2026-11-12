@@ -1372,6 +1372,7 @@ async function sendMessage(customText=null){
     // Attachment is deliberately kept here for retry
 
   }finally{
+    clearTimeout(timeout);
     removeTyping();
     setBusy(false);
     input.focus();
