@@ -1270,9 +1270,10 @@ async function sendMessage(customText=null){
   setBusy(true);
   showTyping();
 
+  let requestTimeout=null;
   try{
     const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),90000);
+    requestTimeout=setTimeout(()=>controller.abort(),90000);
 
     let response;
 
@@ -1327,7 +1328,7 @@ async function sendMessage(customText=null){
           signal:controller.signal
         });
       }finally{
-        clearTimeout(timeout);
+        clearTimeout(requestTimeout);
       }
 
       let data;
@@ -1352,7 +1353,7 @@ async function sendMessage(customText=null){
       saveHistory();
       clearSelectedFile();
     }
-    clearTimeout(timeout);
+    clearTimeout(requestTimeout);
 
   }catch(error){
     removeTyping();
@@ -1372,7 +1373,7 @@ async function sendMessage(customText=null){
     // Attachment is deliberately kept here for retry
 
   }finally{
-    clearTimeout(timeout);
+    clearTimeout(requestTimeout);
     removeTyping();
     setBusy(false);
     input.focus();
