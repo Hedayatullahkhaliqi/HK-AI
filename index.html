@@ -448,6 +448,16 @@ button{cursor:pointer}
 .mic-btn{
   font-size:22px;
   color:#f2f3f5;
+  transition:background .18s ease,color .18s ease,transform .18s ease;
+}
+.mic-btn.is-recording{
+  color:#fff;
+  background:#e53945;
+  box-shadow:0 0 0 4px rgba(229,57,69,.16);
+  animation:micPulse 1.2s ease-in-out infinite;
+}
+@keyframes micPulse{
+  50%{box-shadow:0 0 0 7px rgba(229,57,69,.08)}
 }
 
 .send-btn{
@@ -1560,6 +1570,15 @@ let voiceRecorder=null;
 let voiceStream=null;
 let voiceChunks=[];
 
+function setComposerMicRecording(active){
+  const button=$("composerMicBtn");
+  if(!button)return;
+  button.classList.toggle("is-recording",!!active);
+  button.textContent=active?"■":"🎙";
+  button.title=active?"برای پایان ضبط بزن":"شروع ضبط صدا";
+  button.setAttribute("aria-label",active?"پایان ضبط صدا":"شروع ضبط صدا");
+}
+
 function finishVoiceTurn(){
   if(!voiceMode)return;
   $("voiceBtn").textContent="🎙 پاسخ تمام شد؛ دوباره گوش می‌دهد…";
@@ -1626,6 +1645,7 @@ async function startVoiceInput(){
       voiceStream?.getTracks().forEach(track=>track.stop());
       voiceStream=null;
       voiceRecorder=null;
+      setComposerMicRecording(false);
       voiceChunks=[];
       if(!voiceMode)return;
       if(!audioBlob.size){
@@ -1661,6 +1681,7 @@ async function startVoiceInput(){
       }
     };
     voiceRecorder.start();
+    setComposerMicRecording(true);
     $("voiceBtn").textContent="🔴 گوش می‌دهد… برای پایان صحبت دوباره بزن";
   }catch(error){
     console.warn("Microphone access:",error);
@@ -1668,6 +1689,7 @@ async function startVoiceInput(){
     voiceStream=null;
     voiceRecorder=null;
     voiceMode=false;
+    setComposerMicRecording(false);
     $("voiceBtn").textContent=error.name==="NotAllowedError"?"🎙 اجازهٔ میکروفون داده نشد":"🎙 میکروفون فعال نشد؛ دوباره تلاش کن";
   }
 }
@@ -1682,6 +1704,7 @@ $("voiceBtn").addEventListener("click",()=>{
       return;
     }
     voiceMode=false;
+    setComposerMicRecording(false);
     if(voiceRecorder&&voiceRecorder.state!=="inactive"){try{voiceRecorder.stop()}catch{}}
     voiceStream?.getTracks().forEach(track=>track.stop());
     voiceStream=null;
