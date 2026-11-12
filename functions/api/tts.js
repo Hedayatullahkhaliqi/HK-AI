@@ -60,8 +60,8 @@ export async function onRequestPost({ request, env }) {
     const result = await upstream.json().catch(() => ({}));
 
     if (!upstream.ok) {
-      const message = result.error?.message || "سرویس صداسازی Gemini پاسخ موفق نداد.";
-      return json({ error: message.slice(0, 500) }, upstream.status >= 500 ? 502 : upstream.status);
+      const message = "سرویس صداسازی درخواست را نپذیرفت (HTTP " + upstream.status + ").";
+      return json({ error: message }, upstream.status >= 500 ? 502 : upstream.status);
     }
 
     const audioBase64 =
