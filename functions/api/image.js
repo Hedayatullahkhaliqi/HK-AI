@@ -27,7 +27,7 @@ export async function onRequestPost({request,env}){
         return json({error:"فرمت تصویر برای ویرایش پشتیبانی نمی‌شود."},400);
       }
 
-      const imageMatch=inputImage.match(/^data:image\\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/i);
+      const imageMatch=inputImage.match(/^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/i);
       const mime="image/"+(imageMatch[1].toLowerCase()==="jpg"?"jpeg":imageMatch[1].toLowerCase());
       const binary=atob(imageMatch[2]);
       const imageBytes=new Uint8Array(binary.length);
