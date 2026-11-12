@@ -14,6 +14,21 @@ export async function onRequest({request,env,next}){
  const max=BODY_LIMITS[url.pathname];if(!max)return reply({error:"Not found"},404,cors);
  const size=Number(request.headers.get("Content-Length")||0);if(size>max)return reply({error:"Request body too large"},413,cors);
  if(!request.headers.get("Content-Type")?.toLowerCase().includes("application/json"))return reply({error:"Content-Type must be application/json"},415,cors);
+ // Approximate per-IP rate limiting backed by a Cloudflare KV namespace.
+ // Create and bind the namespace as HK_RATE_LIMITS in the Pages project.
+ if(env.HK_RATE_LIMITS){
+   const ip=request.headers.get("CF-Connecting-IP")||"unknown";
+   const isImage=url.pathname==="/api/image";
+   const maxRequests=isImage?5:30;
+   const bucket=Math.floor(Date.now()/60000);
+   const key="api-rate:"+url.pathname+":"+ip+":"+bucket;
+   const current=Number(await env.HK_RATE_LIMITS.get(key)||0);
+   if(current>=maxRequests){
+     cors.set("Retry-After","60");
+     return reply({error:"تعداد درخواست‌ها زیاد است. کمی بعد دوباره کوشش کن."},429,cors);
+   }
+   await env.HK_RATE_LIMITS.put(key,String(current+1),{expirationTtl:120});
+ }
  const response=await next();const headers=new Headers(response.headers);for(const [k,v] of cors)headers.set(k,v);secure(headers);
  return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
 }
