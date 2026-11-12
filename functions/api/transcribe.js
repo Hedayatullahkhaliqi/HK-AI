@@ -76,6 +76,6 @@ export async function onRequestPost({ request, env }) {
 
     return json({ transcript: transcript.trim() });
   } catch (error) {
-    return json({ error: error?.message || "در تبدیل صدا به متن خطایی رخ داد." }, 500);
+    return json({ error: "سرویس تبدیل صدا فعلاً در دسترس نیست. لطفاً بعداً دوباره کوشش کن." }, 500);
   }
 }
