@@ -330,17 +330,21 @@ button{cursor:pointer}
   background:linear-gradient(transparent,#111418 15%);
 }
 
+/* Compact attachment preview */
 .file-preview{
   display:none;
   align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding:10px 13px;
-  margin-bottom:9px;
+  justify-content:flex-start;
+  gap:9px;
+  width:max-content;
+  max-width:100%;
+  padding:6px 9px;
+  margin:0 0 9px auto;
   border:1px solid #626f7a;
-  border-radius:12px;
-  background:#252d35;
-  font-size:12px;
+  border-radius:13px;
+  background:linear-gradient(145deg,#303942,#1c2229);
+  box-shadow:0 4px 12px #0005;
+  font-size:11px;
   color:#dce4ea;
 }
 
@@ -349,18 +353,23 @@ button{cursor:pointer}
 .preview-info{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:9px;
   min-width:0;
 }
 
 #fileName{
-  overflow-wrap:anywhere;
+  display:block;
+  max-width:190px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
 .preview-image{
   display:none;
-  width:55px;
-  height:55px;
+  flex-shrink:0;
+  width:48px;
+  height:48px;
   object-fit:cover;
   border-radius:9px;
   border:1px solid #8995a0;
@@ -370,10 +379,13 @@ button{cursor:pointer}
 
 .remove-file{
   flex-shrink:0;
+  width:28px;
+  height:32px;
   border:0;
-  background:transparent;
+  border-radius:8px;
+  background:#ffffff0b;
   color:#f0a0a0;
-  font-size:22px;
+  font-size:21px;
 }
 
 /* Input direction and button positions */
@@ -846,14 +858,19 @@ async function sendMessage(customText=null){
 
   if(!text&&!selectedFile)return;
 
+  // Keep a stable copy of the attachment for this request
+  const imageForRequest=selectedImageData;
+  const documentForRequest=selectedDocument;
+  const fileForRequest=selectedFile;
+
   let userText=text;
 
-  if(selectedFile&&selectedDocument){
+  if(fileForRequest&&documentForRequest){
     userText=(text?text+"\n\n":"لطفاً محتوای PDF پیوست‌شده را بررسی کن: ")+
-      "فایل PDF: "+selectedFile.name;
+      "فایل PDF: "+fileForRequest.name;
   }
 
-  if(selectedImageData&&!userText){
+  if(imageForRequest&&!userText){
     userText="لطفاً این تصویر را بررسی و توضیح بده.";
   }
 
@@ -871,11 +888,11 @@ async function sendMessage(customText=null){
 
   const userNode=addMessage("user",userText,false);
 
-  // Show image in the conversation without saving its data in history
-  if(selectedImageData){
+  // Keep the sent image inside the conversation
+  if(imageForRequest){
     const img=document.createElement("img");
     img.className="message-image";
-    img.src=selectedImageData;
+    img.src=imageForRequest;
     img.alt="تصویر ارسال‌شده";
     userNode.querySelector(".message-content").append(img);
   }
@@ -903,8 +920,8 @@ async function sendMessage(customText=null){
             role:m.role,
             content:m.content
           })),
-          document:selectedDocument,
-          image:selectedImageData||undefined
+          document:documentForRequest,
+          image:imageForRequest||undefined
         }),
         signal:controller.signal
       });
@@ -942,6 +959,7 @@ async function sendMessage(customText=null){
     addMessage("assistant",data.reply,false);
     saveHistory();
 
+    // Clear composer attachment only after successful response
     clearSelectedFile();
 
   }catch(error){
@@ -958,6 +976,8 @@ async function sendMessage(customText=null){
     );
 
     node.querySelector(".message-content").classList.add("error-note");
+
+    // Attachment is deliberately kept here for retry
 
   }finally{
     removeTyping();
@@ -1024,7 +1044,7 @@ fileInput.addEventListener("change",async()=>{
     return;
   }
 
-  // Image processing
+  // Prepare image and show compact preview
   fileName.textContent="در حال آماده‌سازی تصویر...";
 
   try{
