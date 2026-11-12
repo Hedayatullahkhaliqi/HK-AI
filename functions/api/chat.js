@@ -20,11 +20,11 @@ function json(data, status = 200) {
 function normalizeDigits(value) {
   const digits = {
     "۰": "0", "۱": "1", "۲": "2", "۳": "3",
-    "۴": "4", "۵": "5", "۶": "6", "۷": "7",
-    "۸": "8", "۹": "9",
+    "۴": "4", "۵": "5", "۶": "6",
+    "۷": "7", "۸": "8", "۹": "9",
     "٠": "0", "١": "1", "٢": "2", "٣": "3",
-    "٤": "4", "٥": "5", "٦": "6", "٧": "7",
-    "٨": "8", "٩": "9"
+    "٤": "4", "٥": "5", "٦": "6",
+    "٧": "7", "٨": "8", "٩": "9"
   };
 
   return String(value).replace(/[۰-۹٠-٩]/g, d => digits[d]);
@@ -180,86 +180,26 @@ function calculateMath(message) {
 
 // Supported language preferences
 const LANGUAGE_PATTERNS = [
-  {
-    language: "Dari",
-    pattern: /دری|فارسی افغانستان|افغانستانی/i
-  },
-  {
-    language: "Pashto",
-    pattern: /پښتو|پشتو|پختو/i
-  },
-  {
-    language: "Persian",
-    pattern: /فارسی|پارسی/i
-  },
-  {
-    language: "English",
-    pattern: /انگلیسی|انگلیسی جواب|english/i
-  },
-  {
-    language: "Arabic",
-    pattern: /عربی|العربية|arabic/i
-  },
-  {
-    language: "Turkish",
-    pattern: /ترکی استانبولی|ترکی|turkish|türkçe/i
-  },
-  {
-    language: "Uzbek",
-    pattern: /ازبیکی|ازبکی|اوزبیکی|اوزبکی|uzbek|o‘zbek|o'zbek|ўзбек/i
-  },
-  {
-    language: "French",
-    pattern: /فرانسوی|فرانسه|french|français/i
-  },
-  {
-    language: "German",
-    pattern: /آلمانی|جرمنی|german|deutsch/i
-  },
-  {
-    language: "Spanish",
-    pattern: /اسپانیایی|اسپانیا|spanish|español/i
-  },
-  {
-    language: "Russian",
-    pattern: /روسی|russian|русский/i
-  },
-  {
-    language: "Chinese",
-    pattern: /چینی|chinese|中文/i
-  },
-  {
-    language: "Japanese",
-    pattern: /جاپانی|ژاپنی|japanese|日本語/i
-  },
-  {
-    language: "Korean",
-    pattern: /کوریایی|کره‌ای|korean|한국어/i
-  },
-  {
-    language: "Hindi",
-    pattern: /هندی|hindi|हिन्दी/i
-  },
-  {
-    language: "Urdu",
-    pattern: /اردو|urdu/i
-  },
-  {
-    language: "Portuguese",
-    pattern: /پرتگالی|پرتغالی|portuguese|português/i
-  },
-  {
-    language: "Italian",
-    pattern: /ایتالیایی|ایتالوی|italian|italiano/i
-  },
-  {
-    language: "Bengali",
-    pattern: /بنگالی|بنگلادیشی|bengali|বাংলা/i
-  },
-  {
-    language: "Indonesian",
-    pattern: /اندونزیایی|indonesian|bahasa indonesia/i
-  }
+  { language: "Dari", pattern: /دری|فارسی افغانستان|افغانستانی/i },
+  { language: "Pashto", pattern: /پښتو|پشتو|پختو/i },
+  { language: "Persian", pattern: /فارسی|پارسی/i },
+  { language: "English", pattern: /انگلیسی|انگلیسی جواب|english/i },
+  { language: "Arabic", pattern: /عربی|العربية|arabic/i },
+  { language: "Turkish", pattern: /ترکی استانبولی|ترکی|turkish|türkçe/i },
+  { language: "Uzbek", pattern: /ازبیکی|ازبکی|اوزبیکی|اوزبکی|uzbek|o‘zbek|o'zbek|ўзбек/i },
+  { language: "French", pattern: /فرانسوی|فرانسه|french|français/i },
+  { language: "German", pattern: /آلمانی|جرمنی|german|deutsch/i },
+  { language: "Spanish", pattern: /اسپانیایی|اسپانیا|spanish|español/i },
+  { language: "Russian", pattern: /روسی|russian|русский/i },
+  { language: "Chinese", pattern: /چینی|chinese|中文/i },
+  { language: "Japanese", pattern: /جاپانی|ژاپنی|japanese|日本語/i },
+  { language: "Korean", pattern: /کوریایی|کره‌ای|korean|한국어/i },
+  { language: "Hindi", pattern: /هندی|hindi|हिन्दी/i },
+  { language: "Urdu", pattern: /اردو|urdu/i },
+  { language: "Portuguese", pattern: /پرتگالی|پرتغالی|portuguese|português/i },
+  { language: "Italian", pattern: /ایتالیایی|ایتالوی|italian|italiano/i },
+  { language: "Bengali", pattern: /بنگالی|بنگلادیشی|bengali|বাংলা/i },
+  { language: "Indonesian", pattern: /اندونزیایی|indonesian|bahasa indonesia/i }
 ];
 
 function detectLanguagePreference(messages) {
@@ -289,7 +229,6 @@ function detectLanguagePreference(messages) {
   return "AUTO";
 }
 
-// Automatic language detection
 function detectAutomaticLanguage(text) {
   const value = String(text || "").trim().toLowerCase();
 
@@ -300,32 +239,14 @@ function detectAutomaticLanguage(text) {
   }
 
   const uzbekWords = [
-    "salom",
-    "assalomu alaykum",
-    "qalaysiz",
-    "yaxshimisiz",
-    "rahmat",
-    "iltimos",
-    "yaxshi",
-    "men",
-    "siz",
-    "nima",
-    "qanday",
-    "bugun",
-    "ertaga",
-    "do'st",
-    "dost",
-    "o'zbek",
-    "ozbek",
-    "o'zbekcha",
-    "tushundim",
-    "xayr",
-    "kechirasiz",
-    "qayerda",
-    "nima gap",
-    "yordam bering",
-    "yaxshiman",
-    "salomlar"
+    "salom", "assalomu alaykum", "qalaysiz",
+    "yaxshimisiz", "rahmat", "iltimos",
+    "yaxshi", "men", "siz", "nima",
+    "qanday", "bugun", "ertaga", "do'st",
+    "dost", "o'zbek", "ozbek", "o'zbekcha",
+    "tushundim", "xayr", "kechirasiz",
+    "qayerda", "nima gap", "yordam bering",
+    "yaxshiman", "salomlar"
   ];
 
   const words = value
@@ -344,16 +265,9 @@ function detectAutomaticLanguage(text) {
   }
 
   const uzbekCyrillicWords = [
-    "салом",
-    "раҳмат",
-    "илтимос",
-    "яхшимисиз",
-    "яхшиман",
-    "қандай",
-    "нима",
-    "мен",
-    "сиз",
-    "хайр"
+    "салом", "раҳмат", "илтимос",
+    "яхшимисиз", "яхшиман", "қандай",
+    "нима", "мен", "сиз", "хайр"
   ];
 
   if (
@@ -482,7 +396,6 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "Invalid messages" }, 400);
     }
 
-    // Check optional image
     const hasImage = body.image !== undefined &&
       body.image !== null &&
       body.image !== "";
@@ -519,13 +432,11 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "No user message" }, 400);
     }
 
-    // Give a default instruction if an image has no text
     if (hasImage && !latestUserMessage.content.trim()) {
       latestUserMessage.content =
         "Please examine this image carefully and describe what you can see.";
     }
 
-    // Accurate local calculator (text-only requests)
     if (!hasImage) {
       const mathResult = calculateMath(latestUserMessage.content);
 
@@ -669,43 +580,35 @@ Remember:
 You are HK.AI — Hedayatullah Khaliqi AI.
 `;
 
-    // Prepare model messages
+    // Prepare text messages
     const modelMessages = [
       { role: "system", content: systemPrompt },
-      ...messages.map(message => {
-        if (hasImage && message === latestUserMessage) {
-          return {
-            role: message.role,
-            content: [
-              {
-                type: "text",
-                text: message.content
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: body.image
-                }
-              }
-            ]
-          };
-        }
-
-        return message;
-      })
+      ...messages
     ];
 
-    // Use Vision model only when an image is attached
-    const selectedModel = hasImage ? VISION_MODEL : MODEL;
+    let result;
 
-    const result = await env.AI.run(selectedModel, {
-      messages: modelMessages,
-      max_tokens: 2048,
-      temperature: 0.3,
-      chat_template_kwargs: {
-        enable_thinking: false
-      }
-    });
+    // Use the Vision model for image requests
+    if (hasImage) {
+      // Convert data URL into raw base64 image data
+      const imageBase64 = body.image.split(",")[1];
+
+      result = await env.AI.run(VISION_MODEL, {
+        messages: modelMessages,
+        image: imageBase64,
+        max_tokens: 2048,
+        temperature: 0.3
+      });
+    } else {
+      result = await env.AI.run(MODEL, {
+        messages: modelMessages,
+        max_tokens: 2048,
+        temperature: 0.3,
+        chat_template_kwargs: {
+          enable_thinking: false
+        }
+      });
+    }
 
     const reply = cleanReply(extractReply(result));
 
