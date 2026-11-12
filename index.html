@@ -851,6 +851,52 @@ body:before{
 @media(max-width:480px){.feature-bar{gap:6px}.feature-btn{font-size:11px;padding:7px 3px}.planner-entry input{flex-basis:40%}}
 @media(prefers-reduced-motion:reduce){.feature-btn,.tool-primary{transition:none}}
 
+
+/* Chat layout: fixed app viewport, independently scrolling messages, pinned composer */
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+body{
+  overscroll-behavior:none;
+}
+.app{
+  height:100vh;
+  height:100dvh;
+  min-height:0;
+  overflow:hidden;
+}
+.header,.status,.feature-bar,.tool-panel,.composer{
+  flex-shrink:0;
+}
+.chat{
+  flex:1 1 0;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  scroll-behavior:smooth;
+  padding-bottom:18px;
+}
+.composer{
+  position:relative;
+  bottom:auto;
+  flex:0 0 auto;
+  z-index:5;
+}
+@media(max-width:560px){
+  .app{
+    height:100vh;
+    height:100dvh;
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
+  .chat{
+    min-height:0;
+  }
+}
+
 </style>
 </head>
 
