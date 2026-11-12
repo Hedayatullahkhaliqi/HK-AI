@@ -1322,6 +1322,7 @@ async function sendMessage(customText=null){
 
     removeTyping();
     addMessage("assistant",data.reply,false);
+    speakReply(data.reply);
     saveHistory();
 
     // Clear composer attachment only after successful response
@@ -1509,15 +1510,26 @@ $("generateImage").addEventListener("click",async()=>{
 
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recognition=null;
-$("voiceBtn").addEventListener("click",()=>{
-  if(!SpeechRecognition){$("voiceBtn").textContent="🎙 صدا در این مرورگر پشتیبانی نمی‌شود";return;}
-  if(recognition){try{recognition.stop()}catch{} recognition=null;$("voiceBtn").textContent="🎙 صحبت کردن";return;}
+let voiceMode=false;
+function speakReply(text){
+  if(!voiceMode||!("speechSynthesis" in window))return;
+  window.speechSynthesis.cancel();
+  const utterance=new SpeechSynthesisUtterance(text.replace(/```[\\s\\S]*?```/g,"کد در پاسخ نوشته شده است"));
+  utterance.lang="fa-AF";utterance.rate=.94;utterance.pitch=1;
+  window.speechSynthesis.speak(utterance);
+}
+function startVoiceInput(){
+  if(!SpeechRecognition){$("voiceBtn").textContent="🎙 گفتار در این مرورگر پشتیبانی نمی‌شود";voiceMode=false;return;}
   recognition=new SpeechRecognition();recognition.lang="fa-AF";recognition.interimResults=false;recognition.maxAlternatives=1;
-  $("voiceBtn").textContent="🔴 گوش می‌دهد…";
-  recognition.onresult=e=>{input.value=(input.value+" "+e.results[0][0].transcript).trim();input.dispatchEvent(new Event("input"));};
-  recognition.onerror=()=>{$("voiceBtn").textContent="🎙 دوباره تلاش کن";recognition=null;};
-  recognition.onend=()=>{$("voiceBtn").textContent="🎙 صحبت کردن";recognition=null;};
-  try{recognition.start()}catch{$("voiceBtn").textContent="🎙 دوباره تلاش کن";recognition=null;}
+  $("voiceBtn").textContent="🔴 گوش می‌دهد… (برای توقف بزن)";
+  recognition.onresult=e=>{input.value=e.results[0][0].transcript;input.dispatchEvent(new Event("input"));sendMessage();};
+  recognition.onerror=()=>{$("voiceBtn").textContent="🎙 شروع گفت‌وگوی صوتی";};
+  recognition.onend=()=>{recognition=null;if(voiceMode)$("voiceBtn").textContent="🎙 گفت‌وگوی صوتی روشن";};
+  try{recognition.start()}catch{recognition=null;$("voiceBtn").textContent="🎙 دوباره تلاش کن";}
+}
+$("voiceBtn").addEventListener("click",()=>{
+  if(voiceMode){voiceMode=false;if(recognition){try{recognition.stop()}catch{}recognition=null;}if("speechSynthesis" in window)window.speechSynthesis.cancel();$("voiceBtn").textContent="🎙 گفت‌وگوی صوتی";return;}
+  voiceMode=true;startVoiceInput();
 });
 
 const TASK_KEY="hk_ai_planner_tasks_v1";
