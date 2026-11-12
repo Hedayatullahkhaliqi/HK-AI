@@ -37,13 +37,8 @@ body{
   background-attachment:fixed;
 }
 
-button,textarea{
-  font:inherit;
-}
-
-button{
-  cursor:pointer;
-}
+button,textarea{font:inherit}
+button{cursor:pointer}
 
 .app{
   width:100%;
@@ -82,7 +77,7 @@ button{
   font-weight:900;
   letter-spacing:-2px;
   color:#20252b;
-  background:linear-gradient(135deg,#ffffff,#aeb9c4 35%,#687580 65%,#e8edf1);
+  background:linear-gradient(135deg,#fff,#aeb9c4 35%,#687580 65%,#e8edf1);
   border:1px solid #f1f4f6;
   box-shadow:inset 0 2px 4px #fff,0 3px 12px #0008;
   text-shadow:0 1px 1px #fff;
@@ -97,7 +92,7 @@ button{
 
 .brand-sub{
   font-size:11px;
-  color:#b7c0c9;
+  color:#c4cdd5;
   margin-top:4px;
 }
 
@@ -176,6 +171,18 @@ button{
   margin:10px auto;
 }
 
+.brand-meaning{
+  display:inline-block;
+  margin-top:5px;
+  padding:7px 13px;
+  border:1px solid #65727e;
+  border-radius:10px;
+  color:#e0e5e9;
+  background:linear-gradient(145deg,#303942,#191e24);
+  font-size:12px;
+  letter-spacing:.2px;
+}
+
 .suggestions{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -194,9 +201,7 @@ button{
   font-size:12px;
 }
 
-.suggestion:active{
-  background:#414c57;
-}
+.suggestion:active{background:#414c57}
 
 .message{
   max-width:88%;
@@ -209,13 +214,8 @@ button{
   to{opacity:1;transform:translateY(0)}
 }
 
-.message.user{
-  margin-right:auto;
-}
-
-.message.assistant{
-  margin-left:auto;
-}
+.message.user{margin-right:auto}
+.message.assistant{margin-left:auto}
 
 .message-label{
   font-size:11px;
@@ -240,13 +240,8 @@ button{
   border-color:#8995a0;
 }
 
-.message-content p{
-  margin:5px 0 12px;
-}
-
-.message-content h3,.message-content h4{
-  color:#e4ebf0;
-}
+.message-content p{margin:5px 0 12px}
+.message-content h3,.message-content h4{color:#e4ebf0}
 
 .message-content pre{
   direction:ltr;
@@ -272,13 +267,9 @@ button{
   text-decoration:underline;
 }
 
-.message-content ul{
-  padding-right:22px;
-}
+.message-content ul{padding-right:22px}
 
-.message-actions{
-  margin:7px 5px;
-}
+.message-actions{margin:7px 5px}
 
 .copy-btn{
   border:1px solid #56636e;
@@ -342,9 +333,7 @@ button{
   color:#dce4ea;
 }
 
-.file-preview.show{
-  display:flex;
-}
+.file-preview.show{display:flex}
 
 .remove-file{
   border:0;
@@ -353,7 +342,9 @@ button{
   font-size:18px;
 }
 
+/* Input direction and button positions */
 .input-box{
+  direction:rtl;
   display:flex;
   align-items:flex-end;
   gap:9px;
@@ -385,9 +376,7 @@ button{
   -webkit-touch-callout:default;
 }
 
-#messageInput::placeholder{
-  color:#a3adb7;
-}
+#messageInput::placeholder{color:#a3adb7}
 
 .attach-btn,.send-btn{
   flex-shrink:0;
@@ -410,9 +399,7 @@ button{
   font-weight:900;
 }
 
-.send-btn:disabled,.attach-btn:disabled{
-  opacity:.45;
-}
+.send-btn:disabled,.attach-btn:disabled{opacity:.45}
 
 .footer{
   text-align:center;
@@ -421,9 +408,7 @@ button{
   font-size:10px;
 }
 
-#fileInput{
-  display:none;
-}
+#fileInput{display:none}
 
 @media(max-width:500px){
   .app{padding:10px}
@@ -435,7 +420,6 @@ button{
   .message{max-width:94%}
   .suggestion{font-size:11px;padding:12px 7px}
 }
-
 </style>
 </head>
 
@@ -470,6 +454,10 @@ button{
         آماده است تا به پرسش‌ها و ایده‌های شما کمک کند.
       </p>
 
+      <div class="brand-meaning">
+        HK = Hedayatullah Khaliqi
+      </div>
+
       <div class="suggestions">
         <button class="suggestion" data-prompt="خودت را معرفی کن">معرفی HK.AI</button>
         <button class="suggestion" data-prompt="چگونه می‌توانم انگلیسی را بهتر یاد بگیرم؟">یادگیری زبان</button>
@@ -488,15 +476,18 @@ button{
     </div>
 
     <div class="input-box">
-      <button class="attach-btn" id="attachBtn" title="افزودن PDF">＋</button>
+
+      <!-- Send button is first so it appears on the right in RTL -->
+      <button class="send-btn" id="sendBtn" title="ارسال">➤</button>
 
       <textarea
         id="messageInput"
         rows="1"
-        placeholder="پیامت را برای HK بنویس..."
+        placeholder="پیامت را برای HK بنوی..."
       ></textarea>
 
-      <button class="send-btn" id="sendBtn" title="ارسال">➤</button>
+      <button class="attach-btn" id="attachBtn" title="افزودن PDF">＋</button>
+
     </div>
 
     <input type="file" id="fileInput" accept=".pdf,application/pdf">
