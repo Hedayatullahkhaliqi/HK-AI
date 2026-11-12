@@ -88,7 +88,7 @@ export async function onRequestPost({ request, env }) {
     });
   } catch (error) {
     return json({
-      error: error?.message || "در صداسازی خطایی رخ داد."
+      error: "سرویس صداسازی فعلاً در دسترس نیست. لطفاً بعداً دوباره کوشش کن."
     }, 500);
   }
 }
