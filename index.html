@@ -1539,24 +1539,74 @@ $("generateImage").addEventListener("click",async()=>{
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recognition=null;
 let voiceMode=false;
-function speakReply(text){
-  if(!voiceMode||!("speechSynthesis" in window))return;
-  window.speechSynthesis.cancel();
-  const utterance=new SpeechSynthesisUtterance(text.replace(/```[\\s\\S]*?```/g,"کد در پاسخ نوشته شده است"));
-  utterance.lang="fa-AF";utterance.rate=.94;utterance.pitch=1;
-  window.speechSynthesis.speak(utterance);
+let voiceAudio=null;
+let voiceAudioUrl=null;
+function finishVoiceTurn(){
+  if(!voiceMode)return;
+  $("voiceBtn").textContent="🎙 پاسخ تمام شد؛ دوباره گوش می‌دهد…";
+  setTimeout(()=>{if(voiceMode&&!recognition)startVoiceInput();},350);
+}
+async function speakReply(text){
+  if(!voiceMode)return;
+  const spokenText=String(text||"").replace(/```[\\s\\S]*?```/g,"کد در پاسخ نوشته شده است").slice(0,1800);
+  $("voiceBtn").textContent="🔊 HK.AI در حال صحبت است…";
+  try{
+    const response=await fetch("/api/tts",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({text:spokenText})
+    });
+    if(!response.ok){let error={};try{error=await response.json()}catch{};throw new Error(error.error||"صداسازی انجام نشد.");}
+    const audioBlob=await response.blob();
+    if(!audioBlob.type.includes("audio"))throw new Error("فایل صوتی معتبر نیست.");
+    voiceAudioUrl=URL.createObjectURL(audioBlob);
+    voiceAudio=new Audio(voiceAudioUrl);
+    voiceAudio.onended=()=>{voiceAudio=null;if(voiceAudioUrl)URL.revokeObjectURL(voiceAudioUrl);voiceAudioUrl=null;finishVoiceTurn();};
+    voiceAudio.onerror=()=>{voiceAudio=null;if(voiceAudioUrl)URL.revokeObjectURL(voiceAudioUrl);voiceAudioUrl=null;finishVoiceTurn();};
+    await voiceAudio.play();
+  }catch(error){
+    console.warn("Gemini Dari TTS:",error);
+    if("speechSynthesis" in window){
+      const utterance=new SpeechSynthesisUtterance(spokenText);
+      utterance.lang="fa-AF";utterance.rate=.94;utterance.pitch=1;
+      utterance.onend=finishVoiceTurn;
+      utterance.onerror=finishVoiceTurn;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+      $("voiceBtn").textContent="🔊 صدای جایگزین مرورگر";
+    }else{
+      $("voiceBtn").textContent="🎙 صداسازی در دسترس نیست";
+    }
+  }
 }
 function startVoiceInput(){
   if(!SpeechRecognition){$("voiceBtn").textContent="🎙 گفتار در این مرورگر پشتیبانی نمی‌شود";voiceMode=false;return;}
-  recognition=new SpeechRecognition();recognition.lang="fa-AF";recognition.interimResults=false;recognition.maxAlternatives=1;
+  if(recognition)return;
+  recognition=new SpeechRecognition();
+  recognition.lang="fa-AF";recognition.continuous=false;recognition.interimResults=false;recognition.maxAlternatives=1;
   $("voiceBtn").textContent="🔴 گوش می‌دهد… (برای توقف بزن)";
-  recognition.onresult=e=>{input.value=e.results[0][0].transcript;input.dispatchEvent(new Event("input"));sendMessage();};
-  recognition.onerror=()=>{$("voiceBtn").textContent="🎙 شروع گفت‌وگوی صوتی";};
-  recognition.onend=()=>{recognition=null;if(voiceMode)$("voiceBtn").textContent="🎙 گفت‌وگوی صوتی روشن";};
+  recognition.onresult=e=>{
+    const transcript=e.results?.[0]?.[0]?.transcript||"";
+    if(!transcript.trim())return;
+    input.value=transcript;input.dispatchEvent(new Event("input"));sendMessage();
+  };
+  recognition.onerror=e=>{
+    console.warn("Speech recognition:",e.error);
+    if(e.error==="not-allowed"||e.error==="service-not-allowed"){voiceMode=false;$("voiceBtn").textContent="🎙 اجازهٔ میکروفون داده نشد";return;}
+  };
+  recognition.onend=()=>{recognition=null;if(voiceMode&&!busy)$("voiceBtn").textContent="🎙 آمادهٔ شنیدن";}
   try{recognition.start()}catch{recognition=null;$("voiceBtn").textContent="🎙 دوباره تلاش کن";}
 }
 $("voiceBtn").addEventListener("click",()=>{
-  if(voiceMode){voiceMode=false;if(recognition){try{recognition.stop()}catch{}recognition=null;}if("speechSynthesis" in window)window.speechSynthesis.cancel();$("voiceBtn").textContent="🎙 گفت‌وگوی صوتی";return;}
+  if(voiceMode){
+    voiceMode=false;
+    if(recognition){try{recognition.stop()}catch{}recognition=null;}
+    if("speechSynthesis" in window)window.speechSynthesis.cancel();
+    if(voiceAudio){voiceAudio.pause();voiceAudio=null;}
+    if(voiceAudioUrl){URL.revokeObjectURL(voiceAudioUrl);voiceAudioUrl=null;}
+    $("voiceBtn").textContent="🎙 گفت‌وگوی صوتی";
+    return;
+  }
   voiceMode=true;startVoiceInput();
 });
 
