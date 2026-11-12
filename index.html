@@ -1276,57 +1276,83 @@ async function sendMessage(customText=null){
 
     let response;
 
-    try{
-      response=await fetch("/api/chat",{
+    const imageEditRequest=!!imageForRequest&&
+      /طبیعی|طبیعی‌تر|واقعی|واقعی‌تر|natural|realistic|retouch|ادیت|ویرایش|تغییر بده|تغییرش بده|اصلاح کن|زیباتر/i.test(text);
+
+    if(imageEditRequest){
+      let editPrompt=text;
+      if(/طبیعی|طبیعی‌تر|واقعی|واقعی‌تر|natural|realistic/i.test(text)){
+        editPrompt="Make the provided image look like a natural, realistic photograph. Preserve the original person's identity and facial features exactly, including face shape, eyes, nose, lips, skin tone, age, hairstyle, pose, clothing, and background. Keep the original composition and details. Only remove an artificial or AI-generated appearance. Do not beautify, stylize, replace the person, or invent new details.";
+      }
+
+      response=await fetch("/api/image",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          messages:messages.slice(-20).map(m=>({
-            role:m.role,
-            content:m.content
-          })),
-          document:documentForRequest,
-          image:imageForRequest||undefined
-        }),
+        body:JSON.stringify({prompt:editPrompt,image:imageForRequest}),
         signal:controller.signal
       });
-    }finally{
-      clearTimeout(timeout);
+
+      if(!response.ok){
+        let error={};try{error=await response.json()}catch{}
+        throw new Error(error.error||error.details||"ویرایش تصویر انجام نشد.");
+      }
+
+      const editedBlob=await response.blob();
+      if(!editedBlob.type.startsWith("image/"))throw new Error("سرور تصویر ویرایش‌شده را برنگرداند.");
+      const editedURL=URL.createObjectURL(editedBlob);
+      const assistantText="تصویر ویرایش‌شده آماده است.";
+      messages.push({role:"assistant",content:assistantText,timestamp:Date.now()});
+      removeTyping();
+      const resultNode=addMessage("assistant",assistantText,false);
+      const resultImage=document.createElement("img");
+      resultImage.className="message-image";
+      resultImage.src=editedURL;
+      resultImage.alt="تصویر ویرایش‌شده";
+      resultNode.querySelector(".message-content").append(resultImage);
+      saveHistory();
+      clearSelectedFile();
+    }else{
+      try{
+        response=await fetch("/api/chat",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({
+            messages:messages.slice(-20).map(m=>({
+              role:m.role,
+              content:m.content
+            })),
+            document:documentForRequest,
+            image:imageForRequest||undefined
+          }),
+          signal:controller.signal
+        });
+      }finally{
+        clearTimeout(timeout);
+      }
+
+      let data;
+      try{
+        data=await response.json();
+      }catch{
+        throw new Error("پاسخ سرور قابل خواندن نیست.");
+      }
+
+      if(!response.ok){
+        throw new Error(data.details||data.error||"خطا در ارتباط با سرور.");
+      }
+
+      if(typeof data.reply!=="string"||!data.reply.trim()){
+        throw new Error("پاسخ خالی از سرور دریافت شد.");
+      }
+
+      messages.push({role:"assistant",content:data.reply,timestamp:Date.now()});
+      removeTyping();
+      addMessage("assistant",data.reply,false);
+      speakReply(data.reply);
+      saveHistory();
+      clearSelectedFile();
     }
-
-    let data;
-
-    try{
-      data=await response.json();
-    }catch{
-      throw new Error("پاسخ سرور قابل خواندن نیست.");
-    }
-
-    if(!response.ok){
-      throw new Error(
-        data.details||data.error||"خطا در ارتباط با سرور."
-      );
-    }
-
-    if(typeof data.reply!=="string"||!data.reply.trim()){
-      throw new Error("پاسخ خالی از سرور دریافت شد.");
-    }
-
-    const assistantTimestamp=Date.now();
-
-    messages.push({
-      role:"assistant",
-      content:data.reply,
-      timestamp:assistantTimestamp
-    });
-
-    removeTyping();
-    addMessage("assistant",data.reply,false);
-    speakReply(data.reply);
-    saveHistory();
-
-    // Clear composer attachment only after successful response
-    clearSelectedFile();
+    clearTimeout(timeout);
 
   }catch(error){
     removeTyping();
