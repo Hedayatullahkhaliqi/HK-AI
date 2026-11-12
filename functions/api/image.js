@@ -29,7 +29,7 @@ export async function onRequestPost({request,env}){
 
       const result=await env.AI.run("@cf/black-forest-labs/flux-1-kontext-pro",{
         prompt,
-        input_image:inputImage,
+        input_image:inputImage.split(",")[1],
         output_format:"jpeg"
       });
 
