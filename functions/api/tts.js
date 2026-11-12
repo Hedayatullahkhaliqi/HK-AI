@@ -39,7 +39,17 @@ export async function onRequestPost({ request, env }) {
       },
       body: JSON.stringify({
         model: MODEL,
-        input: prompt,
+        input: [{
+          type: "user_input",
+          content: [{
+            type: "text",
+            text: prompt,
+            annotations: [{
+              type: "speech_metadata",
+              style: "Natural, warm, conversational Afghan Dari pronunciation. Speak clearly at a moderate pace."
+            }]
+          }]
+        }],
         response_format: { type: "audio" },
         generation_config: {
           speech_config: [{ voice: "Kore" }]
