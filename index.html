@@ -820,6 +820,15 @@ body:before{
 
 
 /* Functional tools: image generation, voice and planner */
+/* Everyday helper */
+.feature-bar{grid-template-columns:repeat(4,minmax(0,1fr))}
+.helper-panel .tool-hint{margin-bottom:12px}
+.helper-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.helper-action{min-height:82px;padding:12px 10px;text-align:right;border:1px solid rgba(157,198,226,.28);border-radius:13px;color:#e7f1f8;background:linear-gradient(145deg,rgba(53,78,98,.8),rgba(15,27,39,.96));font:inherit;font-size:12px;font-weight:700;line-height:1.7}
+.helper-action span{display:block;color:#a9c9e0;font-size:19px;margin-bottom:3px}
+.helper-action:active{transform:scale(.985);background:#30495d}
+@media(max-width:480px){.feature-bar{grid-template-columns:repeat(2,minmax(0,1fr))}.helper-grid{grid-template-columns:1fr 1fr}.helper-action{font-size:11px;padding:10px 8px}}
+
 .feature-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0 4px}
 .feature-btn{min-height:48px;border:1px solid rgba(157,198,226,.34);border-radius:14px;color:#e6f2fa;background:linear-gradient(145deg,rgba(57,83,104,.9),rgba(17,29,41,.98));font-size:12px;font-weight:700;box-shadow:0 7px 18px #0003,inset 0 1px #ffffff12}
 .feature-btn:active,.tool-primary:active{transform:scale(.98)}
@@ -870,7 +879,19 @@ body:before{
     <button class="feature-btn" id="openImageTool">✦ ساخت تصویر</button>
     <button class="feature-btn" id="voiceBtn">🎙 صحبت کردن</button>
     <button class="feature-btn" id="openPlanner">▦ برنامه‌ریزی</button>
+    <button class="feature-btn" id="openHelper">✦ کمک‌یار</button>
   </nav>
+  <section class="tool-panel helper-panel" id="helperTool" hidden>
+    <div class="tool-heading"><strong>کمک‌یار هوشمند HK.AI</strong><button class="tool-close" data-close="helperTool" aria-label="بستن">×</button></div>
+    <p class="tool-hint">کاری را انتخاب کن؛ متن آماده می‌شود و می‌توانی جزئیات خودت را اضافه کنی.</p>
+    <div class="helper-grid">
+      <button class="helper-action" data-helper="document"><span>▤</span>خواندن و توضیح سند یا قبض</button>
+      <button class="helper-action" data-helper="translate"><span>文</span>ترجمه و ساده‌سازی متن</button>
+      <button class="helper-action" data-helper="letter"><span>✎</span>نوشتن درخواست و نامه رسمی</button>
+      <button class="helper-action" data-helper="cv"><span>▣</span>ساختن سی‌وی و درخواست کار</button>
+    </div>
+    <p class="tool-hint">برای سند، عکس یا PDF را هم پیوست کن. پیش از فرستادن، اطلاعات شخصی و محرمانه را بپوشان.</p>
+  </section>
   <section class="tool-panel" id="imageTool" hidden>
     <div class="tool-heading"><strong>ساخت تصویر با هوش مصنوعی</strong><button class="tool-close" data-close="imageTool">×</button></div>
     <textarea id="imagePrompt" rows="2" placeholder="تصویری را که می‌خواهی بساز، توصیف کن..."></textarea>
@@ -963,6 +984,33 @@ if(window.pdfjsLib){
 const $=id=>document.getElementById(id);
 
 const chat=$("chat");
+
+const helperPrompts={
+  document:"لطفاً این سند، فورم یا قبض پیوست‌شده را دقیق بخوان و به زبان ساده دری افغانستان توضیح بده. نکات مهم، تاریخ‌ها، مبلغ‌ها و کارهایی را که باید انجام بدهم جداگانه بنویس. اگر بخشی خوانا نیست، حدس نزن.",
+  translate:"لطفاً متن زیر را ترجمه کن. زبان مقصد را از من بپرس اگر مشخص نکرده‌ام؛ ترجمه باید طبیعی و دقیق باشد و اصطلاحات دشوار را هم ساده توضیح بده. متن:",
+  letter:"کمکم کن یک نامه یا درخواست رسمی و محترمانه بنویسم. اول اگر جزئیات ضروری مثل گیرنده، هدف و نام/تاریخ لازم است از من بپرس؛ اطلاعاتی را که نداده‌ام اختراع نکن.",
+  cv:"کمکم کن یک سی‌وی (CV) و درخواست کار حرفه‌ای بسازم. اول درباره تحصیلات، تجربه کاری، مهارت‌ها، زبان‌ها و شغل مورد نظر سؤال‌های کوتاه بپرس؛ هیچ سابقه یا مدرکی را از خودت نساز."
+};
+$("openHelper").addEventListener("click",()=>{
+  const panel=$("helperTool");
+  panel.hidden=!panel.hidden;
+  if(!panel.hidden)panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+});
+$("helperTool").addEventListener("click",event=>{
+  const button=event.target.closest("[data-helper]");
+  if(!button)return;
+  const kind=button.dataset.helper;
+  input.value=helperPrompts[kind]||"";
+  input.dispatchEvent(new Event("input"));
+  $("helperTool").hidden=true;
+  if(kind==="document"){
+    selectedDocument="";
+    attachBtn.click();
+  }else{
+    input.focus();
+  }
+});
+
 const welcome=$("welcome");
 const input=$("messageInput");
 const sendBtn=$("sendBtn");
