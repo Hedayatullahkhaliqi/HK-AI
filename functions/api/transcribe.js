@@ -55,10 +55,13 @@ export async function onRequestPost({ request, env }) {
       })
     });
 
-    const result = await upstream.json().catch(() => ({}));
+    const responseText = await upstream.text();
+    let result = {};
+    try { result = responseText ? JSON.parse(responseText) : {}; } catch {}
     if (!upstream.ok) {
-      const message = result.error?.message || "Gemini نتوانست صدا را تشخیص بدهد.";
-      return json({ error: message.slice(0, 500) }, upstream.status >= 500 ? 502 : upstream.status);
+      const detail = result.error?.message || result.message || result.detail || responseText || "بدون جزئیات از Gemini";
+      const message = "Gemini API (" + upstream.status + "): " + String(detail).slice(0, 350);
+      return json({ error: message }, upstream.status >= 500 ? 502 : upstream.status);
     }
 
     const transcript =
