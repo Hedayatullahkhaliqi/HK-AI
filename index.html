@@ -1,375 +1,962 @@
 
-if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#171a1e">
+<title>HK.AI | Hedayatullah Khaliqi</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<style>
+:root{
+  --bg:#111418;
+  --panel:#1b2026;
+  --metal:#aeb8c2;
+  --silver:#e0e5e9;
+  --muted:#89939d;
+  --border:#46515c;
+  --text:#edf1f4;
+  --dark:#171b20;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(ellipse at 50% -20%,#58636f 0%,transparent 48%),
+    linear-gradient(145deg,#252b32,#101317 65%);
+  background-attachment:fixed;
+}
+
+button,textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.app{
+  width:100%;
+  max-width:900px;
+  min-height:100vh;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  padding:15px;
+}
+
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:15px 17px;
+  border:1px solid #68737d;
+  border-radius:19px;
+  background:linear-gradient(145deg,#343c45,#171c22 55%,#303942);
+  box-shadow:0 8px 25px #0008,inset 0 1px 1px #ffffff30;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.logo{
+  width:53px;
+  height:53px;
+  display:grid;
+  place-items:center;
+  border-radius:15px;
+  font-size:23px;
+  font-weight:900;
+  letter-spacing:-2px;
+  color:#20252b;
+  background:linear-gradient(135deg,#ffffff,#aeb9c4 35%,#687580 65%,#e8edf1);
+  border:1px solid #f1f4f6;
+  box-shadow:inset 0 2px 4px #fff,0 3px 12px #0008;
+  text-shadow:0 1px 1px #fff;
+}
+
+.brand-name{
+  font-size:21px;
+  font-weight:850;
+  letter-spacing:1px;
+  color:#f0f3f5;
+}
+
+.brand-sub{
+  font-size:11px;
+  color:#b7c0c9;
+  margin-top:4px;
+}
+
+.new-chat{
+  border:1px solid #87939e;
+  border-radius:12px;
+  padding:10px 13px;
+  color:#e8edf1;
+  background:linear-gradient(145deg,#555f69,#252c33);
+  box-shadow:inset 0 1px 1px #fff3,0 3px 8px #0005;
+  font-size:12px;
+}
+
+.new-chat:active,.send-btn:active,.attach-btn:active{
+  transform:scale(.96);
+}
+
+.status{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  color:#aeb8c2;
+  font-size:11px;
+  margin:13px 5px;
+}
+
+.status-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#b9c7d1;
+  box-shadow:0 0 9px #dce8f2;
+}
+
+.chat{
+  flex:1;
+  min-height:300px;
+  padding:8px 2px 20px;
+}
+
+.welcome{
+  text-align:center;
+  padding:65px 15px 35px;
+}
+
+.welcome-logo{
+  width:85px;
+  height:85px;
+  margin:0 auto 20px;
+  display:grid;
+  place-items:center;
+  border-radius:25px;
+  font-size:35px;
+  font-weight:900;
+  letter-spacing:-3px;
+  color:#20252b;
+  background:linear-gradient(140deg,#fff,#aab5c0 40%,#65717d 70%,#e8edf1);
+  border:2px solid #dbe1e6;
+  box-shadow:0 12px 35px #0009,inset 0 2px 5px #fff;
+}
+
+.welcome h1{
+  font-size:27px;
+  margin:10px 0;
+  background:linear-gradient(90deg,#929da8,#fff,#a6b1bc);
+  background-clip:text;
+  -webkit-background-clip:text;
+  color:transparent;
+}
+
+.welcome p{
+  color:#aeb8c2;
+  font-size:14px;
+  line-height:2;
+  max-width:440px;
+  margin:10px auto;
+}
+
+.suggestions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:30px;
+}
+
+.suggestion{
+  padding:14px 10px;
+  text-align:center;
+  border:1px solid #53606c;
+  border-radius:13px;
+  color:#dbe1e6;
+  background:linear-gradient(145deg,#303942,#191e24);
+  box-shadow:inset 0 1px 1px #ffffff18,0 4px 12px #0005;
+  font-size:12px;
+}
+
+.suggestion:active{
+  background:#414c57;
+}
+
+.message{
+  max-width:88%;
+  margin:15px 0;
+  animation:appear .25s ease;
+}
+
+@keyframes appear{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.message.user{
+  margin-right:auto;
+}
+
+.message.assistant{
+  margin-left:auto;
+}
+
+.message-label{
+  font-size:11px;
+  color:#aeb9c4;
+  margin:0 7px 6px;
+}
+
+.message-content{
+  padding:14px 16px;
+  line-height:1.95;
+  font-size:14px;
+  overflow-wrap:anywhere;
+  border:1px solid #4d5965;
+  border-radius:16px;
+  background:linear-gradient(145deg,#303841,#1b2026);
+  box-shadow:inset 0 1px 1px #ffffff16,0 5px 15px #0005;
+}
+
+.user .message-content{
+  color:#f0f3f5;
+  background:linear-gradient(145deg,#596571,#303942);
+  border-color:#8995a0;
+}
+
+.message-content p{
+  margin:5px 0 12px;
+}
+
+.message-content h3,.message-content h4{
+  color:#e4ebf0;
+}
+
+.message-content pre{
+  direction:ltr;
+  text-align:left;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  padding:12px;
+  border-radius:10px;
+  background:#0c1014;
+  border:1px solid #56616c;
+  color:#dce5eb;
+}
+
+.message-content code{
+  direction:ltr;
+  background:#10151a;
+  padding:2px 5px;
+  border-radius:5px;
+}
+
+.message-content a{
+  color:#c5d8e8;
+  text-decoration:underline;
+}
+
+.message-content ul{
+  padding-right:22px;
+}
+
+.message-actions{
+  margin:7px 5px;
+}
+
+.copy-btn{
+  border:1px solid #56636e;
+  border-radius:9px;
+  padding:6px 11px;
+  color:#cbd4dc;
+  background:#252c33;
+  font-size:11px;
+}
+
+.error-note{
+  border-color:#a16d6d;
+  color:#ffdada;
+}
+
+.typing{
+  width:max-content;
+  margin:12px auto;
+  padding:12px 17px;
+  border:1px solid #586571;
+  border-radius:12px;
+  background:#252c33;
+  color:#c7d0d8;
+  font-size:12px;
+}
+
+.typing-dots span{
+  display:inline-block;
+  width:5px;
+  height:5px;
+  margin:0 2px;
+  border-radius:50%;
+  background:#d9e1e8;
+  animation:blink 1s infinite alternate;
+}
+
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+
+@keyframes blink{
+  to{opacity:.2;transform:translateY(-4px)}
+}
+
+.composer{
+  position:sticky;
+  bottom:0;
+  padding:10px 0 calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(transparent,#111418 15%);
+}
+
+.file-preview{
+  display:none;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 13px;
+  margin-bottom:9px;
+  border:1px solid #626f7a;
+  border-radius:12px;
+  background:#252d35;
+  font-size:12px;
+  color:#dce4ea;
+}
+
+.file-preview.show{
+  display:flex;
+}
+
+.remove-file{
+  border:0;
+  background:transparent;
+  color:#f0a0a0;
+  font-size:18px;
+}
+
+.input-box{
+  display:flex;
+  align-items:flex-end;
+  gap:9px;
+  padding:9px;
+  border:1px solid #788590;
+  border-radius:18px;
+  background:linear-gradient(145deg,#343d46,#171c22);
+  box-shadow:0 8px 25px #0009,inset 0 1px 2px #ffffff25;
+}
+
+#messageInput{
+  flex:1;
+  min-width:0;
+  min-height:44px;
+  max-height:140px;
+  resize:none;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#f2f5f7;
+  padding:11px 6px;
+  font-size:16px;
+  line-height:1.6;
+  direction:auto;
+  appearance:none;
+  -webkit-appearance:none;
+  -webkit-user-select:text;
+  user-select:text;
+  -webkit-touch-callout:default;
+}
+
+#messageInput::placeholder{
+  color:#a3adb7;
+}
+
+.attach-btn,.send-btn{
+  flex-shrink:0;
+  width:43px;
+  height:43px;
+  display:grid;
+  place-items:center;
+  border-radius:13px;
+  color:#e8edf1;
+  border:1px solid #84909b;
+  background:linear-gradient(145deg,#65717d,#343d46);
+  box-shadow:inset 0 1px 2px #fff5,0 3px 8px #0006;
+  font-size:19px;
+}
+
+.send-btn{
+  color:#20252b;
+  background:linear-gradient(145deg,#fff,#b9c4ce 55%,#77838e);
+  font-size:22px;
+  font-weight:900;
+}
+
+.send-btn:disabled,.attach-btn:disabled{
+  opacity:.45;
+}
+
+.footer{
+  text-align:center;
+  padding:8px 0 2px;
+  color:#78848f;
+  font-size:10px;
+}
+
+#fileInput{
+  display:none;
+}
+
+@media(max-width:500px){
+  .app{padding:10px}
+  .header{padding:12px}
+  .logo{width:47px;height:47px}
+  .brand-name{font-size:18px}
+  .welcome{padding-top:48px}
+  .welcome h1{font-size:24px}
+  .message{max-width:94%}
+  .suggestion{font-size:11px;padding:12px 7px}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <header class="header">
+    <div class="brand">
+      <div class="logo">HK</div>
+      <div>
+        <div class="brand-name">HK.AI</div>
+        <div class="brand-sub">Hedayatullah Khaliqi</div>
+      </div>
+    </div>
+    <button class="new-chat" id="newChatBtn">＋ گفت‌وگوی جدید</button>
+  </header>
+
+  <div class="status">
+    <span class="status-dot"></span>
+    HK AI آماده پاسخ‌گویی است
+  </div>
+
+  <main class="chat" id="chat">
+
+    <section class="welcome" id="welcome">
+      <div class="welcome-logo">HK</div>
+      <h1>به HK.AI خوش آمدید</h1>
+      <p>
+        هوش مصنوعی Hedayatullah Khaliqi
+        <br>
+        آماده است تا به پرسش‌ها و ایده‌های شما کمک کند.
+      </p>
+
+      <div class="suggestions">
+        <button class="suggestion" data-prompt="خودت را معرفی کن">معرفی HK.AI</button>
+        <button class="suggestion" data-prompt="چگونه می‌توانم انگلیسی را بهتر یاد بگیرم؟">یادگیری زبان</button>
+        <button class="suggestion" data-prompt="یک حقیقت علمی جالب برایم بگو">دانستنی‌های علمی</button>
+        <button class="suggestion" data-prompt="برای من یک برنامه روزانه مفید بساز">برنامه‌ریزی روزانه</button>
+      </div>
+    </section>
+
+  </main>
+
+  <section class="composer">
+
+    <div class="file-preview" id="filePreview">
+      <span id="fileName"></span>
+      <button class="remove-file" id="removeFile">×</button>
+    </div>
+
+    <div class="input-box">
+      <button class="attach-btn" id="attachBtn" title="افزودن PDF">＋</button>
+
+      <textarea
+        id="messageInput"
+        rows="1"
+        placeholder="پیامت را برای HK بنویس..."
+      ></textarea>
+
+      <button class="send-btn" id="sendBtn" title="ارسال">➤</button>
+    </div>
+
+    <input type="file" id="fileInput" accept=".pdf,application/pdf">
+
+    <div class="footer">
+      HK.AI · Hedayatullah Khaliqi
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+"use strict";
+
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc=
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
 
 const $=id=>document.getElementById(id);
-const chat=$("chat"),welcome=$("welcome"),input=$("messageInput"),sendBtn=$("sendBtn"),attachBtn=$("attachBtn"),fileInput=$("fileInput"),filePreview=$("filePreview"),fileName=$("fileName");
+
+const chat=$("chat");
+const welcome=$("welcome");
+const input=$("messageInput");
+const sendBtn=$("sendBtn");
+const attachBtn=$("attachBtn");
+const fileInput=$("fileInput");
+const filePreview=$("filePreview");
+const fileName=$("fileName");
 
 const STORAGE_KEY="hk_ai_chat_history_v3";
-const MAX_AGE=24*60*60*1000;
+const MAX_AGE=12*60*60*1000;
 
-let messages=[],busy=false,selectedDocument="",selectedFile=null;
+let messages=[];
+let busy=false;
+let selectedDocument="";
+let selectedFile=null;
 
 function isRecent(message){
-return Number.isFinite(message.timestamp)&&
-(Date.now()-message.timestamp>=0)&&
-(Date.now()-message.timestamp<MAX_AGE);
+  return Number.isFinite(message.timestamp)&&
+    Date.now()-message.timestamp>=0&&
+    Date.now()-message.timestamp<MAX_AGE;
 }
 
 function saveHistory(){
-try{
-localStorage.setItem(
-STORAGE_KEY,
-JSON.stringify(messages.slice(-40))
-);
-}catch(e){
-console.warn("History storage unavailable",e);
-}
+  try{
+    const recent=messages.filter(isRecent).slice(-40);
+    messages=recent;
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(recent));
+  }catch(e){
+    console.warn("History storage unavailable",e);
+  }
 }
 
-function escapeHTML(s){
-return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g,c=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[c]));
 }
 
 function safeURL(url){
-try{
-const u=new URL(url);
-return ["http:","https:"].includes(u.protocol)?u.href:"";
-}catch{
-return "";
-}
+  try{
+    const u=new URL(url);
+    return ["http:","https:"].includes(u.protocol)?u.href:"";
+  }catch{
+    return "";
+  }
 }
 
 function renderMarkdown(raw){
-let s=escapeHTML(raw);
-const blocks=[];
+  let s=escapeHTML(raw);
+  const blocks=[];
 
-s=s.replace(/```([\w+-]*)\n?([\s\S]*?)```/g,(_,lang,code)=>{
-const n=blocks.length;
-blocks.push(`<pre><code>${code.trim()}</code></pre>`);
-return `@@BLOCK${n}@@`;
-});
+  s=s.replace(/```([\w+-]*)\n?([\s\S]*?)```/g,(_,lang,code)=>{
+    const n=blocks.length;
+    blocks.push(`<pre><code>${code.trim()}</code></pre>`);
+    return `@@BLOCK${n}@@`;
+  });
 
-s=s.replace(/`([^`]+)`/g,"<code>$1</code>");
-s=s.replace(/^### (.+)$/gm,"<h4>$1</h4>").replace(/^## (.+)$/gm,"<h3>$1</h3>").replace(/^# (.+)$/gm,"<h3>$1</h3>");
-s=s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>");
+  s=s.replace(/`([^`]+)`/g,"<code>$1</code>");
 
-s=s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(_,label,url)=>{
-const safe=safeURL(url);
-return safe?`<a href="${safe}" target="_blank" rel="noopener noreferrer">${label}</a>`:label;
-});
+  s=s.replace(/^### (.+)$/gm,"<h4>$1</h4>")
+    .replace(/^## (.+)$/gm,"<h3>$1</h3>")
+    .replace(/^# (.+)$/gm,"<h3>$1</h3>");
 
-s=s.replace(/^\s*[-*] (.+)$/gm,"<li>$1</li>").replace(/(?:<li>[\s\S]*?<\/li>\n?)+/g,m=>`<ul>${m}</ul>`);
+  s=s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g,"<em>$1</em>");
 
-s=s.split(/\n{2,}/).map(part=>{
-if(/^@@BLOCK\d+@@$/.test(part))return part;
-if(part.startsWith("<h")||part.startsWith("<ul>"))return part;
-return `<p>${part.replace(/\n/g,"<br>")}</p>`;
-}).join("");
+  s=s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(_,label,url)=>{
+    const safe=safeURL(url);
+    return safe?
+      `<a href="${safe}" target="_blank" rel="noopener noreferrer">${label}</a>`:
+      label;
+  });
 
-s=s.replace(/@@BLOCK(\d+)@@/g,(_,n)=>blocks[Number(n)]);
-return s;
+  s=s.replace(/^\s*[-*] (.+)$/gm,"<li>$1</li>");
+  s=s.replace(/(?:<li>[\s\S]*?<\/li>\n?)+/g,m=>`<ul>${m}</ul>`);
+
+  s=s.split(/\n{2,}/).map(part=>{
+    if(/^@@BLOCK\d+@@$/.test(part))return part;
+    if(part.startsWith("<h")||part.startsWith("<ul>"))return part;
+    return `<p>${part.replace(/\n/g,"<br>")}</p>`;
+  }).join("");
+
+  s=s.replace(/@@BLOCK(\d+)@@/g,(_,n)=>blocks[Number(n)]);
+
+  return s;
 }
 
 function addMessage(role,content,save=true,timestamp=Date.now()){
-const wrap=document.createElement("div");
-wrap.className="message "+role;
+  const wrap=document.createElement("div");
+  wrap.className="message "+role;
 
-const label=document.createElement("div");
-label.className="message-label";
-label.textContent=role==="user"?"شما":"HK AI";
+  const label=document.createElement("div");
+  label.className="message-label";
+  label.textContent=role==="user"?"شما":"HK AI";
 
-const body=document.createElement("div");
-body.className="message-content";
+  const body=document.createElement("div");
+  body.className="message-content";
 
-if(role==="assistant")body.innerHTML=renderMarkdown(content);
-else body.textContent=content;
+  if(role==="assistant"){
+    body.innerHTML=renderMarkdown(content);
+  }else{
+    body.textContent=content;
+  }
 
-wrap.append(label,body);
+  wrap.append(label,body);
 
-if(role==="assistant"){
-const actions=document.createElement("div");
-actions.className="message-actions";
+  if(role==="assistant"){
+    const actions=document.createElement("div");
+    actions.className="message-actions";
 
-const copy=document.createElement("button");
-copy.className="copy-btn";
-copy.textContent="کاپی پاسخ";
+    const copy=document.createElement("button");
+    copy.className="copy-btn";
+    copy.textContent="کاپی پاسخ";
 
-copy.addEventListener("click",async()=>{
-try{
-await navigator.clipboard.writeText(content);
-copy.textContent="کاپی شد ✓";
-}catch{
-copy.textContent="کاپی نشد";
-}
-});
+    copy.addEventListener("click",async()=>{
+      try{
+        await navigator.clipboard.writeText(content);
+        copy.textContent="کاپی شد ✓";
+      }catch{
+        const temp=document.createElement("textarea");
+        temp.value=content;
+        document.body.append(temp);
+        temp.select();
+        try{
+          document.execCommand("copy");
+          copy.textContent="کاپی شد ✓";
+        }catch{
+          copy.textContent="کاپی نشد";
+        }
+        temp.remove();
+      }
+    });
 
-actions.append(copy);
-wrap.append(actions);
-}
+    actions.append(copy);
+    wrap.append(actions);
+  }
 
-chat.append(wrap);
+  chat.append(wrap);
 
-if(save){
-saveHistory();
-}
+  if(save){
+    messages.push({role,content,timestamp});
+    saveHistory();
+  }
 
-return wrap;
+  chat.scrollTop=chat.scrollHeight;
+
+  return wrap;
 }
 
 function showTyping(){
-const el=document.createElement("div");
-el.className="typing";
-el.id="typing";
-el.innerHTML='HK AI در حال نوشتن پاسخ است <span class="typing-dots"><span></span><span></span><span></span></span>';
-chat.append(el);
+  removeTyping();
+
+  const el=document.createElement("div");
+  el.className="typing";
+  el.id="typing";
+  el.innerHTML='HK AI در حال نوشتن پاسخ است <span class="typing-dots"><span></span><span></span><span></span></span>';
+
+  chat.append(el);
+  chat.scrollTop=chat.scrollHeight;
 }
 
 function removeTyping(){
-const el=$("typing");
-if(el)el.remove();
+  const el=$("typing");
+  if(el)el.remove();
 }
 
-function setBusy(v){
-busy=v;
-sendBtn.disabled=v;
-input.disabled=v;
-attachBtn.disabled=v;
-sendBtn.textContent=v?"…":"➤";
+function setBusy(value){
+  busy=value;
+  sendBtn.disabled=value;
+  input.disabled=value;
+  attachBtn.disabled=value;
+  sendBtn.textContent=value?"…":"➤";
 }
 
 function clearSelectedFile(){
-selectedDocument="";
-selectedFile=null;
-fileInput.value="";
-filePreview.classList.remove("show");
-fileName.textContent="";
+  selectedDocument="";
+  selectedFile=null;
+  fileInput.value="";
+  filePreview.classList.remove("show");
+  fileName.textContent="";
 }
 
 async function extractPDF(file){
-if(!window.pdfjsLib)throw new Error("ابزار خواندن PDF بارگذاری نشد؛ اینترنت را بررسی کنید.");
-if(file.size>10*1024*1024)throw new Error("حجم فایل PDF نباید بیشتر از ۱۰ مگابایت باشد.");
+  if(!window.pdfjsLib){
+    throw new Error("ابزار PDF بارگذاری نشد؛ اینترنت را بررسی کنید.");
+  }
 
-const pdf=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+  if(file.size>10*1024*1024){
+    throw new Error("حجم PDF نباید بیشتر از ۱۰ مگابایت باشد.");
+  }
 
-if(pdf.numPages>30)throw new Error("فایل PDF نباید بیشتر از ۳۰ صفحه باشد.");
+  const pdf=await pdfjsLib.getDocument({
+    data:new Uint8Array(await file.arrayBuffer())
+  }).promise;
 
-let text="";
+  if(pdf.numPages>30){
+    throw new Error("فایل PDF نباید بیشتر از ۳۰ صفحه باشد.");
+  }
 
-for(let n=1;n<=pdf.numPages;n++){
-const page=await pdf.getPage(n);
-const content=await page.getTextContent();
+  let text="";
 
-text+=content.items.map(x=>x.str).join(" ")+"\n";
+  for(let n=1;n<=pdf.numPages;n++){
+    const page=await pdf.getPage(n);
+    const content=await page.getTextContent();
 
-if(text.length>30000){
-text=text.slice(0,30000);
-break;
-}
-}
+    text+=content.items.map(x=>x.str).join(" ")+"\n";
 
-if(!text.trim())throw new Error("متنی در این PDF پیدا نشد؛ شاید فایل اسکن‌شده باشد.");
+    if(text.length>30000){
+      text=text.slice(0,30000);
+      break;
+    }
+  }
 
-return text;
+  if(!text.trim()){
+    throw new Error("متنی در این PDF پیدا نشد؛ شاید فایل اسکن‌شده باشد.");
+  }
+
+  return text;
 }
 
 async function sendMessage(customText=null){
-if(busy)return;
+  if(busy)return;
 
-const text=(customText!==null?customText:input.value).trim();
+  const text=(customText!==null?customText:input.value).trim();
 
-if(!text&&!selectedFile)return;
+  if(!text&&!selectedFile)return;
 
-let userText=text;
+  let userText=text;
 
-if(selectedFile&&selectedDocument){
-userText=(text?text+"\n\n":"لطفاً محتوای فایل PDF پیوست‌شده را بررسی کن: ")+"فایل PDF: "+selectedFile.name;
-}
+  if(selectedFile&&selectedDocument){
+    userText=(text?text+"\n\n":"لطفاً محتوای PDF پیوست‌شده را بررسی کن: ")+
+      "فایل PDF: "+selectedFile.name;
+  }
 
-if(!userText)return;
+  if(!userText)return;
 
-welcome.style.display="none";
+  welcome.style.display="none";
 
-const userTimestamp=Date.now();
+  const userTimestamp=Date.now();
 
-messages.push({
-role:"user",
-content:userText,
-timestamp:userTimestamp
-});
+  messages.push({
+    role:"user",
+    content:userText,
+    timestamp:userTimestamp
+  });
 
-addMessage("user",userText,false);
-saveHistory();
+  addMessage("user",userText,false);
+  saveHistory();
 
-input.value="";
-input.style.height="44px";
+  input.value="";
+  input.style.height="44px";
 
-setBusy(true);
-showTyping();
+  setBusy(true);
+  showTyping();
 
-try{
-const controller=new AbortController();
-const timeout=setTimeout(()=>controller.abort(),90000);
+  try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),90000);
 
-let response;
+    let response;
 
-try{
-response=await fetch("/api/chat",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-messages:messages.slice(-20).map(m=>({
-role:m.role,
-content:m.content
-})),
-document:selectedDocument
-}),
-signal:controller.signal
-});
-}finally{
-clearTimeout(timeout);
-}
+    try{
+      response=await fetch("/api/chat",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          messages:messages.slice(-20).map(m=>({
+            role:m.role,
+            content:m.content
+          })),
+          document:selectedDocument
+        }),
+        signal:controller.signal
+      });
+    }finally{
+      clearTimeout(timeout);
+    }
 
-let data;
+    let data;
 
-try{
-data=await response.json();
-}catch{
-throw new Error("پاسخ سرور قابل خواندن نیست.");
-}
+    try{
+      data=await response.json();
+    }catch{
+      throw new Error("پاسخ سرور قابل خواندن نیست.");
+    }
 
-if(!response.ok)throw new Error(data.error||"خطا در ارتباط با سرور.");
+    if(!response.ok){
+      throw new Error(data.error||"خطا در ارتباط با سرور.");
+    }
 
-if(typeof data.reply!=="string"||!data.reply.trim()){
-throw new Error("پاسخ خالی از سرور دریافت شد.");
-}
+    if(typeof data.reply!=="string"||!data.reply.trim()){
+      throw new Error("پاسخ خالی از سرور دریافت شد.");
+    }
 
-const assistantTimestamp=Date.now();
+    const assistantTimestamp=Date.now();
 
-messages.push({
-role:"assistant",
-content:data.reply,
-timestamp:assistantTimestamp
-});
+    messages.push({
+      role:"assistant",
+      content:data.reply,
+      timestamp:assistantTimestamp
+    });
 
-removeTyping();
-addMessage("assistant",data.reply,false);
-saveHistory();
+    removeTyping();
+    addMessage("assistant",data.reply,false);
+    saveHistory();
 
-clearSelectedFile();
+    clearSelectedFile();
 
-}catch(error){
+  }catch(error){
+    removeTyping();
 
-messages.pop();
-saveHistory();
-removeTyping();
+    const msg=error.name==="AbortError"?
+      "زمان پاسخ‌گویی سرور تمام شد؛ دوباره تلاش کنید.":
+      (error.message||"ارتباط با سرور برقرار نشد.");
 
-const msg=error.name==="AbortError"
-?"زمان پاسخ‌گویی سرور تمام شد؛ دوباره تلاش کنید."
-:(error.message||"ارتباط با سرور برقرار نشد.");
+    const node=addMessage(
+      "assistant",
+      "متأسفم، مشکلی پیش آمد:\n"+msg,
+      false
+    );
 
-const node=addMessage("assistant","متأسفم، مشکلی پیش آمد:\n"+msg,false);
-node.querySelector(".message-content").classList.add("error-note");
+    node.querySelector(".message-content").classList.add("error-note");
 
-}finally{
-removeTyping();
-setBusy(false);
-}
+  }finally{
+    removeTyping();
+    setBusy(false);
+    input.focus();
+  }
 }
 
 sendBtn.addEventListener("click",()=>sendMessage());
 
 input.addEventListener("keydown",e=>{
-if(e.key==="Enter"&&!e.shiftKey){
-e.preventDefault();
-sendMessage();
-}
+  if(e.key==="Enter"&&!e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
 });
 
 input.addEventListener("input",()=>{
-input.style.height="44px";
-input.style.height=Math.min(input.scrollHeight,140)+"px";
+  input.style.height="44px";
+  input.style.height=Math.min(input.scrollHeight,140)+"px";
 });
 
-attachBtn.addEventListener("click",()=>fileInput.click());
+attachBtn.addEventListener("click",()=>{
+  fileInput.click();
+});
 
 fileInput.addEventListener("change",async()=>{
-const file=fileInput.files[0];
-if(!file)return;
+  const file=fileInput.files[0];
 
-if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf")){
-alert("لطفاً فقط فایل PDF انتخاب کنید.");
-clearSelectedFile();
-return;
-}
+  if(!file)return;
 
-selectedFile=file;
-fileName.textContent="در حال خواندن: "+file.name;
-filePreview.classList.add("show");
+  if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf")){
+    alert("لطفاً فقط فایل PDF انتخاب کنید.");
+    clearSelectedFile();
+    return;
+  }
 
-try{
-selectedDocument=await extractPDF(file);
-fileName.textContent="✓ "+file.name+" آماده ارسال است";
-}catch(e){
-alert(e.message);
-clearSelectedFile();
-}
+  selectedFile=file;
+  fileName.textContent="در حال خواندن: "+file.name;
+  filePreview.classList.add("show");
+
+  try{
+    selectedDocument=await extractPDF(file);
+    fileName.textContent="✓ "+file.name+" آماده ارسال است";
+  }catch(e){
+    alert(e.message);
+    clearSelectedFile();
+  }
 });
 
 $("removeFile").addEventListener("click",clearSelectedFile);
 
-document.querySelectorAll(".suggestion").forEach(b=>{
-b.addEventListener("click",()=>sendMessage(b.dataset.prompt));
+document.querySelectorAll(".suggestion").forEach(button=>{
+  button.addEventListener("click",()=>{
+    sendMessage(button.dataset.prompt);
+  });
 });
 
 $("newChatBtn").addEventListener("click",()=>{
-if(busy)return;
+  if(busy)return;
 
-messages=[];
-chat.innerHTML="";
-clearSelectedFile();
+  messages=[];
+  chat.innerHTML="";
+  clearSelectedFile();
 
-try{
-localStorage.removeItem(STORAGE_KEY);
-}catch(e){
-console.warn(e);
-}
+  try{
+    localStorage.removeItem(STORAGE_KEY);
+  }catch(e){
+    console.warn(e);
+  }
 
-welcome.style.display="block";
-input.value="";
-input.style.height="44px";
+  welcome.style.display="block";
+  input.value="";
+  input.style.height="44px";
 });
 
 function restoreHistory(){
-try{
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
 
-const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw)return;
 
-if(!raw)return;
+    const list=JSON.parse(raw);
 
-const list=JSON.parse(raw);
+    if(!Array.isArray(list))return;
 
-if(!Array.isArray(list))return;
+    messages=list.filter(m=>
+      m&&
+      (m.role==="user"||m.role==="assistant")&&
+      typeof m.content==="string"&&
+      isRecent(m)
+    ).slice(-40);
 
-messages=list.filter(m=>
-m&&
-(m.role==="user"||m.role==="assistant")&&
-typeof m.content==="string"&&
-isRecent(m)
-).slice(-40);
+    saveHistory();
 
-saveHistory();
+    if(messages.length){
+      welcome.style.display="none";
 
-if(messages.length){
-welcome.style.display="none";
+      messages.forEach(m=>{
+        addMessage(m.role,m.content,false,m.timestamp);
+      });
+    }
 
-messages.forEach(m=>{
-addMessage(m.role,m.content,false,m.timestamp);
-});
-}
-
-}catch(e){
-console.warn("Could not restore history",e);
-}
+  }catch(e){
+    console.warn("Could not restore history",e);
+  }
 }
 
 restoreHistory();
+
+</script>
+
+</body>
+</html>
