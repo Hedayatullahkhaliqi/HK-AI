@@ -1,0 +1,11 @@
+{
+  "appId": "com.hedayatullahkhaliqi.hkai",
+  "appName": "HK.AI",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
