@@ -326,6 +326,9 @@ button{cursor:pointer}
   to{opacity:.2;transform:translateY(-4px)}
 }
 
+.voice-status{min-height:0;padding:0 14px;text-align:center;font-size:12px;color:#c5d0da;line-height:1.5}
+.voice-status:not(:empty){padding-top:7px;padding-bottom:3px}
+
 .composer{
   position:sticky;
   bottom:0;
@@ -932,6 +935,8 @@ body:before{
       <button class="attach-btn" id="attachBtn" title="افزودن عکس یا PDF" aria-label="افزودن فایل">＋</button>
 
     </div>
+
+    <div id="voiceStatus" class="voice-status" role="status" aria-live="polite"></div>
 
     <input
       type="file"
@@ -1573,6 +1578,13 @@ let voiceRecorder=null;
 let voiceStream=null;
 let voiceChunks=[];
 
+function setVoiceStatus(message){
+  const status=$("voiceStatus");
+  if(status)status.textContent=message||"";
+  const legacy=$("voiceBtn");
+  if(legacy)legacy.textContent=message||"🎙 صحبت کردن";
+}
+
 function setComposerMicRecording(active){
   const button=$("composerMicBtn");
   if(!button)return;
@@ -1591,13 +1603,13 @@ function finishVoiceTurn(){
   if(voiceRecorder&&voiceRecorder.state!=="inactive"){
     try{voiceRecorder.stop()}catch{}
   }
-  $("voiceBtn").textContent="🎙 برای صحبت دوباره میکروفون را بزن";
+  setVoiceStatus("🎙 برای صحبت دوباره میکروفون را بزن");
 }
 
 async function speakReply(text){
   if(!voiceMode)return;
   const spokenText=String(text||"").replace(/```[\\s\\S]*?```/g,"کد در پاسخ نوشته شده است").slice(0,1800);
-  $("voiceBtn").textContent="🔊 HK.AI در حال صحبت است…";
+  setVoiceStatus("🔊 HK.AI در حال صحبت است…");
   try{
     const response=await fetch("/api/tts",{
       method:"POST",
@@ -1621,9 +1633,9 @@ async function speakReply(text){
       utterance.onerror=finishVoiceTurn;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
-      $("voiceBtn").textContent="🔊 صدای جایگزین مرورگر";
+      setVoiceStatus("🔊 صدای جایگزین مرورگر");
     }else{
-      $("voiceBtn").textContent="🎙 صداسازی در دسترس نیست";
+      setVoiceStatus("🎙 صداسازی در دسترس نیست");
       finishVoiceTurn();
     }
   }
@@ -1633,7 +1645,7 @@ async function startVoiceInput(){
   if(voiceRecorder)return;
   if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
     voiceMode=false;
-    $("voiceBtn").textContent="🎙 ضبط صدا در این مرورگر پشتیبانی نمی‌شود";
+    setVoiceStatus("🎙 ضبط صدا در این مرورگر پشتیبانی نمی‌شود");
     return;
   }
   try{
@@ -1646,7 +1658,7 @@ async function startVoiceInput(){
     voiceRecorder.ondataavailable=event=>{if(event.data&&event.data.size)voiceChunks.push(event.data);};
     voiceRecorder.onerror=event=>{
       console.warn("Audio recording:",event.error);
-      $("voiceBtn").textContent="🎙 در ضبط صدا مشکل پیش آمد";
+      setVoiceStatus("🎙 در ضبط صدا مشکل پیش آمد");
     };
     voiceRecorder.onstop=async()=>{
       const recorderMime=voiceRecorder?.mimeType||voiceChunks[0]?.type||"audio/mp4";
@@ -1658,11 +1670,11 @@ async function startVoiceInput(){
       voiceChunks=[];
       if(!voiceMode)return;
       if(!audioBlob.size){
-        $("voiceBtn").textContent="🎙 صدایی ضبط نشد؛ دوباره بزن";
+        setVoiceStatus("🎙 صدایی ضبط نشد؛ دوباره بزن");
         finishVoiceTurn();
         return;
       }
-      $("voiceBtn").textContent="⌛ در حال تشخیص گفتار دری…";
+      setVoiceStatus("⌛ در حال تشخیص گفتار دری…");
       try{
         const reader=new FileReader();
         const audioBase64=await new Promise((resolve,reject)=>{
@@ -1685,14 +1697,14 @@ async function startVoiceInput(){
         sendMessage(transcript);
       }catch(error){
         console.warn("Gemini Dari transcription:",error);
-        $("voiceBtn").textContent="🎙 "+(error.message||"تبدیل صدا به متن ناموفق شد.");
+        setVoiceStatus("🎙 "+(error.message||"تبدیل صدا به متن ناموفق شد."));
         finishVoiceTurn();
       }
     };
     // Request periodic audio chunks for more reliable capture on iOS Safari.
     voiceRecorder.start(250);
     setComposerMicRecording(true);
-    $("voiceBtn").textContent="🔴 گوش می‌دهد… برای پایان صحبت دوباره بزن";
+    setVoiceStatus("🔴 گوش می‌دهد… برای پایان صحبت دوباره بزن");
   }catch(error){
     console.warn("Microphone access:",error);
     voiceStream?.getTracks().forEach(track=>track.stop());
@@ -1700,14 +1712,14 @@ async function startVoiceInput(){
     voiceRecorder=null;
     voiceMode=false;
     setComposerMicRecording(false);
-    $("voiceBtn").textContent=error.name==="NotAllowedError"?"🎙 اجازهٔ میکروفون داده نشد":"🎙 میکروفون فعال نشد؛ دوباره تلاش کن";
+    setVoiceStatus(error.name==="NotAllowedError"?"🎙 اجازهٔ میکروفون داده نشد":"🎙 میکروفون فعال نشد؛ دوباره تلاش کن");
   }
 }
 
 async function handleVoiceButton(){
   if(voiceMode){
     if(voiceRecorder&&voiceRecorder.state==="recording"){
-      $("voiceBtn").textContent="⌛ در حال تبدیل صدا به متن…";
+      setVoiceStatus("⌛ در حال تبدیل صدا به متن…");
       voiceRecorder.stop();
       return;
     }
@@ -1719,7 +1731,7 @@ async function handleVoiceButton(){
     if("speechSynthesis" in window)window.speechSynthesis.cancel();
     if(voiceAudio){voiceAudio.pause();voiceAudio=null;}
     if(voiceAudioUrl){URL.revokeObjectURL(voiceAudioUrl);voiceAudioUrl=null;}
-    $("voiceBtn").textContent="🎙 صحبت کردن";
+    setVoiceStatus("🎙 صحبت کردن");
     return;
   }
   voiceMode=true;
