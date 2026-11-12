@@ -691,8 +691,7 @@ You are HK.AI — Hedayatullah Khaliqi AI.
 
   } catch (error) {
     return json({
-      error: "HK AI service error",
-      details: String(error?.message || error)
+      error: "HK.AI service is temporarily unavailable. Please try again."
     }, 500);
   }
 }
