@@ -50,7 +50,7 @@ export async function onRequestPost({ request, env }) {
             text: prompt,
             annotations: [{
               type: "speech_metadata",
-              style: "Natural, warm, conversational English pronunciation. Speak clearly at a moderate pace."
+              style: "Natural, warm, conversational pronunciation in the language of the supplied text. Preserve its original language and speak clearly at a moderate pace."
             }]
           }]
         }],
