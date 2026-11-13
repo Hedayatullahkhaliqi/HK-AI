@@ -1,4 +1,4 @@
-name: Test HK.AI rate limiter
+name: Test HK.AI preview rate limiter
 on:
   workflow_dispatch:
 
@@ -9,22 +9,23 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Send harmless validation request through Pages middleware
+      - name: Send one harmless validation request to the preview deployment
         shell: bash
         run: |
-          set +e
+          set -euo pipefail
           HTTP_CODE=$(curl --silent --show-error --max-time 30 \
             --output response.json \
             --write-out "%{http_code}" \
-            --request POST "https://hk-ai.pages.dev/api/chat" \
+            --request POST "https://fix-production-durable-objec.hk-ai.pages.dev/api/chat" \
+            --header "Origin: https://fix-production-durable-objec.hk-ai.pages.dev" \
             --header "Content-Type: application/json" \
             --data '{}')
-          CURL_EXIT=$?
-          echo "curl_exit_code=$CURL_EXIT"
           echo "http_status=$HTTP_CODE"
           echo "response_body:"
-          cat response.json 2>/dev/null || true
+          cat response.json
           echo
-          if [ "$CURL_EXIT" -ne 0 ]; then
-            exit "$CURL_EXIT"
+          if [ "$HTTP_CODE" != "400" ] || ! grep -q "Invalid messages" response.json; then
+            echo "FAIL: expected the request to pass origin and Durable Object checks, then receive the API's harmless 400 validation response."
+            exit 1
           fi
+          echo "PASS: preview origin accepted and request passed the Durable Object rate limiter."
