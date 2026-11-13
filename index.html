@@ -1,7 +1,7 @@
 
 <!-- Production redeploy: use the already-tested image-generation build. -->
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="fa-AF" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -924,6 +924,19 @@ body{
   }
 }
 
+
+/* Dari / Persian interface support */
+body{direction:rtl;text-align:right}
+.header,.brand,.header-actions{direction:rtl}
+.history-panel,.tool-panel,.welcome{direction:rtl;text-align:right}
+.history-item{direction:rtl}
+.helper-action{text-align:right}
+.feature-bar,.suggestions,.helper-grid{direction:rtl}
+.message-label{text-align:right}
+.message.user{margin-right:auto;margin-left:0}
+.message.assistant{margin-left:auto;margin-right:0}
+.message-content{direction:auto;text-align:start}
+@media(max-width:560px){.header-actions{gap:5px}}
 </style>
 </head>
 
@@ -940,60 +953,60 @@ body{
       </div>
     </div>
     <div class="header-actions">
-      <button class="history-toggle" id="historyToggle" aria-expanded="false">History</button>
-      <button class="new-chat" id="newChatBtn">＋ New Chat</button>
+      <button class="history-toggle" id="historyToggle" aria-expanded="false">تاریخچه</button>
+      <button class="new-chat" id="newChatBtn">＋ گفت‌وگوی جدید</button>
     </div>
   </header>
 
   <div class="status">
     <span class="status-dot"></span>
-    HK.AI is ready to help
+    HK.AI آمادهٔ کمک است
   </div>
 
-  <section class="history-panel" id="historyPanel" hidden aria-label="Chat history">
-    <div class="history-top"><span>Previous conversations</span><button class="tool-close" id="closeHistory" aria-label="Close history">×</button></div>
-    <input class="history-search" id="historySearch" type="search" placeholder="Search conversations..." autocomplete="off">
+  <section class="history-panel" id="historyPanel" hidden aria-label="تاریخچهٔ گفتگوها">
+    <div class="history-top"><span>گفتگوهای قبلی</span><button class="tool-close" id="closeHistory" aria-label="بستن تاریخچه">×</button></div>
+    <input class="history-search" id="historySearch" type="search" placeholder="جستجوی گفتگوها..." autocomplete="off">
     <div class="history-list" id="historyList"></div>
   </section>
 
-  <nav class="feature-bar" aria-label="HK.AI features">
-    <button class="feature-btn" id="openImageTool">✦ Generate Image</button>
-    <button class="feature-btn" id="voiceBtn">🎙 Voice</button>
-    <button class="feature-btn" id="openPlanner">▦ Planner</button>
-    <button class="feature-btn" id="openHelper">✦ Assistant Tools</button>
+  <nav class="feature-bar" aria-label="امکانات HK.AI">
+    <button class="feature-btn" id="openImageTool">✦ ساخت تصویر</button>
+    <button class="feature-btn" id="voiceBtn">🎙 صدا</button>
+    <button class="feature-btn" id="openPlanner">▦ برنامه‌ریز</button>
+    <button class="feature-btn" id="openHelper">✦ ابزارهای دستیار</button>
   </nav>
   <section class="tool-panel helper-panel" id="helperTool" hidden>
-    <div class="tool-heading"><strong>HK.AI Smart Assistant</strong><button class="tool-close" data-close="helperTool" aria-label="Close">×</button></div>
-    <p class="tool-hint">Choose a task. A prompt will be prepared for you to customize.</p>
+    <div class="tool-heading"><strong>دستیار هوشمند HK.AI</strong><button class="tool-close" data-close="helperTool" aria-label="Close">×</button></div>
+    <p class="tool-hint">یک کار را انتخاب کنید؛ متن راهنما برای ویرایش شما آماده می‌شود.</p>
     <div class="helper-grid">
-      <button class="helper-action" data-helper="document"><span>▤</span>Read and explain a document</button>
-      <button class="helper-action" data-helper="translate"><span>文</span>Translate and simplify text</button>
-      <button class="helper-action" data-helper="letter"><span>✎</span>Write a formal letter</button>
-      <button class="helper-action" data-helper="cv"><span>▣</span>Create a CV and job application</button>
-      <button class="helper-action" data-helper="study"><span>🎓</span>Study help and practice</button>
-      <button class="helper-action" data-helper="data"><span>▦</span>Analyze data and tables</button>
+      <button class="helper-action" data-helper="document"><span>▤</span>خواندن و توضیح سند</button>
+      <button class="helper-action" data-helper="translate"><span>文</span>ترجمه و ساده‌سازی متن</button>
+      <button class="helper-action" data-helper="letter"><span>✎</span>نوشتن نامهٔ رسمی</button>
+      <button class="helper-action" data-helper="cv"><span>▣</span>ساخت خلص‌سوانح و درخواست کار</button>
+      <button class="helper-action" data-helper="study"><span>🎓</span>کمک درسی و تمرین</button>
+      <button class="helper-action" data-helper="data"><span>▦</span>تحلیل داده‌ها و جدول‌ها</button>
     </div>
-    <p class="tool-hint">You can attach an image or PDF. Hide personal or confidential information before sending.</p>
+    <p class="tool-hint">می‌توانید عکس یا فایل PDF ضمیمه کنید. پیش از فرستادن، اطلاعات شخصی و محرمانه را پنهان سازید.</p>
   </section>
   <section class="tool-panel" id="imageTool" hidden>
-    <div class="tool-heading"><strong>Advanced AI Image Studio</strong><button class="tool-close" data-close="imageTool" aria-label="Close">×</button></div>
-    <p class="tool-hint">Create detailed images or use up to four reference photos to guide an edit. Describe exactly what must change and what should stay the same.</p>
-    <textarea id="imagePrompt" rows="3" maxlength="1200" placeholder="Describe your image in detail. Example: A realistic mountain valley at sunset, with a narrow river and no buildings..."></textarea>
+    <div class="tool-heading"><strong>استودیوی پیشرفتهٔ ساخت تصویر</strong><button class="tool-close" data-close="imageTool" aria-label="Close">×</button></div>
+    <p class="tool-hint">تصویرهای دقیق بسازید یا تا چهار عکس مرجع برای ویرایش اضافه کنید. روشن کنید چه چیز تغییر کند و چه چیز بدون تغییر بماند.</p>
+    <textarea id="imagePrompt" rows="3" maxlength="1200" placeholder="تصویر مورد نظر را با جزئیات توصیف کنید..."></textarea>
     <div class="image-controls">
-      <label class="image-control">Visual style
+      <label class="image-control">سبک تصویر
         <select id="imageStyle">
-          <option value="auto">Automatic / follow my description</option>
-          <option value="photorealistic">Photorealistic</option>
-          <option value="cinematic">Cinematic</option>
-          <option value="digital">Digital illustration</option>
-          <option value="3d">3D render</option>
-          <option value="anime">Anime</option>
-          <option value="watercolor">Watercolor</option>
-          <option value="fantasy">Fantasy concept art</option>
-          <option value="product">Product photography</option>
+          <option value="auto">خودکار / مطابق توصیف من</option>
+          <option value="photorealistic">واقع‌گرایانه</option>
+          <option value="cinematic">سینمایی</option>
+          <option value="digital">تصویرسازی دیجیتال</option>
+          <option value="3d">مدل سه‌بعدی</option>
+          <option value="anime">انیمه</option>
+          <option value="watercolor">آبرنگ</option>
+          <option value="fantasy">هنر مفهومی خیال‌پردازانه</option>
+          <option value="product">عکاسی محصول</option>
         </select>
       </label>
-      <label class="image-control">Image format
+      <label class="image-control">اندازهٔ تصویر
         <select id="imageAspect">
           <option value="square">Square · 1:1</option>
           <option value="portrait">Portrait · 4:5</option>
@@ -1003,37 +1016,37 @@ body{
         </select>
       </label>
     </div>
-    <label class="image-guidance">Prompt accuracy <input id="imageGuidance" type="range" min="1" max="10" step="0.5" value="4"><span id="imageGuidanceValue">4</span></label>
+    <label class="image-guidance">دقت پیروی از متن <input id="imageGuidance" type="range" min="1" max="10" step="0.5" value="4"><span id="imageGuidanceValue">4</span></label>
     <div class="image-reference-row">
-      <button class="tool-secondary" id="addImageReferences" type="button">＋ Add reference photos</button>
+      <button class="tool-secondary" id="addImageReferences" type="button">＋ افزودن عکس مرجع</button>
       <input id="imageReferenceInput" type="file" accept="image/jpeg,image/png,image/webp" multiple>
-      <span class="image-reference-list" id="imageReferenceList">No reference photos selected · up to 4</span>
-      <button class="tool-secondary" id="clearImageReferences" type="button" hidden>Clear</button>
+      <span class="image-reference-list" id="imageReferenceList">هیچ عکس مرجعی انتخاب نشده · حداکثر ۴ عکس</span>
+      <button class="tool-secondary" id="clearImageReferences" type="button" hidden>پاک‌کردن</button>
     </div>
     <div class="image-actions">
-      <button class="tool-secondary" id="enhanceImagePrompt" type="button">✦ Improve prompt</button>
-      <button class="tool-primary" id="generateImage" type="button">Generate Image</button>
+      <button class="tool-secondary" id="enhanceImagePrompt" type="button">✦ بهبود متن توصیف</button>
+      <button class="tool-primary" id="generateImage" type="button">ساخت تصویر</button>
     </div>
     <div id="imageStatus" class="tool-status" aria-live="polite"></div>
-    <img id="generatedImage" class="generated-image" alt="Generated image" hidden>
-    <a id="downloadGeneratedImage" class="image-download" download="hk-ai-image.png" hidden>↓ Download image</a>
+    <img id="generatedImage" class="generated-image" alt="تصویر ساخته‌شده" hidden>
+    <a id="downloadGeneratedImage" class="image-download" download="hk-ai-image.png" hidden>↓ دریافت تصویر</a>
   </section>
   <section class="tool-panel" id="plannerTool" hidden>
-    <div class="tool-heading"><strong>Personal Planner</strong><button class="tool-close" data-close="plannerTool">×</button></div>
-    <div class="planner-entry"><input id="taskInput" placeholder="What do you need to do today?"><input id="taskTime" type="time" aria-label="Reminder time"><button class="tool-primary" id="addTask">Add</button></div>
+    <div class="tool-heading"><strong>برنامه‌ریز شخصی</strong><button class="tool-close" data-close="plannerTool">×</button></div>
+    <div class="planner-entry"><input id="taskInput" placeholder="امروز چه کاری باید انجام دهید؟"><input id="taskTime" type="time" aria-label="زمان یادآوری"><button class="tool-primary" id="addTask">افزودن</button></div>
     <ul id="taskList" class="task-list"></ul>
-    <p class="tool-hint">Tasks are saved on this device. Allow browser notifications to receive reminders.</p>
+    <p class="tool-hint">کارها روی همین دستگاه ذخیره می‌شوند. برای دریافت یادآوری، اجازهٔ اعلان‌های مرورگر را فعال کنید.</p>
   </section>
 
   <main class="chat" id="chat">
 
     <section class="welcome" id="welcome">
       <div class="welcome-logo">HK</div>
-      <h1>Welcome to HK.AI</h1>
+      <h1>به HK.AI خوش آمدید</h1>
       <p>
         Hedayatullah Khaliqi AI
         <br>
-        Ready to help with your questions and ideas.
+        آماده‌ام در پرسش‌ها و ایده‌های شما کمک کنم.
       </p>
 
       <div class="brand-meaning">
@@ -1041,10 +1054,10 @@ body{
       </div>
 
       <div class="suggestions">
-        <button class="suggestion" data-prompt="Introduce yourself">Meet HK.AI</button>
-        <button class="suggestion" data-prompt="How can I improve my English?">Learn a language</button>
-        <button class="suggestion" data-prompt="Tell me an interesting scientific fact.">Science facts</button>
-        <button class="suggestion" data-prompt="Create a useful daily schedule for me.">Daily planning</button>
+        <button class="suggestion" data-prompt="خودت را معرفی کن">با HK.AI آشنا شوید</button>
+        <button class="suggestion" data-prompt="چگونه می‌توانم زبان انگلیسی خود را بهتر بسازم؟">یادگیری زبان</button>
+        <button class="suggestion" data-prompt="یک حقیقت علمی جالب برایم بگو.">دانستنی‌های علمی</button>
+        <button class="suggestion" data-prompt="یک برنامهٔ روزانهٔ مفید برایم بساز.">برنامه‌ریزی روزانه</button>
       </div>
     </section>
 
@@ -1057,22 +1070,22 @@ body{
         <img id="imagePreview" class="preview-image" alt="Image preview">
         <span id="fileName"></span>
       </div>
-      <button class="remove-file" id="removeFile" title="Remove file">×</button>
+      <button class="remove-file" id="removeFile" title="حذف فایل">×</button>
     </div>
 
     <div class="input-box">
 
-      <button class="attach-btn" id="attachBtn" title="Attach an image or PDF" aria-label="Attach file">＋</button>
+      <button class="attach-btn" id="attachBtn" title="ضمیمه‌کردن عکس یا PDF" aria-label="ضمیمه‌کردن فایل">＋</button>
 
-      <button class="mic-btn" id="composerMicBtn" title="Record audio" aria-label="Record audio">🎙</button>
+      <button class="mic-btn" id="composerMicBtn" title="ضبط صدا" aria-label="ضبط صدا">🎙</button>
 
       <textarea
         id="messageInput"
         rows="1"
-        placeholder="Ask HK.AI"
+        placeholder="از HK.AI بپرسید..."
       ></textarea>
 
-      <button class="send-btn" id="sendBtn" title="Send" aria-label="Send message">↑</button>
+      <button class="send-btn" id="sendBtn" title="فرستادن" aria-label="فرستادن پیام">↑</button>
 
     </div>
 
@@ -1085,7 +1098,7 @@ body{
     >
 
     <div class="footer">
-      HK.AI · Hedayatullah Khaliqi
+      HK.AI · هدایت‌الله خلیقی
     </div>
 
   </section>
