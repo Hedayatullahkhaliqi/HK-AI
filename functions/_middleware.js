@@ -4,7 +4,9 @@ function isAllowedOrigin(origin){
  if(ALLOWED_ORIGINS.has(origin)) return true;
  try {
    const url=new URL(origin);
-   return url.protocol==="https:" && url.hostname.endsWith(".hk-ai.pages.dev");
+   return url.protocol==="https:" &&
+     url.origin===origin &&
+     /^[a-z0-9-]+\\.hk-ai\\.pages\\.dev$/i.test(url.hostname);
  } catch {
    return false;
  }
