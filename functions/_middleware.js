@@ -1,4 +1,4 @@
-const ALLOWED_ORIGINS = new Set(["https://hk-ai.pages.dev","capacitor://localhost","https://localhost","http://localhost"]);
+const ALLOWED_ORIGINS = new Set(["https://hk-ai.pages.dev","https://feature-chat-image-generatio.hk-ai.pages.dev","capacitor://localhost","https://localhost","http://localhost"]);
 const BODY_LIMITS = {"/api/chat":11*1024*1024,"/api/image":11*1024*1024,"/api/transcribe":16*1024*1024,"/api/tts":64*1024};
 function secure(h){h.set("X-Content-Type-Options","nosniff");h.set("Referrer-Policy","no-referrer");h.set("X-Frame-Options","DENY");h.set("Permissions-Policy","camera=(), geolocation=(), payment=()");h.set("Cache-Control","no-store");return h;}
 function reply(data,status,cors){const h=new Headers(cors);h.set("Content-Type","application/json; charset=utf-8");secure(h);return new Response(JSON.stringify(data),{status,headers:h});}
