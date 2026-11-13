@@ -1,0 +1,31 @@
+name: HK.AI self-improvement checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  syntax:
+    name: Validate JavaScript syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check Pages Functions syntax
+        run: |
+          node --experimental-default-type=module --check < functions/_middleware.js
+          node --experimental-default-type=module --check < functions/api/feedback.js
+
+      - name: Check frontend inline scripts
+        run: node scripts/check-inline-scripts.mjs
