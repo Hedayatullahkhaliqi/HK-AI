@@ -110,6 +110,8 @@ button{cursor:pointer}
   font-size:12px;
 }
 
+.header-actions{display:flex;align-items:center;gap:8px}
+.history-toggle{border:1px solid #71808d;border-radius:12px;padding:10px 12px;color:#e8edf1;background:#202830;font-size:12px}
 .new-chat:active,.send-btn:active,.attach-btn:active{
   transform:scale(.96);
 }
@@ -863,7 +865,17 @@ body:before{
 .task-list li label{flex:1}
 .task-list li.done label{text-decoration:line-through;opacity:.55}
 .task-list button{border:0;border-radius:8px;padding:5px 9px;background:#ffffff12;color:#e6c4c4}
-@media(max-width:480px){.feature-bar{gap:6px}.feature-btn{font-size:11px;padding:7px 3px}.planner-entry input{flex-basis:40%}}
+.history-panel{margin:10px 0;padding:12px;border:1px solid #596b7b;border-radius:14px;background:linear-gradient(145deg,#263440,#151e27)}
+.history-panel[hidden]{display:none}
+.history-top{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:9px;color:#e7f0f7;font-size:13px;font-weight:700}
+.history-search{width:100%;padding:10px 12px;border:1px solid #526779;border-radius:10px;background:#0d1721;color:#f2f7fb;font:inherit;font-size:13px}
+.history-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;margin-top:9px}
+.history-item{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #ffffff16;border-radius:9px;background:#ffffff08}
+.history-open{flex:1;min-width:0;border:0;background:transparent;color:#e7edf2;text-align:left;font:inherit;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-date{display:block;color:#9cabb8;font-size:10px;margin-top:3px}
+.history-delete{border:0;border-radius:7px;padding:6px 9px;background:#ffffff12;color:#e6bcbc;font-size:12px}
+.history-empty{padding:12px;color:#aab8c4;text-align:center;font-size:12px}
+@media(max-width:480px){.header{padding:11px 10px}.header-actions{gap:5px}.history-toggle,.new-chat{padding:9px 8px;font-size:11px}.feature-bar{gap:6px}.feature-btn{font-size:11px;padding:7px 3px}.planner-entry input{flex-basis:40%}}
 @media(prefers-reduced-motion:reduce){.feature-btn,.tool-primary{transition:none}}
 
 
@@ -927,7 +939,10 @@ body{
         <div class="brand-sub">Hedayatullah Khaliqi</div>
       </div>
     </div>
-    <button class="new-chat" id="newChatBtn">＋ New Chat</button>
+    <div class="header-actions">
+      <button class="history-toggle" id="historyToggle" aria-expanded="false">History</button>
+      <button class="new-chat" id="newChatBtn">＋ New Chat</button>
+    </div>
   </header>
 
   <div class="status">
@@ -935,7 +950,12 @@ body{
     HK.AI is ready to help
   </div>
 
-  
+  <section class="history-panel" id="historyPanel" hidden aria-label="Chat history">
+    <div class="history-top"><span>Previous conversations</span><button class="tool-close" id="closeHistory" aria-label="Close history">×</button></div>
+    <input class="history-search" id="historySearch" type="search" placeholder="Search conversations..." autocomplete="off">
+    <div class="history-list" id="historyList"></div>
+  </section>
+
   <nav class="feature-bar" aria-label="HK.AI features">
     <button class="feature-btn" id="openImageTool">✦ Generate Image</button>
     <button class="feature-btn" id="voiceBtn">🎙 Voice</button>
@@ -1122,10 +1142,15 @@ const fileName=$("fileName");
 const imagePreview=$("imagePreview");
 
 const STORAGE_KEY="hk_ai_chat_history_v3";
-const MAX_AGE=12*60*60*1000;
+const CONVERSATIONS_KEY="hk_ai_conversations_v1";
+const MAX_AGE=30*24*60*60*1000;
+const MAX_CONVERSATIONS=20;
+const MAX_CONVERSATION_MESSAGES=30;
 const MAX_IMAGE_SIZE=8*1024*1024;
 
 let messages=[];
+let conversations=[];
+let activeConversationId="";
 let busy=false;
 let selectedDocument="";
 let selectedFile=null;
@@ -1137,11 +1162,50 @@ function isRecent(message){
     Date.now()-message.timestamp<MAX_AGE;
 }
 
+function makeConversationId(){
+  return "chat-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
+}
+
+function conversationTitle(list){
+  const first=list.find(m=>m&&m.role==="user"&&typeof m.content==="string");
+  if(!first)return "New conversation";
+  const title=first.content.replace(/\\s+/g," ").trim();
+  return title.length>42?title.slice(0,42)+"…":title||"New conversation";
+}
+
+function persistConversations(){
+  try{
+    localStorage.setItem(CONVERSATIONS_KEY,JSON.stringify(
+      conversations.slice(0,MAX_CONVERSATIONS).map(item=>({
+        id:item.id,
+        title:item.title,
+        updatedAt:item.updatedAt,
+        messages:item.messages.slice(-MAX_CONVERSATION_MESSAGES)
+      }))
+    ));
+  }catch(e){
+    console.warn("Conversation archive could not be saved",e);
+  }
+}
+
 function saveHistory(){
   try{
     const recent=messages.filter(isRecent).slice(-40);
     messages=recent;
     localStorage.setItem(STORAGE_KEY,JSON.stringify(recent));
+    if(activeConversationId){
+      let item=conversations.find(x=>x.id===activeConversationId);
+      if(!item){
+        item={id:activeConversationId,title:"New conversation",updatedAt:Date.now(),messages:[]};
+        conversations.unshift(item);
+      }
+      item.messages=recent.slice(-MAX_CONVERSATION_MESSAGES);
+      item.title=conversationTitle(item.messages);
+      item.updatedAt=Date.now();
+      conversations.sort((a,b)=>b.updatedAt-a.updatedAt);
+      conversations=conversations.slice(0,MAX_CONVERSATIONS);
+      persistConversations();
+    }
   }catch(e){
     console.warn("History storage unavailable",e);
   }
@@ -1708,53 +1772,124 @@ document.querySelectorAll(".suggestion").forEach(button=>{
   });
 });
 
-$("newChatBtn").addEventListener("click",()=>{
-  if(busy)return;
-
-  messages=[];
+function resetChatView(){
   chat.innerHTML="";
-  clearSelectedFile();
-
-  try{
-    localStorage.removeItem(STORAGE_KEY);
-  }catch(e){
-    console.warn(e);
-  }
-
   welcome.style.display="block";
   input.value="";
   input.style.height="44px";
+  clearSelectedFile();
+}
+
+function startNewConversation(){
+  if(busy)return;
+  saveHistory();
+  activeConversationId=makeConversationId();
+  messages=[];
+  resetChatView();
+  saveHistory();
+  renderConversationList();
+}
+
+$("newChatBtn").addEventListener("click",startNewConversation);
+
+function openConversation(id){
+  if(busy)return;
+  saveHistory();
+  const item=conversations.find(x=>x.id===id);
+  if(!item)return;
+  activeConversationId=item.id;
+  messages=item.messages.filter(m=>m&&(m.role==="user"||m.role==="assistant")&&typeof m.content==="string"&&isRecent(m)).slice(-40);
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(messages));}catch(e){console.warn(e);}
+  resetChatView();
+  if(messages.length){
+    welcome.style.display="none";
+    messages.forEach(m=>addMessage(m.role,m.content,false,m.timestamp));
+  }
+  $("historyPanel").hidden=true;
+  $("historyToggle").setAttribute("aria-expanded","false");
+  renderConversationList();
+}
+
+function renderConversationList(){
+  const list=$("historyList");
+  if(!list)return;
+  const query=String($("historySearch").value||"").trim().toLowerCase();
+  list.replaceChildren();
+  const filtered=conversations.filter(item=>!query||item.title.toLowerCase().includes(query)||item.messages.some(m=>m.content.toLowerCase().includes(query)));
+  if(!filtered.length){
+    const empty=document.createElement("div");
+    empty.className="history-empty";
+    empty.textContent=conversations.length?"No matching conversations.":"Your saved conversations will appear here.";
+    list.append(empty);
+    return;
+  }
+  filtered.forEach(item=>{
+    const row=document.createElement("div");row.className="history-item";
+    const open=document.createElement("button");open.className="history-open";open.type="button";
+    const title=document.createElement("span");title.textContent=item.title||"New conversation";
+    const date=document.createElement("span");date.className="history-date";date.textContent=new Date(item.updatedAt).toLocaleString();
+    open.append(title,date);open.addEventListener("click",()=>openConversation(item.id));
+    const remove=document.createElement("button");remove.className="history-delete";remove.type="button";remove.textContent="Delete";remove.setAttribute("aria-label","Delete "+(item.title||"conversation"));
+    remove.addEventListener("click",()=>{
+      if(busy)return;
+      conversations=conversations.filter(x=>x.id!==item.id);
+      if(activeConversationId===item.id){activeConversationId=makeConversationId();messages=[];resetChatView();saveHistory();}
+      persistConversations();renderConversationList();
+    });
+    row.append(open,remove);list.append(row);
+  });
+}
+
+$("historyToggle").addEventListener("click",()=>{
+  const panel=$("historyPanel");panel.hidden=!panel.hidden;
+  $("historyToggle").setAttribute("aria-expanded",String(!panel.hidden));
+  if(!panel.hidden){renderConversationList();$("historySearch").focus();}
 });
+$("closeHistory").addEventListener("click",()=>{
+  $("historyPanel").hidden=true;$("historyToggle").setAttribute("aria-expanded","false");
+});
+$("historySearch").addEventListener("input",renderConversationList);
 
 function restoreHistory(){
   try{
-    const raw=localStorage.getItem(STORAGE_KEY);
-
-    if(!raw)return;
-
-    const list=JSON.parse(raw);
-
-    if(!Array.isArray(list))return;
-
-    messages=list.filter(m=>
-      m&&
-      (m.role==="user"||m.role==="assistant")&&
-      typeof m.content==="string"&&
-      isRecent(m)
-    ).slice(-40);
-
-    saveHistory();
-
+    const saved=localStorage.getItem(CONVERSATIONS_KEY);
+    if(saved){
+      const parsed=JSON.parse(saved);
+      if(Array.isArray(parsed)){
+        conversations=parsed.filter(item=>item&&typeof item.id==="string"&&Array.isArray(item.messages)).map(item=>({
+          id:item.id,
+          title:typeof item.title==="string"?item.title:"New conversation",
+          updatedAt:Number(item.updatedAt)||Date.now(),
+          messages:item.messages.filter(m=>m&&(m.role==="user"||m.role==="assistant")&&typeof m.content==="string"&&isRecent(m)).slice(-MAX_CONVERSATION_MESSAGES)
+        })).filter(item=>item.messages.length).sort((a,b)=>b.updatedAt-a.updatedAt).slice(0,MAX_CONVERSATIONS);
+      }
+    }
+    const legacy=localStorage.getItem(STORAGE_KEY);
+    if(!conversations.length&&legacy){
+      const oldList=JSON.parse(legacy);
+      if(Array.isArray(oldList)){
+        const oldMessages=oldList.filter(m=>m&&(m.role==="user"||m.role==="assistant")&&typeof m.content==="string"&&isRecent(m)).slice(-40);
+        if(oldMessages.length){
+          const migrated={id:makeConversationId(),title:conversationTitle(oldMessages),updatedAt:Date.now(),messages:oldMessages.slice(-MAX_CONVERSATION_MESSAGES)};
+          conversations=[migrated];
+        }
+      }
+    }
+    if(conversations.length){
+      const latest=conversations[0];activeConversationId=latest.id;messages=latest.messages.slice(-40);
+    }else{
+      activeConversationId=makeConversationId();messages=[];
+    }
+    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(messages));}catch(e){console.warn(e);}
+    persistConversations();
     if(messages.length){
       welcome.style.display="none";
-
-      messages.forEach(m=>{
-        addMessage(m.role,m.content,false,m.timestamp);
-      });
+      messages.forEach(m=>addMessage(m.role,m.content,false,m.timestamp));
     }
-
+    renderConversationList();
   }catch(e){
-    console.warn("Could not restore history",e);
+    console.warn("Could not restore conversation history",e);
+    activeConversationId=makeConversationId();
   }
 }
 
