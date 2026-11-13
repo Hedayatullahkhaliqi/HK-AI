@@ -9,23 +9,60 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Send one harmless validation request to the preview deployment
+      - name: Verify preview origin and harmless API validation
         shell: bash
         run: |
           set -euo pipefail
+          URL="https://fix-production-durable-objec.hk-ai.pages.dev/api/chat"
+          ORIGIN="https://fix-production-durable-objec.hk-ai.pages.dev"
           HTTP_CODE=$(curl --silent --show-error --max-time 30 \
             --output response.json \
             --write-out "%{http_code}" \
-            --request POST "https://fix-production-durable-objec.hk-ai.pages.dev/api/chat" \
-            --header "Origin: https://fix-production-durable-objec.hk-ai.pages.dev" \
+            --request POST "$URL" \
+            --header "Origin: $ORIGIN" \
             --header "Content-Type: application/json" \
             --data '{}')
-          echo "http_status=$HTTP_CODE"
-          echo "response_body:"
+          echo "initial_http_status=$HTTP_CODE"
           cat response.json
           echo
           if [ "$HTTP_CODE" != "400" ] || ! grep -q "Invalid messages" response.json; then
-            echo "FAIL: expected the request to pass origin and Durable Object checks, then receive the API's harmless 400 validation response."
+            echo "FAIL: expected harmless 400 validation response after origin and rate-limiter checks."
             exit 1
           fi
-          echo "PASS: preview origin accepted and request passed the Durable Object rate limiter."
+          echo "PASS: initial request passed origin and rate-limiter checks."
+
+      - name: Verify the 30-request per-minute limit on preview only
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://fix-production-durable-objec.hk-ai.pages.dev/api/chat"
+          ORIGIN="https://fix-production-durable-objec.hk-ai.pages.dev"
+          for i in $(seq 1 30); do
+            HTTP_CODE=$(curl --silent --show-error --max-time 30 \
+              --output "response-$i.json" \
+              --write-out "%{http_code}" \
+              --request POST "$URL" \
+              --header "Origin: $ORIGIN" \
+              --header "Content-Type: application/json" \
+              --data '{}')
+            echo "request=$((i + 1)) http_status=$HTTP_CODE"
+            if [ "$i" -lt 30 ]; then
+              if [ "$HTTP_CODE" != "400" ]; then
+                echo "FAIL: request $((i + 1)) should still be under the 30-request limit."
+                cat "response-$i.json"
+                exit 1
+              fi
+            else
+              if [ "$HTTP_CODE" != "429" ]; then
+                echo "FAIL: request 31 should be rate limited with HTTP 429."
+                cat "response-$i.json"
+                exit 1
+              fi
+              if ! grep -qi "too many requests" "response-$i.json"; then
+                echo "FAIL: HTTP 429 response did not contain the expected rate-limit message."
+                cat "response-$i.json"
+                exit 1
+              fi
+            fi
+          done
+          echo "PASS: first 30 requests were allowed through middleware; request 31 was rate limited."
