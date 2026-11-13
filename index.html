@@ -1383,40 +1383,58 @@ function clearSelectedFile(){
 
 async function extractPDF(file){
   if(!window.pdfjsLib){
-    throw new Error("ابزار PDF بارگذاری نشد. اتصال اینترنت خود را بررسی کنید.");
+    throw new Error("ابزار خواندن PDF بارگذاری نشد. برای خواندن این فایل به اتصال اینترنت نیاز است.");
   }
 
+  if(!file||file.size===0){
+    throw new Error("فایل PDF خالی است.");
+  }
   if(file.size>10*1024*1024){
     throw new Error("حجم فایل PDF نباید بیشتر از ۱۰ مگابایت باشد.");
   }
 
-  const pdf=await pdfjsLib.getDocument({
-    data:new Uint8Array(await file.arrayBuffer())
-  }).promise;
-
-  if(pdf.numPages>30){
-    throw new Error("فایل PDF نباید بیشتر از ۳۰ صفحه باشد.");
+  // Validate the actual PDF signature, not only its extension or MIME type.
+  const header=new Uint8Array(await file.slice(0,5).arrayBuffer());
+  if(header.length!==5||String.fromCharCode(...header)!=="%PDF-"){
+    throw new Error("فایل انتخاب‌شده یک سند PDF معتبر نیست.");
   }
 
-  let text="";
+  let pdf;
+  try{
+    pdf=await pdfjsLib.getDocument({
+      data:new Uint8Array(await file.arrayBuffer())
+    }).promise;
 
-  for(let n=1;n<=pdf.numPages;n++){
-    const page=await pdf.getPage(n);
-    const content=await page.getTextContent();
-
-    text+=content.items.map(x=>x.str).join(" ")+"\n";
-
-    if(text.length>30000){
-      text=text.slice(0,30000);
-      break;
+    if(pdf.numPages>30){
+      throw new Error("فایل PDF نباید بیشتر از ۳۰ صفحه باشد.");
     }
-  }
 
-  if(!text.trim()){
-    throw new Error("در این فایل PDF متنی پیدا نشد؛ شاید سند اسکن‌شده باشد.");
-  }
+    let text="";
+    for(let n=1;n<=pdf.numPages;n++){
+      const page=await pdf.getPage(n);
+      try{
+        const content=await page.getTextContent();
+        for(const item of content.items){
+          if(typeof item.str==="string")text+=item.str;
+          text+=item.hasEOL?"\\n":" ";
+          if(text.length>=30000)break;
+        }
+      }finally{
+        page.cleanup();
+      }
+      if(text.length>=30000){
+        text=text.slice(0,30000);
+        break;
+      }
+    }
 
-  return text;
+    if(!text.trim()){
+      throw new Error("از این PDF متن قابل‌استخراج پیدا نشد. احتمالاً سند اسکن‌شده یا تصویری است؛ قابلیت OCR هنوز در HK.AI فعال نشده است.");
+    }
+    return text.trim();
+  }finally{
+    if(pdf)await pdf.destroy();
+  }
 }
 
 // Convert selected image to a smaller JPEG
