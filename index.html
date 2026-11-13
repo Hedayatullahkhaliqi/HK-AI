@@ -1118,7 +1118,7 @@ const $=id=>document.getElementById(id);
 const chat=$("chat");
 
 const helperPrompts={
-  document:"Please read the attached document, form, or receipt carefully and explain it in clear English. List the key points, dates, amounts, and actions I need to take. Do not guess if something is unreadable.",
+  document:"Please read the attached document, form, or receipt carefully. Explain it in the same language the user is using. List the key points, dates, amounts, and actions the user may need to take. Preserve names, dates, and figures accurately. Do not guess if something is unreadable; clearly mark uncertain text.",
   translate:"Please translate the text below. Ask me for the target language if I have not specified one. Make the translation natural and accurate, and explain difficult terms simply. Text:",
   letter:"Help me write a respectful, professional letter or formal request. Ask for essential details such as the recipient, purpose, and any required names or dates. Do not invent information I have not provided.",
   cv:"Help me create a professional CV and job application. First ask brief questions about my education, work experience, skills, languages, and target job. Never invent experience or qualifications.",
