@@ -1,7 +1,7 @@
 
 <!-- Production redeploy: use the already-tested image-generation build. -->
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
@@ -218,8 +218,8 @@ button{cursor:pointer}
   to{opacity:1;transform:translateY(0)}
 }
 
-.message.user{margin-right:auto}
-.message.assistant{margin-left:auto}
+.message.user{margin-left:auto}
+.message.assistant{margin-right:auto}
 
 .message-label{
   font-size:11px;
@@ -271,7 +271,7 @@ button{cursor:pointer}
   text-decoration:underline;
 }
 
-.message-content ul{padding-right:22px}
+.message-content ul{padding-left:22px}
 
 .message-actions{margin:7px 5px}
 
@@ -346,7 +346,7 @@ button{cursor:pointer}
   width:max-content;
   max-width:100%;
   padding:6px 9px;
-  margin:0 0 9px auto;
+  margin:0 0 9px 0;
   border:1px solid #626f7a;
   border-radius:13px;
   background:linear-gradient(145deg,#303942,#1c2229);
@@ -397,7 +397,7 @@ button{cursor:pointer}
 
 /* ChatGPT-style rounded message composer */
 .input-box{
-  direction:rtl;
+  direction:ltr;
   display:flex;
   align-items:center;
   gap:7px;
@@ -825,7 +825,7 @@ body:before{
 .feature-bar{grid-template-columns:repeat(4,minmax(0,1fr))}
 .helper-panel .tool-hint{margin-bottom:12px}
 .helper-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-.helper-action{min-height:82px;padding:12px 10px;text-align:right;border:1px solid rgba(157,198,226,.28);border-radius:13px;color:#e7f1f8;background:linear-gradient(145deg,rgba(53,78,98,.8),rgba(15,27,39,.96));font:inherit;font-size:12px;font-weight:700;line-height:1.7}
+.helper-action{min-height:82px;padding:12px 10px;text-align:left;border:1px solid rgba(157,198,226,.28);border-radius:13px;color:#e7f1f8;background:linear-gradient(145deg,rgba(53,78,98,.8),rgba(15,27,39,.96));font:inherit;font-size:12px;font-weight:700;line-height:1.7}
 .helper-action span{display:block;color:#a9c9e0;font-size:19px;margin-bottom:3px}
 .helper-action:active{transform:scale(.985);background:#30495d}
 @media(max-width:480px){.feature-bar{grid-template-columns:repeat(2,minmax(0,1fr))}.helper-grid{grid-template-columns:1fr 1fr}.helper-action{font-size:11px;padding:10px 8px}}
@@ -913,55 +913,55 @@ body{
         <div class="brand-sub">Hedayatullah Khaliqi</div>
       </div>
     </div>
-    <button class="new-chat" id="newChatBtn">＋ گفت‌وگوی جدید</button>
+    <button class="new-chat" id="newChatBtn">＋ New Chat</button>
   </header>
 
   <div class="status">
     <span class="status-dot"></span>
-    HK AI آماده پاسخ‌گویی است
+    HK.AI is ready to help
   </div>
 
   
-  <nav class="feature-bar" aria-label="قابلیت‌های HK.AI">
-    <button class="feature-btn" id="openImageTool">✦ ساخت تصویر</button>
-    <button class="feature-btn" id="voiceBtn">🎙 صحبت کردن</button>
-    <button class="feature-btn" id="openPlanner">▦ برنامه‌ریزی</button>
-    <button class="feature-btn" id="openHelper">✦ کمک‌یار</button>
+  <nav class="feature-bar" aria-label="HK.AI features">
+    <button class="feature-btn" id="openImageTool">✦ Generate Image</button>
+    <button class="feature-btn" id="voiceBtn">🎙 Voice</button>
+    <button class="feature-btn" id="openPlanner">▦ Planner</button>
+    <button class="feature-btn" id="openHelper">✦ Assistant Tools</button>
   </nav>
   <section class="tool-panel helper-panel" id="helperTool" hidden>
-    <div class="tool-heading"><strong>کمک‌یار هوشمند HK.AI</strong><button class="tool-close" data-close="helperTool" aria-label="بستن">×</button></div>
-    <p class="tool-hint">کاری را انتخاب کن؛ متن آماده می‌شود و می‌توانی جزئیات خودت را اضافه کنی.</p>
+    <div class="tool-heading"><strong>HK.AI Smart Assistant</strong><button class="tool-close" data-close="helperTool" aria-label="بستن">×</button></div>
+    <p class="tool-hint">Choose a task. A prompt will be prepared for you to customize.</p>
     <div class="helper-grid">
-      <button class="helper-action" data-helper="document"><span>▤</span>خواندن و توضیح سند یا قبض</button>
-      <button class="helper-action" data-helper="translate"><span>文</span>ترجمه و ساده‌سازی متن</button>
-      <button class="helper-action" data-helper="letter"><span>✎</span>نوشتن درخواست و نامه رسمی</button>
-      <button class="helper-action" data-helper="cv"><span>▣</span>ساختن سی‌وی و درخواست کار</button>
+      <button class="helper-action" data-helper="document"><span>▤</span>Read and explain a document</button>
+      <button class="helper-action" data-helper="translate"><span>文</span>Translate and simplify text</button>
+      <button class="helper-action" data-helper="letter"><span>✎</span>Write a formal letter</button>
+      <button class="helper-action" data-helper="cv"><span>▣</span>Create a CV and job application</button>
     </div>
-    <p class="tool-hint">برای سند، عکس یا PDF را هم پیوست کن. پیش از فرستادن، اطلاعات شخصی و محرمانه را بپوشان.</p>
+    <p class="tool-hint">You can attach an image or PDF. Hide personal or confidential information before sending.</p>
   </section>
   <section class="tool-panel" id="imageTool" hidden>
-    <div class="tool-heading"><strong>ساخت تصویر با هوش مصنوعی</strong><button class="tool-close" data-close="imageTool">×</button></div>
-    <textarea id="imagePrompt" rows="2" placeholder="تصویری را که می‌خواهی بساز، توصیف کن..."></textarea>
-    <button class="tool-primary" id="generateImage">ساخت تصویر</button>
+    <div class="tool-heading"><strong>AI Image Generator</strong><button class="tool-close" data-close="imageTool">×</button></div>
+    <textarea id="imagePrompt" rows="2" placeholder="Describe the image you want to create..."></textarea>
+    <button class="tool-primary" id="generateImage">Generate Image</button>
     <div id="imageStatus" class="tool-status" aria-live="polite"></div>
     <img id="generatedImage" class="generated-image" alt="تصویر ساخته‌شده" hidden>
   </section>
   <section class="tool-panel" id="plannerTool" hidden>
-    <div class="tool-heading"><strong>برنامه‌ریز شخصی</strong><button class="tool-close" data-close="plannerTool">×</button></div>
-    <div class="planner-entry"><input id="taskInput" placeholder="کار امروزت چیست؟"><input id="taskTime" type="time" aria-label="زمان یادآوری"><button class="tool-primary" id="addTask">افزودن</button></div>
+    <div class="tool-heading"><strong>Personal Planner</strong><button class="tool-close" data-close="plannerTool">×</button></div>
+    <div class="planner-entry"><input id="taskInput" placeholder="What do you need to do today?"><input id="taskTime" type="time" aria-label="زمان یادآوری"><button class="tool-primary" id="addTask">Add</button></div>
     <ul id="taskList" class="task-list"></ul>
-    <p class="tool-hint">برنامه‌ها روی همین دستگاه ذخیره می‌شوند. برای اعلان یادآوری، اجازهٔ اعلان مرورگر را فعال کن.</p>
+    <p class="tool-hint">Tasks are saved on this device. Allow browser notifications to receive reminders.</p>
   </section>
 
   <main class="chat" id="chat">
 
     <section class="welcome" id="welcome">
       <div class="welcome-logo">HK</div>
-      <h1>به HK.AI خوش آمدید</h1>
+      <h1>Welcome to HK.AI</h1>
       <p>
         هوش مصنوعی Hedayatullah Khaliqi
         <br>
-        آماده است تا به پرسش‌ها و ایده‌های شما کمک کند.
+        Ready to help with your questions and ideas.
       </p>
 
       <div class="brand-meaning">
@@ -969,10 +969,10 @@ body{
       </div>
 
       <div class="suggestions">
-        <button class="suggestion" data-prompt="خودت را معرفی کن">معرفی HK.AI</button>
-        <button class="suggestion" data-prompt="چگونه می‌توانم انگلیسی را بهتر یاد بگیرم؟">یادگیری زبان</button>
-        <button class="suggestion" data-prompt="یک حقیقت علمی جالب برایم بگو">دانستنی‌های علمی</button>
-        <button class="suggestion" data-prompt="برای من یک برنامه روزانه مفید بساز">برنامه‌ریزی روزانه</button>
+        <button class="suggestion" data-prompt="خودت را معرفی کن">Meet HK.AI</button>
+        <button class="suggestion" data-prompt="چگونه می‌توانم انگلیسی را بهتر یاد بگیرم؟">Learn a language</button>
+        <button class="suggestion" data-prompt="یک حقیقت علمی جالب برایم بگو">Science facts</button>
+        <button class="suggestion" data-prompt="برای من یک برنامه روزانه مفید بساز">Daily planning</button>
       </div>
     </section>
 
@@ -982,17 +982,17 @@ body{
 
     <div class="file-preview" id="filePreview">
       <div class="preview-info">
-        <img id="imagePreview" class="preview-image" alt="پیش‌نمایش عکس">
+        <img id="imagePreview" class="preview-image" alt="Image preview">
         <span id="fileName"></span>
       </div>
-      <button class="remove-file" id="removeFile" title="حذف فایل">×</button>
+      <button class="remove-file" id="removeFile" title="Remove file">×</button>
     </div>
 
     <div class="input-box">
 
-      <button class="send-btn" id="sendBtn" title="ارسال" aria-label="ارسال پیام">↑</button>
+      <button class="send-btn" id="sendBtn" title="ارسال" aria-label="Send message">↑</button>
 
-      <button class="mic-btn" id="composerMicBtn" title="ضبط صدا" aria-label="ضبط صدا">🎙</button>
+      <button class="mic-btn" id="composerMicBtn" title="Record audio" aria-label="Record audio">🎙</button>
 
       <textarea
         id="messageInput"
@@ -1000,7 +1000,7 @@ body{
         placeholder="Ask HK.AI"
       ></textarea>
 
-      <button class="attach-btn" id="attachBtn" title="افزودن عکس یا PDF" aria-label="افزودن فایل">＋</button>
+      <button class="attach-btn" id="attachBtn" title="Attach an image or PDF" aria-label="Attach file">＋</button>
 
     </div>
 
@@ -1033,10 +1033,10 @@ const $=id=>document.getElementById(id);
 const chat=$("chat");
 
 const helperPrompts={
-  document:"لطفاً این سند، فورم یا قبض پیوست‌شده را دقیق بخوان و به زبان ساده دری افغانستان توضیح بده. نکات مهم، تاریخ‌ها، مبلغ‌ها و کارهایی را که باید انجام بدهم جداگانه بنویس. اگر بخشی خوانا نیست، حدس نزن.",
-  translate:"لطفاً متن زیر را ترجمه کن. زبان مقصد را از من بپرس اگر مشخص نکرده‌ام؛ ترجمه باید طبیعی و دقیق باشد و اصطلاحات دشوار را هم ساده توضیح بده. متن:",
-  letter:"کمکم کن یک نامه یا درخواست رسمی و محترمانه بنویسم. اول اگر جزئیات ضروری مثل گیرنده، هدف و نام/تاریخ لازم است از من بپرس؛ اطلاعاتی را که نداده‌ام اختراع نکن.",
-  cv:"کمکم کن یک سی‌وی (CV) و درخواست کار حرفه‌ای بسازم. اول درباره تحصیلات، تجربه کاری، مهارت‌ها، زبان‌ها و شغل مورد نظر سؤال‌های کوتاه بپرس؛ هیچ سابقه یا مدرکی را از خودت نساز."
+  document:"Please read the attached document, form, or receipt carefully and explain it in clear English. List the key points, dates, amounts, and actions I need to take. Do not guess if something is unreadable.",
+  translate:"Please translate the text below. Ask me for the target language if I have not specified one. Make the translation natural and accurate, and explain difficult terms simply. Text:",
+  letter:"Help me write a respectful, professional letter or formal request. Ask for essential details such as the recipient, purpose, and any required names or dates. Do not invent information I have not provided.",
+  cv:"Help me create a professional CV and job application. First ask brief questions about my education, work experience, skills, languages, and target job. Never invent experience or qualifications."
 };
 $("openHelper").addEventListener("click",()=>{
   const panel=$("helperTool");
@@ -1158,7 +1158,7 @@ function addMessage(role,content,save=true,timestamp=Date.now()){
 
   const label=document.createElement("div");
   label.className="message-label";
-  label.textContent=role==="user"?"شما":"HK AI";
+  label.textContent=role==="user"?"You":"HK.AI";
 
   const body=document.createElement("div");
   body.className="message-content";
@@ -1177,12 +1177,12 @@ function addMessage(role,content,save=true,timestamp=Date.now()){
 
     const copy=document.createElement("button");
     copy.className="copy-btn";
-    copy.textContent="کاپی پاسخ";
+    copy.textContent="Copy response";
 
     copy.addEventListener("click",async()=>{
       try{
         await navigator.clipboard.writeText(content);
-        copy.textContent="کاپی شد ✓";
+        copy.textContent="Copied ✓";
       }catch{
         const temp=document.createElement("textarea");
         temp.value=content;
@@ -1190,9 +1190,9 @@ function addMessage(role,content,save=true,timestamp=Date.now()){
         temp.select();
         try{
           document.execCommand("copy");
-          copy.textContent="کاپی شد ✓";
+          copy.textContent="Copied ✓";
         }catch{
-          copy.textContent="کاپی نشد";
+          copy.textContent="Copy failed";
         }
         temp.remove();
       }
@@ -1220,7 +1220,7 @@ function showTyping(){
   const el=document.createElement("div");
   el.className="typing";
   el.id="typing";
-  el.innerHTML='HK AI در حال نوشتن پاسخ است <span class="typing-dots"><span></span><span></span><span></span></span>';
+  el.innerHTML='HK.AI is thinking <span class="typing-dots"><span></span><span></span><span></span></span>';
 
   chat.append(el);
   chat.scrollTop=chat.scrollHeight;
@@ -1350,7 +1350,7 @@ function isImageGenerationRequest(text){
   const value=String(text||"").trim();
   const imageWord=/(تصویر|عکس|نقاشی|پوستر|لوگو|انځور|image|picture|illustration|poster|logo)/i;
   const visualScene=/(کوهستان|کوه|منظره|غروب|طلوع|آفتاب|ماه|ستاره|آسمان|دریا|بحر|ساحل|جنگل|طبیعت|گل|باغ|شهر|خانه|قصر|پرتره|چهره|منظر|landscape|mountain|sunset|sunrise|sky|ocean|sea|forest|nature|flower|garden|city|portrait)/i;
-  const createVerb=/(بساز(?:ید|ی)?|ایجاد کن|تولید کن|طراحی کن|درست کن|جوړ کړه|جوړ کړئ|generate|create|draw|make|design)/i;
+  const createVerb=/(بساز(?:ید|ی)?|ایجاد کن|تولید کن|طراحی کن|درست کن|جوړ کړه|جوړ کړئ|generate|create|draw|make|design|a beautiful|realistic|photorealistic)/i;
   return createVerb.test(value)&&(imageWord.test(value)||visualScene.test(value));
 }
 
@@ -1369,12 +1369,12 @@ async function sendMessage(customText=null){
   let userText=text;
 
   if(fileForRequest&&documentForRequest){
-    userText=(text?text+"\n\n":"لطفاً محتوای PDF پیوست‌شده را بررسی کن: ")+
-      "فایل PDF: "+fileForRequest.name;
+    userText=(text?text+"\n\n":Please review the attached PDF: ")+
+      PDF file: "+fileForRequest.name;
   }
 
   if(imageForRequest&&!userText){
-    userText="لطفاً این تصویر را بررسی و توضیح بده.";
+    userText="Please examine and describe this image.";
   }
 
   if(!userText)return;
@@ -1430,15 +1430,15 @@ async function sendMessage(customText=null){
 
       if(!response.ok){
         let error={};try{error=await response.json()}catch{}
-        throw new Error(error.error||"ساخت تصویر انجام نشد.");
+        throw new Error(error.error||"Image generation failed.");
       }
 
       const generatedBlob=await response.blob();
       if(!generatedBlob.type.startsWith("image/")){
-        throw new Error("سرور تصویر ساخته‌شده را برنگرداند.");
+        throw new Error("The server did not return a generated image.");
       }
       const generatedURL=URL.createObjectURL(generatedBlob);
-      const assistantText="تصویر ساخته‌شده آماده است.";
+      const assistantText="Your image is ready.";
       messages.push({role:"assistant",content:assistantText,timestamp:Date.now()});
       removeTyping();
       const resultNode=addMessage("assistant",assistantText,false);
@@ -1464,13 +1464,13 @@ async function sendMessage(customText=null){
 
       if(!response.ok){
         let error={};try{error=await response.json()}catch{}
-        throw new Error(error.error||error.details||"ویرایش تصویر انجام نشد.");
+        throw new Error(error.error||error.details||"Image editing failed.");
       }
 
       const editedBlob=await response.blob();
-      if(!editedBlob.type.startsWith("image/"))throw new Error("سرور تصویر ویرایش‌شده را برنگرداند.");
+      if(!editedBlob.type.startsWith("image/"))throw new Error("The server did not return an edited image.");
       const editedURL=URL.createObjectURL(editedBlob);
-      const assistantText="تصویر ویرایش‌شده آماده است.";
+      const assistantText="Your edited image is ready.";
       messages.push({role:"assistant",content:assistantText,timestamp:Date.now()});
       removeTyping();
       const resultNode=addMessage("assistant",assistantText,false);
@@ -1504,15 +1504,15 @@ async function sendMessage(customText=null){
       try{
         data=await response.json();
       }catch{
-        throw new Error("پاسخ سرور قابل خواندن نیست.");
+        throw new Error("The server response could not be read.");
       }
 
       if(!response.ok){
-        throw new Error(data.details||data.error||"خطا در ارتباط با سرور.");
+        throw new Error(data.details||data.error||"A server communication error occurred.");
       }
 
       if(typeof data.reply!=="string"||!data.reply.trim()){
-        throw new Error("پاسخ خالی از سرور دریافت شد.");
+        throw new Error("The server returned an empty response.");
       }
 
       messages.push({role:"assistant",content:data.reply,timestamp:Date.now()});
@@ -1528,12 +1528,12 @@ async function sendMessage(customText=null){
     removeTyping();
 
     const msg=error.name==="AbortError"?
-      "زمان پاسخ‌گویی سرور تمام شد؛ دوباره تلاش کنید.":
-      (error.message||"ارتباط با سرور برقرار نشد.");
+      "The server timed out. Please try again.":
+      (error.message||"Could not connect to the server.");
 
     const node=addMessage(
       "assistant",
-      "متأسفم، مشکلی پیش آمد:\n"+msg,
+      "Sorry, something went wrong:\n"+msg,
       false
     );
 
@@ -1583,7 +1583,7 @@ fileInput.addEventListener("change",async()=>{
   ].includes(file.type);
 
   if(!isPDF&&!isImage){
-    alert("لطفاً یک فایل PDF یا عکس JPG، PNG و WebP انتخاب کن.");
+    alert("Please choose a PDF or an image in JPG, PNG, or WebP format.");
     clearSelectedFile();
     return;
   }
@@ -1594,7 +1594,7 @@ fileInput.addEventListener("change",async()=>{
   filePreview.classList.add("show");
 
   if(isPDF){
-    fileName.textContent="در حال خواندن: "+file.name;
+    fileName.textContent="Reading: "+file.name;
 
     try{
       selectedDocument=await extractPDF(file);
@@ -1608,7 +1608,7 @@ fileInput.addEventListener("change",async()=>{
   }
 
   // Prepare image and show compact preview
-  fileName.textContent="در حال آماده‌سازی تصویر...";
+  fileName.textContent="Preparing image...";
 
   try{
     selectedImageData=await prepareImage(file);
@@ -1694,13 +1694,13 @@ $("generateImage").addEventListener("click",async()=>{
   const prompt=$("imagePrompt").value.trim();
   const status=$("imageStatus");
   const result=$("generatedImage");
-  if(!prompt){status.textContent="اول توضیح تصویر را بنویس.";return;}
-  const button=$("generateImage");button.disabled=true;status.textContent="در حال ساخت تصویر…";result.hidden=true;
+  if(!prompt){status.textContent="Please describe the image first.";return;}
+  const button=$("generateImage");button.disabled=true;status.textContent="Generating image…";result.hidden=true;
   try{
     const response=await fetch("/api/image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
-    if(!response.ok){let error={};try{error=await response.json()}catch{};throw new Error(error.error||"ساخت تصویر موفق نشد.");}
+    if(!response.ok){let error={};try{error=await response.json()}catch{};throw new Error(error.error||"Image generation failed.");}
     const blob=await response.blob();
-    result.src=URL.createObjectURL(blob);result.hidden=false;status.textContent="تصویر آماده شد.";
+    result.src=URL.createObjectURL(blob);result.hidden=false;status.textContent="Image generated successfully.";
   }catch(error){status.textContent=error.message||"ارتباط برقرار نشد.";}
   finally{button.disabled=false;}
 });
@@ -1716,7 +1716,7 @@ function setVoiceStatus(message){
   const status=$("voiceStatus");
   if(status)status.textContent=message||"";
   const legacy=$("voiceBtn");
-  if(legacy)legacy.textContent=message||"🎙 صحبت کردن";
+  if(legacy)legacy.textContent=message||"🎙 Voice";
 }
 
 function setComposerMicRecording(active){
@@ -1724,8 +1724,8 @@ function setComposerMicRecording(active){
   if(!button)return;
   button.classList.toggle("is-recording",!!active);
   button.textContent=active?"■":"🎙";
-  button.title=active?"برای پایان ضبط بزن":"شروع ضبط صدا";
-  button.setAttribute("aria-label",active?"پایان ضبط صدا":"شروع ضبط صدا");
+  button.title=active?"برای پایان ضبط بزن":"Start recording";
+  button.setAttribute("aria-label",active?"Stop recording":"Start recording");
 }
 
 function finishVoiceTurn(finalMessage=null){
@@ -1738,22 +1738,22 @@ function finishVoiceTurn(finalMessage=null){
     try{voiceRecorder.stop()}catch{}
   }
   // Keep useful errors visible instead of immediately overwriting them.
-  setVoiceStatus(finalMessage||"🎙 برای صحبت دوباره میکروفون را بزن");
+  setVoiceStatus(finalMessage||"🎙 Tap the microphone to speak again");
 }
 
 async function speakReply(text){
   if(!voiceMode)return;
   const spokenText=String(text||"").replace(/```[\\s\\S]*?```/g,"کد در پاسخ نوشته شده است").slice(0,1800);
-  setVoiceStatus("🔊 HK.AI در حال صحبت است…");
+  setVoiceStatus("🔊 HK.AI is speaking…");
   try{
     const response=await fetch("/api/tts",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({text:spokenText})
     });
-    if(!response.ok){let error={};try{error=await response.json()}catch{};throw new Error(error.error||"صداسازی انجام نشد.");}
+    if(!response.ok){let error={};try{error=await response.json()}catch{};throw new Error(error.error||"Speech generation failed.");}
     const audioBlob=await response.blob();
-    if(!audioBlob.type.includes("audio"))throw new Error("فایل صوتی معتبر نیست.");
+    if(!audioBlob.type.includes("audio"))throw new Error("The audio file is invalid.");
     voiceAudioUrl=URL.createObjectURL(audioBlob);
     voiceAudio=new Audio(voiceAudioUrl);
     voiceAudio.onended=()=>{voiceAudio=null;if(voiceAudioUrl)URL.revokeObjectURL(voiceAudioUrl);voiceAudioUrl=null;finishVoiceTurn();};
@@ -1763,14 +1763,14 @@ async function speakReply(text){
     console.warn("Gemini Dari TTS:",error);
     if("speechSynthesis" in window){
       const utterance=new SpeechSynthesisUtterance(spokenText);
-      utterance.lang="fa-AF";utterance.rate=.94;utterance.pitch=1;
+      utterance.lang="en-US";utterance.rate=.94;utterance.pitch=1;
       utterance.onend=finishVoiceTurn;
       utterance.onerror=finishVoiceTurn;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
-      setVoiceStatus("🔊 صدای جایگزین مرورگر");
+      setVoiceStatus("🔊 Using browser voice");
     }else{
-      setVoiceStatus("🎙 صداسازی در دسترس نیست");
+      setVoiceStatus("🎙 Speech is unavailable");
       finishVoiceTurn();
     }
   }
@@ -1780,7 +1780,7 @@ async function startVoiceInput(){
   if(voiceRecorder)return;
   if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
     voiceMode=false;
-    setVoiceStatus("🎙 ضبط صدا در این مرورگر پشتیبانی نمی‌شود");
+    setVoiceStatus("🎙 Audio recording is not supported in this browser");
     return;
   }
   try{
@@ -1793,7 +1793,7 @@ async function startVoiceInput(){
     voiceRecorder.ondataavailable=event=>{if(event.data&&event.data.size)voiceChunks.push(event.data);};
     voiceRecorder.onerror=event=>{
       console.warn("Audio recording:",event.error);
-      setVoiceStatus("🎙 در ضبط صدا مشکل پیش آمد");
+      setVoiceStatus("🎙 Audio recording failed");
     };
     voiceRecorder.onstop=async()=>{
       const recorderMime=voiceRecorder?.mimeType||voiceChunks[0]?.type||"audio/mp4";
@@ -1805,7 +1805,7 @@ async function startVoiceInput(){
       voiceChunks=[];
       if(!voiceMode)return;
       if(!audioBlob.size){
-        setVoiceStatus("🎙 صدایی ضبط نشد؛ دوباره بزن");
+        setVoiceStatus("🎙 No audio was recorded. Try again.");
         finishVoiceTurn();
         return;
       }
@@ -1825,7 +1825,7 @@ async function startVoiceInput(){
         const data=await response.json().catch(()=>({}));
         if(!response.ok)throw new Error(data.error||"تشخیص گفتار انجام نشد.");
         const transcript=String(data.transcript||"").trim();
-        if(!transcript)throw new Error("گفتاری تشخیص داده نشد؛ دوباره کوشش کن.");
+        if(!transcript)throw new Error("No speech was detected. Please try again.");
         if(!voiceMode)return;
         $("messageInput").value=transcript;
         $("messageInput").dispatchEvent(new Event("input"));
@@ -1838,7 +1838,7 @@ async function startVoiceInput(){
     // Request periodic audio chunks for more reliable capture on iOS Safari.
     voiceRecorder.start(250);
     setComposerMicRecording(true);
-    setVoiceStatus("🔴 گوش می‌دهد… برای پایان صحبت دوباره بزن");
+    setVoiceStatus("🔴 Listening… Tap again to stop");
   }catch(error){
     console.warn("Microphone access:",error);
     voiceStream?.getTracks().forEach(track=>track.stop());
@@ -1846,7 +1846,7 @@ async function startVoiceInput(){
     voiceRecorder=null;
     voiceMode=false;
     setComposerMicRecording(false);
-    setVoiceStatus(error.name==="NotAllowedError"?"🎙 اجازهٔ میکروفون داده نشد":"🎙 میکروفون فعال نشد؛ دوباره تلاش کن");
+    setVoiceStatus(error.name==="NotAllowedError"?"🎙 Microphone permission was denied":"🎙 Could not start the microphone. Try again.");
   }
 }
 
@@ -1865,7 +1865,7 @@ async function handleVoiceButton(){
     if("speechSynthesis" in window)window.speechSynthesis.cancel();
     if(voiceAudio){voiceAudio.pause();voiceAudio=null;}
     if(voiceAudioUrl){URL.revokeObjectURL(voiceAudioUrl);voiceAudioUrl=null;}
-    setVoiceStatus("🎙 صحبت کردن");
+    setVoiceStatus("🎙 Voice");
     return;
   }
   voiceMode=true;
@@ -1886,7 +1886,7 @@ function renderTasks(){
     const check=document.createElement("input");check.type="checkbox";check.checked=!!task.done;
     check.addEventListener("change",()=>{const tasks=getTasks();tasks[index].done=check.checked;localStorage.setItem(TASK_KEY,JSON.stringify(tasks));renderTasks();});
     const label=document.createElement("label");label.textContent=task.text+(task.time?" · "+task.time:"");
-    const del=document.createElement("button");del.textContent="حذف";del.addEventListener("click",()=>{const tasks=getTasks();tasks.splice(index,1);localStorage.setItem(TASK_KEY,JSON.stringify(tasks));renderTasks();});
+    const del=document.createElement("button");del.textContent="Delete";del.addEventListener("click",()=>{const tasks=getTasks();tasks.splice(index,1);localStorage.setItem(TASK_KEY,JSON.stringify(tasks));renderTasks();});
     li.append(check,label,del);list.append(li);
   });
 }
@@ -1903,7 +1903,7 @@ function checkPlannerReminders(){
   const tasks=getTasks();let changed=false;
   tasks.forEach(task=>{
     if(task.time===clock&&!task.done&&task.remindedDay!==today){
-      new Notification("یادآوری HK.AI",{body:task.text});task.remindedDay=today;changed=true;
+      new Notification("HK.AI Reminder",{body:task.text});task.remindedDay=today;changed=true;
     }
   });
   if(changed)localStorage.setItem(TASK_KEY,JSON.stringify(tasks));
