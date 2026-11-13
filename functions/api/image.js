@@ -89,12 +89,16 @@ export async function onRequestPost({request,env}){
       return new Response(bytes,{headers:{"Content-Type":"image/"+(match[1]==="jpg"?"jpeg":match[1]),"Cache-Control":"no-store"}});
     }
     if(image?.image instanceof ArrayBuffer||ArrayBuffer.isView(image?.image)){
-      return new Response(image.image,{headers:{"Content-Type":"image/png","Cache-Control":"no-store"}});
+      return new Response(image.image,{headers:{"Content-Type":"image/jpeg","Cache-Control":"no-store"}});
     }
     if(typeof image?.image==="string"){
-      const generated=await fetch(image.image);
-      if(!generated.ok)throw new Error("دریافت تصویر ساخته‌شده ناموفق بود.");
-      return new Response(generated.body,{headers:{"Content-Type":generated.headers.get("content-type")||"image/png","Cache-Control":"no-store"}});
+      // FLUX.1 schnell returns raw base64 in image, not a URL or data URI.
+      const base64=image.image.replace(/^data:image\\/[a-zA-Z0-9.+-]+;base64,/,"");
+      if(!/^[A-Za-z0-9+/]+={0,2}$/.test(base64))throw new Error("مدل تصویر را با فرمت base64 معتبر برنگرداند.");
+      const binary=atob(base64);
+      const bytes=new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+      return new Response(bytes,{headers:{"Content-Type":"image/jpeg","Cache-Control":"no-store"}});
     }
     throw new Error("مدل ساخت تصویر خروجی قابل استفاده برنگرداند.");
   }catch(error){
