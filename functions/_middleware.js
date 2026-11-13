@@ -14,7 +14,12 @@ export async function onRequest({request,env,next}){
  if(request.method==="OPTIONS"){secure(cors);return new Response(null,{status:204,headers:cors});}
  if(request.method!=="POST"){cors.set("Allow","POST, OPTIONS");return reply({error:"Method not allowed"},405,cors);}
  const max=BODY_LIMITS[url.pathname];if(!max)return reply({error:"Not found"},404,cors);
- const size=Number(request.headers.get("Content-Length")||0);if(size>max)return reply({error:"Request body too large"},413,cors);
+ const contentLength=request.headers.get("Content-Length");
+ if(contentLength!==null){
+   const size=Number(contentLength);
+   if(!Number.isSafeInteger(size)||size<0)return reply({error:"Invalid Content-Length header."},400,cors);
+   if(size>max)return reply({error:"Request body too large."},413,cors);
+ }
  if(!request.headers.get("Content-Type")?.toLowerCase().includes("application/json"))return reply({error:"Content-Type must be application/json"},415,cors);
  // Fail closed: never bypass rate limiting when KV is unavailable.
  if(!env.HK_RATE_LIMITS){
