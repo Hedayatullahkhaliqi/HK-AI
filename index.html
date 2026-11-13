@@ -1169,7 +1169,7 @@ function makeConversationId(){
 function conversationTitle(list){
   const first=list.find(m=>m&&m.role==="user"&&typeof m.content==="string");
   if(!first)return "New conversation";
-  const title=first.content.replace(/\\s+/g," ").trim();
+  const title=first.content.replace(/\s+/g," ").trim();
   return title.length>42?title.slice(0,42)+"…":title||"New conversation";
 }
 
