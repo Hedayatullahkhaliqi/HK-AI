@@ -53,7 +53,8 @@ export async function onRequest({request,env,next}){
    return reply({error:"The rate limiter returned an invalid response.",code:"RATE_LIMITER_INVALID_RESPONSE"},503,cors);
  }
  if(!result.allowed){
-   const retrySeconds=Math.max(1,Math.ceil((Number(result.retryAfterMs)||60000)/1000));
+   const retryMs=Number.isSafeInteger(result.retryAfterMs)?Math.max(1,Math.min(result.retryAfterMs,60000)):60000;
+   const retrySeconds=Math.ceil(retryMs/1000);
    cors.set("Retry-After",String(retrySeconds));
    return reply({error:"Too many requests. Please try again later."},429,cors);
  }
