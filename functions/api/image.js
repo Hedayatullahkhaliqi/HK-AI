@@ -69,7 +69,15 @@ export async function onRequestPost({request,env}){
       num_steps:4
     });
 
-    if(image instanceof Response)return image;
+    if(image instanceof Response){
+      const headers=new Headers(image.headers);
+      headers.set("Content-Type",headers.get("Content-Type")||"image/png");
+      headers.set("Cache-Control","no-store");
+      return new Response(image.body,{status:image.status,headers});
+    }
+    if(image instanceof ReadableStream){
+      return new Response(image,{headers:{"Content-Type":"image/png","Cache-Control":"no-store"}});
+    }
     if(image instanceof ArrayBuffer||ArrayBuffer.isView(image)){
       return new Response(image,{headers:{"Content-Type":"image/png","Cache-Control":"no-store"}});
     }
@@ -80,13 +88,17 @@ export async function onRequestPost({request,env}){
       for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
       return new Response(bytes,{headers:{"Content-Type":"image/"+(match[1]==="jpg"?"jpeg":match[1]),"Cache-Control":"no-store"}});
     }
-    if(image?.image){
+    if(image?.image instanceof ArrayBuffer||ArrayBuffer.isView(image?.image)){
+      return new Response(image.image,{headers:{"Content-Type":"image/png","Cache-Control":"no-store"}});
+    }
+    if(typeof image?.image==="string"){
       const generated=await fetch(image.image);
       if(!generated.ok)throw new Error("دریافت تصویر ساخته‌شده ناموفق بود.");
       return new Response(generated.body,{headers:{"Content-Type":generated.headers.get("content-type")||"image/png","Cache-Control":"no-store"}});
     }
     throw new Error("مدل ساخت تصویر خروجی قابل استفاده برنگرداند.");
   }catch(error){
+    console.error("HK image operation failed:",error);
     return json({error:"عملیات تصویر فعلاً انجام نشد. لطفاً بعداً دوباره کوشش کن."},500);
   }
 }
