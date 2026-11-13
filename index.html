@@ -272,7 +272,11 @@ button{cursor:pointer}
 
 .message-content ul{padding-right:22px}
 
-.message-actions{margin:7px 5px}
+.message-actions{margin:7px 5px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+
+.feedback-btn{border:1px solid #56636e;border-radius:9px;padding:6px 10px;color:#cbd4dc;background:#252c33;font-size:11px}
+.feedback-btn:disabled{opacity:.6}
+.feedback-status{font-size:11px;color:#9fb0bd}
 
 .copy-btn{
   border:1px solid #56636e;
@@ -1198,6 +1202,42 @@ function addMessage(role,content,save=true,timestamp=Date.now()){
     });
 
     actions.append(copy);
+
+    const useful=document.createElement("button");
+    useful.className="feedback-btn";
+    useful.type="button";
+    useful.textContent="مفید بود 👍";
+
+    const notUseful=document.createElement("button");
+    notUseful.className="feedback-btn";
+    notUseful.type="button";
+    notUseful.textContent="مشکل داشت 👎";
+
+    const feedbackStatus=document.createElement("span");
+    feedbackStatus.className="feedback-status";
+    feedbackStatus.setAttribute("aria-live","polite");
+
+    async function sendFeedback(rating,selectedButton){
+      useful.disabled=true;
+      notUseful.disabled=true;
+      try{
+        const response=await fetch("/api/feedback",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({rating,category:"overall"})
+        });
+        if(!response.ok) throw new Error("feedback failed");
+        feedbackStatus.textContent="تشکر از بازخوردت 🌱";
+      }catch{
+        useful.disabled=false;
+        notUseful.disabled=false;
+        feedbackStatus.textContent="ثبت نشد؛ دوباره کوشش کن.";
+      }
+    }
+
+    useful.addEventListener("click",()=>sendFeedback("positive",useful));
+    notUseful.addEventListener("click",()=>sendFeedback("negative",notUseful));
+    actions.append(useful,notUseful,feedbackStatus);
     wrap.append(actions);
   }
 
