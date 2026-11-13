@@ -9,6 +9,15 @@
       "id": "66376e2c9d304960b316798da75f45ed"
     }
   ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "HK_RATE_LIMITER",
+        "class_name": "RateLimiter",
+        "script_name": "hk-ai-rate-limiter"
+      }
+    ]
+  },
   "ai": {
     "binding": "AI"
   },
@@ -20,6 +29,15 @@
           "id": "66376e2c9d304960b316798da75f45ed"
         }
       ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "HK_RATE_LIMITER",
+            "class_name": "RateLimiter",
+            "script_name": "hk-ai-rate-limiter"
+          }
+        ]
+      },
       "ai": {
         "binding": "AI"
       }
