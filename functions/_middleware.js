@@ -14,20 +14,32 @@ export async function onRequest({request,env,next}){
  const max=BODY_LIMITS[url.pathname];if(!max)return reply({error:"Not found"},404,cors);
  const size=Number(request.headers.get("Content-Length")||0);if(size>max)return reply({error:"Request body too large"},413,cors);
  if(!request.headers.get("Content-Type")?.toLowerCase().includes("application/json"))return reply({error:"Content-Type must be application/json"},415,cors);
- // Approximate per-IP rate limiting backed by a Cloudflare KV namespace.
- // Create and bind the namespace as HK_RATE_LIMITS in the Pages project.
- if(env.HK_RATE_LIMITS){
-   const ip=request.headers.get("CF-Connecting-IP")||"unknown";
-   const isImage=url.pathname==="/api/image";
-   const maxRequests=isImage?5:30;
-   const bucket=Math.floor(Date.now()/60000);
-   const key="api-rate:"+url.pathname+":"+ip+":"+bucket;
-   const current=Number(await env.HK_RATE_LIMITS.get(key)||0);
+ // Fail closed: API requests must not bypass rate limiting if KV is
+ // missing or unavailable. KV counters are approximate under concurrency.
+ if(!env.HK_RATE_LIMITS){
+   return reply({error:"سرویس محافظت موقتاً در دسترس نیست. کمی بعد دوباره کوشش کن."},503,cors);
+ }
+ const ip=request.headers.get("CF-Connecting-IP");
+ if(!ip){
+   return reply({error:"امکان بررسی امنیت درخواست وجود ندارد."},503,cors);
+ }
+ const isImage=url.pathname==="/api/image";
+ const maxRequests=isImage?5:30;
+ const bucket=Math.floor(Date.now()/60000);
+ const key="api-rate:"+url.pathname+":"+ip+":"+bucket;
+ try{
+   const stored=await env.HK_RATE_LIMITS.get(key);
+   const current=stored===null?0:Number(stored);
+   if(!Number.isSafeInteger(current)||current<0){
+     return reply({error:"سرویس محافظت موقتاً در دسترس نیست. کمی بعد دوباره کوشش کن."},503,cors);
+   }
    if(current>=maxRequests){
      cors.set("Retry-After","60");
      return reply({error:"تعداد درخواست‌ها زیاد است. کمی بعد دوباره کوشش کن."},429,cors);
    }
    await env.HK_RATE_LIMITS.put(key,String(current+1),{expirationTtl:120});
+ }catch(error){
+   return reply({error:"سرویس محافظت موقتاً در دسترس نیست. کمی بعد دوباره کوشش کن."},503,cors);
  }
  const response=await next();const headers=new Headers(response.headers);for(const [k,v] of cors)headers.set(k,v);secure(headers);
  return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
