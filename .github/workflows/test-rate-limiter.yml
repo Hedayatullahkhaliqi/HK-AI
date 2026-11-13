@@ -1,0 +1,30 @@
+name: Test HK.AI rate limiter
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send harmless validation request through Pages middleware
+        shell: bash
+        run: |
+          set +e
+          HTTP_CODE=$(curl --silent --show-error --max-time 30 \
+            --output response.json \
+            --write-out "%{http_code}" \
+            --request POST "https://hk-ai.pages.dev/api/chat" \
+            --header "Content-Type: application/json" \
+            --data '{}')
+          CURL_EXIT=$?
+          echo "curl_exit_code=$CURL_EXIT"
+          echo "http_status=$HTTP_CODE"
+          echo "response_body:"
+          cat response.json 2>/dev/null || true
+          echo
+          if [ "$CURL_EXIT" -ne 0 ]; then
+            exit "$CURL_EXIT"
+          fi
