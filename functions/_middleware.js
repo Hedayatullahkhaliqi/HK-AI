@@ -1,5 +1,5 @@
 const ALLOWED_ORIGINS = new Set(["https://hk-ai.pages.dev","capacitor://localhost","https://localhost","http://localhost"]);
-const BODY_LIMITS = {"/api/chat":11*1024*1024,"/api/image":11*1024*1024,"/api/transcribe":16*1024*1024,"/api/tts":64*1024};
+const BODY_LIMITS = {"/api/chat":11*1024*1024,"/api/image":11*1024*1024,"/api/transcribe":16*1024*1024,"/api/tts":64*1024,"/api/feedback":2048};
 function secure(h){h.set("X-Content-Type-Options","nosniff");h.set("Referrer-Policy","no-referrer");h.set("X-Frame-Options","DENY");h.set("Permissions-Policy","camera=(), geolocation=(), payment=()");h.set("Cache-Control","no-store");return h;}
 function reply(data,status,cors){const h=new Headers(cors);h.set("Content-Type","application/json; charset=utf-8");secure(h);return new Response(JSON.stringify(data),{status,headers:h});}
 export async function onRequest({request,env,next}){
@@ -24,7 +24,8 @@ export async function onRequest({request,env,next}){
    return reply({error:"امکان بررسی امنیت درخواست وجود ندارد."},503,cors);
  }
  const isImage=url.pathname==="/api/image";
- const maxRequests=isImage?5:30;
+ const isFeedback=url.pathname==="/api/feedback";
+ const maxRequests=isImage?5:(isFeedback?20:30);
  const bucket=Math.floor(Date.now()/60000);
  const key="api-rate:"+url.pathname+":"+ip+":"+bucket;
  try{
