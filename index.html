@@ -929,7 +929,7 @@ body{
     <button class="feature-btn" id="openHelper">✦ Assistant Tools</button>
   </nav>
   <section class="tool-panel helper-panel" id="helperTool" hidden>
-    <div class="tool-heading"><strong>HK.AI Smart Assistant</strong><button class="tool-close" data-close="helperTool" aria-label="بستن">×</button></div>
+    <div class="tool-heading"><strong>HK.AI Smart Assistant</strong><button class="tool-close" data-close="helperTool" aria-label="Close">×</button></div>
     <p class="tool-hint">Choose a task. A prompt will be prepared for you to customize.</p>
     <div class="helper-grid">
       <button class="helper-action" data-helper="document"><span>▤</span>Read and explain a document</button>
@@ -944,11 +944,11 @@ body{
     <textarea id="imagePrompt" rows="2" placeholder="Describe the image you want to create..."></textarea>
     <button class="tool-primary" id="generateImage">Generate Image</button>
     <div id="imageStatus" class="tool-status" aria-live="polite"></div>
-    <img id="generatedImage" class="generated-image" alt="تصویر ساخته‌شده" hidden>
+    <img id="generatedImage" class="generated-image" alt="Generated image" hidden>
   </section>
   <section class="tool-panel" id="plannerTool" hidden>
     <div class="tool-heading"><strong>Personal Planner</strong><button class="tool-close" data-close="plannerTool">×</button></div>
-    <div class="planner-entry"><input id="taskInput" placeholder="What do you need to do today?"><input id="taskTime" type="time" aria-label="زمان یادآوری"><button class="tool-primary" id="addTask">Add</button></div>
+    <div class="planner-entry"><input id="taskInput" placeholder="What do you need to do today?"><input id="taskTime" type="time" aria-label="Reminder time"><button class="tool-primary" id="addTask">Add</button></div>
     <ul id="taskList" class="task-list"></ul>
     <p class="tool-hint">Tasks are saved on this device. Allow browser notifications to receive reminders.</p>
   </section>
@@ -959,7 +959,7 @@ body{
       <div class="welcome-logo">HK</div>
       <h1>Welcome to HK.AI</h1>
       <p>
-        هوش مصنوعی Hedayatullah Khaliqi
+        Hedayatullah Khaliqi AI
         <br>
         Ready to help with your questions and ideas.
       </p>
@@ -990,7 +990,7 @@ body{
 
     <div class="input-box">
 
-      <button class="send-btn" id="sendBtn" title="ارسال" aria-label="Send message">↑</button>
+      <button class="send-btn" id="sendBtn" title="Send" aria-label="Send message">↑</button>
 
       <button class="mic-btn" id="composerMicBtn" title="Record audio" aria-label="Record audio">🎙</button>
 
@@ -1252,11 +1252,11 @@ function clearSelectedFile(){
 
 async function extractPDF(file){
   if(!window.pdfjsLib){
-    throw new Error("ابزار PDF بارگذاری نشد؛ اینترنت را بررسی کنید.");
+    throw new Error("The PDF tool could not be loaded. Check your internet connection.");
   }
 
   if(file.size>10*1024*1024){
-    throw new Error("حجم PDF نباید بیشتر از ۱۰ مگابایت باشد.");
+    throw new Error("The PDF file must not exceed 10 MB.");
   }
 
   const pdf=await pdfjsLib.getDocument({
@@ -1264,7 +1264,7 @@ async function extractPDF(file){
   }).promise;
 
   if(pdf.numPages>30){
-    throw new Error("فایل PDF نباید بیشتر از ۳۰ صفحه باشد.");
+    throw new Error("The PDF file must not exceed 30 pages.");
   }
 
   let text="";
@@ -1282,7 +1282,7 @@ async function extractPDF(file){
   }
 
   if(!text.trim()){
-    throw new Error("متنی در این PDF پیدا نشد؛ شاید فایل اسکن‌شده باشد.");
+    throw new Error("No text was found in this PDF. It may be a scanned document.");
   }
 
   return text;
@@ -1309,7 +1309,7 @@ function prepareImage(file){
         const context=canvas.getContext("2d");
 
         if(!context){
-          throw new Error("پردازش تصویر در این مرورگر ممکن نیست.");
+          throw new Error("Image processing is not supported in this browser.");
         }
 
         context.drawImage(img,0,0,canvas.width,canvas.height);
@@ -1323,7 +1323,7 @@ function prepareImage(file){
         }
 
         if(data.length>MAX_IMAGE_SIZE){
-          throw new Error("حجم تصویر هنوز زیاد است. لطفاً عکس کوچک‌تری انتخاب کن.");
+          throw new Error("The image is still too large. Please choose a smaller image.");
         }
 
         URL.revokeObjectURL(objectURL);
@@ -1338,7 +1338,7 @@ function prepareImage(file){
     img.onerror=()=>{
       URL.revokeObjectURL(objectURL);
       reject(new Error(
-        "این تصویر باز نشد. لطفاً عکس را به JPG یا PNG تبدیل کن و دوباره انتخاب کن."
+        "This image could not be opened. Convert it to JPG or PNG and try again."
       ));
     };
 
@@ -1348,7 +1348,7 @@ function prepareImage(file){
 
 function isImageGenerationRequest(text){
   const value=String(text||"").trim();
-  const imageWord=/(تصویر|عکس|نقاشی|پوستر|لوگو|انځور|image|picture|illustration|poster|logo)/i;
+  const imageWord=/(تصویر|عکس|نقاشی|پوستر|لوگو|انځور|image|picture|illustration|poster|logo|landscape|photo|photograph)/i;
   const visualScene=/(کوهستان|کوه|منظره|غروب|طلوع|آفتاب|ماه|ستاره|آسمان|دریا|بحر|ساحل|جنگل|طبیعت|گل|باغ|شهر|خانه|قصر|پرتره|چهره|منظر|landscape|mountain|sunset|sunrise|sky|ocean|sea|forest|nature|flower|garden|city|portrait)/i;
   const createVerb=/(بساز(?:ید|ی)?|ایجاد کن|تولید کن|طراحی کن|درست کن|جوړ کړه|جوړ کړئ|generate|create|draw|make|design|a beautiful|realistic|photorealistic)/i;
   return createVerb.test(value)&&(imageWord.test(value)||visualScene.test(value));
@@ -1396,7 +1396,7 @@ async function sendMessage(customText=null){
     const img=document.createElement("img");
     img.className="message-image";
     img.src=imageForRequest;
-    img.alt="تصویر ارسال‌شده";
+    img.alt="Attached image";
     userNode.querySelector(".message-content").append(img);
   }
 
@@ -1445,7 +1445,7 @@ async function sendMessage(customText=null){
       const resultImage=document.createElement("img");
       resultImage.className="message-image";
       resultImage.src=generatedURL;
-      resultImage.alt="تصویر ساخته‌شده";
+      resultImage.alt="Generated image";
       resultNode.querySelector(".message-content").append(resultImage);
       saveHistory();
       clearSelectedFile();
@@ -1477,7 +1477,7 @@ async function sendMessage(customText=null){
       const resultImage=document.createElement("img");
       resultImage.className="message-image";
       resultImage.src=editedURL;
-      resultImage.alt="تصویر ویرایش‌شده";
+      resultImage.alt="Edited image";
       resultNode.querySelector(".message-content").append(resultImage);
       saveHistory();
       clearSelectedFile();
@@ -1598,7 +1598,7 @@ fileInput.addEventListener("change",async()=>{
 
     try{
       selectedDocument=await extractPDF(file);
-      fileName.textContent="✓ PDF آماده ارسال است: "+file.name;
+      fileName.textContent= "✓ PDF ready to send: "+file.name;
     }catch(e){
       alert(e.message);
       clearSelectedFile();
@@ -1616,7 +1616,7 @@ fileInput.addEventListener("change",async()=>{
     imagePreview.src=selectedImageData;
     imagePreview.classList.add("show");
 
-    fileName.textContent="✓ عکس آماده ارسال است: "+file.name;
+    fileName.textContent= "✓ Image ready to send: "+file.name;
 
   }catch(e){
     alert(e.message);
@@ -1701,7 +1701,7 @@ $("generateImage").addEventListener("click",async()=>{
     if(!response.ok){let error={};try{error=await response.json()}catch{};throw new Error(error.error||"Image generation failed.");}
     const blob=await response.blob();
     result.src=URL.createObjectURL(blob);result.hidden=false;status.textContent="Image generated successfully.";
-  }catch(error){status.textContent=error.message||"ارتباط برقرار نشد.";}
+  }catch(error){status.textContent=error.message||"Connection failed.";}
   finally{button.disabled=false;}
 });
 
@@ -1724,7 +1724,7 @@ function setComposerMicRecording(active){
   if(!button)return;
   button.classList.toggle("is-recording",!!active);
   button.textContent=active?"■":"🎙";
-  button.title=active?"برای پایان ضبط بزن":"Start recording";
+  button.title=active?"Tap to stop recording":"Start recording";
   button.setAttribute("aria-label",active?"Stop recording":"Start recording");
 }
 
@@ -1743,7 +1743,7 @@ function finishVoiceTurn(finalMessage=null){
 
 async function speakReply(text){
   if(!voiceMode)return;
-  const spokenText=String(text||"").replace(/```[\\s\\S]*?```/g,"کد در پاسخ نوشته شده است").slice(0,1800);
+  const spokenText=String(text||"").replace(/```[\\s\\S]*?```/g,"Code is included in the response").slice(0,1800);
   setVoiceStatus("🔊 HK.AI is speaking…");
   try{
     const response=await fetch("/api/tts",{
@@ -1814,7 +1814,7 @@ async function startVoiceInput(){
         const reader=new FileReader();
         const audioBase64=await new Promise((resolve,reject)=>{
           reader.onload=()=>resolve(String(reader.result).split(",")[1]||"");
-          reader.onerror=()=>reject(new Error("خواندن فایل صوتی ناموفق شد."));
+          reader.onerror=()=>reject(new Error("Could not read the audio file."));
           reader.readAsDataURL(audioBlob);
         });
         const response=await fetch("/api/transcribe",{
@@ -1823,7 +1823,7 @@ async function startVoiceInput(){
           body:JSON.stringify({audio:audioBase64,mimeType:audioBlob.type||"audio/mp4"})
         });
         const data=await response.json().catch(()=>({}));
-        if(!response.ok)throw new Error(data.error||"تشخیص گفتار انجام نشد.");
+        if(!response.ok)throw new Error(data.error||"Speech transcription failed.");
         const transcript=String(data.transcript||"").trim();
         if(!transcript)throw new Error("No speech was detected. Please try again.");
         if(!voiceMode)return;
@@ -1832,7 +1832,7 @@ async function startVoiceInput(){
         sendMessage(transcript);
       }catch(error){
         console.warn("Gemini Dari transcription:",error);
-        finishVoiceTurn("⚠️ خطای تشخیص گفتار: "+(error.message||"تبدیل صدا به متن ناموفق شد."));
+        finishVoiceTurn( "⚠️ Speech recognition error: "+(error.message||"Speech-to-text conversion failed."));
       }
     };
     // Request periodic audio chunks for more reliable capture on iOS Safari.
