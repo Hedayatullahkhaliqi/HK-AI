@@ -1346,10 +1346,14 @@ function prepareImage(file){
 }
 
 function isImageGenerationRequest(text){
-  const value=String(text||"").trim();
-  const imageWord=/(تصویر|عکس|نقاشی|پوستر|لوگو|انځور|image|picture|illustration|poster|logo)/i;
-  const createVerb=/(بساز(?:ید)?|ایجاد کن|تولید کن|طراحی کن|درست کن|جوړ کړه|جوړ کړئ|generate|create|draw|make)/i;
-  return imageWord.test(value)&&createVerb.test(value);
+  const value=String(text||"").trim().toLowerCase();
+  if(!value)return false;
+
+  const imageWord=/(تصویر|عکس|عکسی|نقاشی|پوستر|لوگو|انځور|image|picture|illustration|poster|logo)/i;
+  const createIntent=/(بساز|بسازید|بسازی|بسازش|بسازین|ایجاد|تولید|طراحی|درست\s*کن|برام\s*بساز|برایم\s*بساز|جوړ|generate|create|draw|make|design)/i;
+  const nonCreationIntent=/(این\s*(تصویر|عکس)\s*(چیست|چیه|را\s*توضیح|را\s*بررسی)|describe|explain|what\s+is)/i;
+
+  return imageWord.test(value)&&createIntent.test(value)&&!nonCreationIntent.test(value);
 }
 
 async function sendMessage(customText=null){
