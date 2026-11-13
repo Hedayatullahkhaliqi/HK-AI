@@ -48,7 +48,7 @@ export async function onRequestPost({ request, env }) {
         input: [
           {
             type: "text",
-            text: "Transcribe the spoken audio exactly as heard. The speaker is likely speaking English. Preserve the spoken English words and wording. Do not translate, summarize, explain, or answer the speaker. Return only the transcription text. If the speech is unclear, transcribe the clear words without inventing."
+            text: "Transcribe the spoken audio exactly as heard, in the language and writing system actually spoken. The speaker may use Dari, Pashto, English, or another language. Do not assume English, translate, transliterate, summarize, explain, or answer the speaker. Preserve the original words and wording. Return only the transcription text. If the speech is unclear, transcribe the clear words without inventing."
           },
           {
             type: "audio",
