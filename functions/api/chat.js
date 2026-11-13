@@ -172,7 +172,7 @@ function calculateMath(message) {
       result.toPrecision(12)
     ).toString();
 
-    return `محاسبه دقیق:\n\n${expression} = ${formatted}\n\nحاصل: ${formatted}`;
+    return `Exact calculation:\n\n${expression} = ${formatted}\n\nResult: ${formatted}`;
   } catch {
     return null;
   }
@@ -507,14 +507,14 @@ export async function onRequestPost({ request, env }) {
       }
     }
 
-    if (!hasImage) {
+    const explicitLanguage = detectLanguagePreference(messages);
+
+    if (!hasImage && (explicitLanguage !== "AUTO" || body.language !== "English")) {
       const simpleReply = handleSimpleConversation(latestUserMessage.content);
       if (simpleReply !== null) {
         return json({ reply: simpleReply });
       }
     }
-
-    const explicitLanguage = detectLanguagePreference(messages);
 
     // Let the multilingual model identify every language from the full message.
     // Keep an explicit supported language choice when the user has made one.
