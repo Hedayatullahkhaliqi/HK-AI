@@ -969,10 +969,10 @@ body{
       </div>
 
       <div class="suggestions">
-        <button class="suggestion" data-prompt="خودت را معرفی کن">Meet HK.AI</button>
-        <button class="suggestion" data-prompt="چگونه می‌توانم انگلیسی را بهتر یاد بگیرم؟">Learn a language</button>
-        <button class="suggestion" data-prompt="یک حقیقت علمی جالب برایم بگو">Science facts</button>
-        <button class="suggestion" data-prompt="برای من یک برنامه روزانه مفید بساز">Daily planning</button>
+        <button class="suggestion" data-prompt="Introduce yourself">Meet HK.AI</button>
+        <button class="suggestion" data-prompt="How can I improve my English?">Learn a language</button>
+        <button class="suggestion" data-prompt="Tell me an interesting scientific fact.">Science facts</button>
+        <button class="suggestion" data-prompt="Create a useful daily schedule for me.">Daily planning</button>
       </div>
     </section>
 
@@ -1809,7 +1809,7 @@ async function startVoiceInput(){
         finishVoiceTurn();
         return;
       }
-      setVoiceStatus("⌛ در حال تشخیص گفتار دری…");
+      setVoiceStatus("⌛ Transcribing speech…");
       try{
         const reader=new FileReader();
         const audioBase64=await new Promise((resolve,reject)=>{
@@ -1853,7 +1853,7 @@ async function startVoiceInput(){
 async function handleVoiceButton(){
   if(voiceMode){
     if(voiceRecorder&&voiceRecorder.state==="recording"){
-      setVoiceStatus("⌛ در حال تبدیل صدا به متن…");
+      setVoiceStatus("⌛ Converting speech to text…");
       voiceRecorder.stop();
       return;
     }
