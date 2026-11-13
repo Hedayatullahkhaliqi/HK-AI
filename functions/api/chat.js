@@ -516,10 +516,19 @@ export async function onRequestPost({ request, env }) {
       }
     }
 
-    // Let the multilingual model identify every language from the full message.
-    // Keep an explicit supported language choice when the user has made one.
+    // Respect an explicit language instruction first, then an app-level choice.
+    // If neither exists, detect the language of the latest user message instead
+    // of silently forcing English for every request.
+    const requestedBodyLanguage =
+      typeof body.language === "string" && body.language.trim() &&
+      body.language.trim().toUpperCase() !== "AUTO"
+        ? body.language.trim()
+        : null;
+
     const languagePreference =
-      explicitLanguage !== "AUTO" ? explicitLanguage : (body.language || "English");
+      explicitLanguage !== "AUTO"
+        ? explicitLanguage
+        : (requestedBodyLanguage || detectAutomaticLanguage(latestUserMessage.content));
 
     const translationMode = isTranslationRequest(
       latestUserMessage.content
