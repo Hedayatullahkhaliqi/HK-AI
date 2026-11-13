@@ -8,6 +8,6 @@ if (blocks.length === 0) throw new Error("No inline scripts found");
 for (let i = 0; i < blocks.length; i++) {
   const source = blocks[i][1].trim();
   if (!source) continue;
-  new Script(source, { filename: \`index.html:inline-script-\${i + 1}\` });
+  new Script(source, { filename: "index.html:inline-script-" + (i + 1) });
 }
-console.log(\`Validated \${blocks.length} inline script block(s).\`);
+console.log("Validated " + blocks.length + " inline script block(s).");
