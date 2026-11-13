@@ -65,8 +65,7 @@ export async function onRequestPost({request,env}){
     }
 
     const image=await env.AI.run("@cf/black-forest-labs/flux-1-schnell",{
-      prompt,
-      num_steps:4
+      prompt
     });
 
     if(image instanceof Response){
