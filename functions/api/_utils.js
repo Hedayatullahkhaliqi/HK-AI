@@ -29,7 +29,11 @@ export async function readJsonBody(request, maxBytes) {
   }
 
   try {
-    return { ok: true, value: JSON.parse(new TextDecoder().decode(bytes)) };
+    const value = JSON.parse(new TextDecoder().decode(bytes));
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return { ok: false, status: 400, error: "The JSON request body must be an object." };
+    }
+    return { ok: true, value };
   } catch {
     return { ok: false, status: 400, error: "Invalid JSON request body." };
   }
