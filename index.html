@@ -1396,6 +1396,27 @@ function prepareImage(file){
   });
 }
 
+function prepareImageForModel(dataURL){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const maxDimension=512;
+        const ratio=Math.min(1,maxDimension/Math.max(img.naturalWidth,img.naturalHeight));
+        const canvas=document.createElement("canvas");
+        canvas.width=Math.max(1,Math.round(img.naturalWidth*ratio));
+        canvas.height=Math.max(1,Math.round(img.naturalHeight*ratio));
+        const context=canvas.getContext("2d");
+        if(!context)throw new Error("Image processing is not supported in this browser.");
+        context.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL("image/jpeg",0.84));
+      }catch(error){reject(error);}
+    };
+    img.onerror=()=>reject(new Error("The reference photo could not be prepared for editing."));
+    img.src=dataURL;
+  });
+}
+
 function isImageGenerationRequest(text){
   const value=String(text||"").trim();
   const imageWord=/(تصویر|عکس|نقاشی|پوستر|لوگو|انځور|image|picture|illustration|poster|logo|landscape|photo|photograph)/i;
@@ -1505,10 +1526,11 @@ async function sendMessage(customText=null){
         editPrompt="Make the provided image look like a natural, realistic photograph. Preserve the original person's identity and facial features exactly, including face shape, eyes, nose, lips, skin tone, age, hairstyle, pose, clothing, and background. Keep the original composition and details. Only remove an artificial or AI-generated appearance. Do not beautify, stylize, replace the person, or invent new details.";
       }
 
+      const editReference=await prepareImageForModel(imageForRequest);
       response=await fetch("/api/image",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({prompt:editPrompt,image:imageForRequest}),
+        body:JSON.stringify({prompt:editPrompt,image:editReference}),
         signal:controller.signal
       });
 
