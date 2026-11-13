@@ -1,3 +1,5 @@
+import { readJsonBody } from "./_utils.js";
+
 const MODEL = "gemini-3.8-flash-tts";
 
 function json(data, status = 200) {
@@ -16,7 +18,9 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "Gemini API key is not configured in Cloudflare secrets." }, 503);
     }
 
-    const body = await request.json();
+    const parsedBody = await readJsonBody(request, 64 * 1024);
+    if (!parsedBody.ok) return json({ error: parsedBody.error }, parsedBody.status);
+    const body = parsedBody.value;
     const text = typeof body.text === "string" ? body.text.trim() : "";
 
     if (!text) return json({ error: "No text was provided for speech." }, 400);
