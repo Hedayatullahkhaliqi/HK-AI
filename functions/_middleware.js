@@ -14,10 +14,10 @@ export async function onRequest({request,env,next}){
  const max=BODY_LIMITS[url.pathname];if(!max)return reply({error:"Not found"},404,cors);
  const size=Number(request.headers.get("Content-Length")||0);if(size>max)return reply({error:"Request body too large"},413,cors);
  if(!request.headers.get("Content-Type")?.toLowerCase().includes("application/json"))return reply({error:"Content-Type must be application/json"},415,cors);
- // Fail closed: API requests must not bypass rate limiting if KV is
- // missing or unavailable. KV counters are approximate under concurrency.
+ // Fail closed: never bypass rate limiting when KV is unavailable.
  if(!env.HK_RATE_LIMITS){
-   return reply({error:"سرویس محافظت موقتاً در دسترس نیست. کمی بعد دوباره کوشش کن."},503,cors);
+   console.error("HK rate limit: KV binding missing");
+   return reply({error:"اتصال KV برای نسخهٔ آزمایشی تنظیم نشده است.",code:"KV_BINDING_MISSING"},503,cors);
  }
  const ip=request.headers.get("CF-Connecting-IP");
  if(!ip){
@@ -27,19 +27,27 @@ export async function onRequest({request,env,next}){
  const maxRequests=isImage?5:30;
  const bucket=Math.floor(Date.now()/60000);
  const key="api-rate:"+url.pathname+":"+ip+":"+bucket;
+ let stored;
  try{
-   const stored=await env.HK_RATE_LIMITS.get(key);
-   const current=stored===null?0:Number(stored);
-   if(!Number.isSafeInteger(current)||current<0){
-     return reply({error:"سرویس محافظت موقتاً در دسترس نیست. کمی بعد دوباره کوشش کن."},503,cors);
-   }
-   if(current>=maxRequests){
-     cors.set("Retry-After","60");
-     return reply({error:"تعداد درخواست‌ها زیاد است. کمی بعد دوباره کوشش کن."},429,cors);
-   }
+   stored=await env.HK_RATE_LIMITS.get(key);
+ }catch(error){
+   console.error("HK rate limit: KV read failed");
+   return reply({error:"خواندن شمارندهٔ KV ناموفق بود.",code:"KV_READ_FAILED"},503,cors);
+ }
+ const current=stored===null?0:Number(stored);
+ if(!Number.isSafeInteger(current)||current<0){
+   console.error("HK rate limit: invalid KV counter");
+   return reply({error:"مقدار شمارندهٔ KV نامعتبر است.",code:"KV_COUNTER_INVALID"},503,cors);
+ }
+ if(current>=maxRequests){
+   cors.set("Retry-After","60");
+   return reply({error:"تعداد درخواست‌ها زیاد است. کمی بعد دوباره کوشش کن."},429,cors);
+ }
+ try{
    await env.HK_RATE_LIMITS.put(key,String(current+1),{expirationTtl:120});
  }catch(error){
-   return reply({error:"سرویس محافظت موقتاً در دسترس نیست. کمی بعد دوباره کوشش کن."},503,cors);
+   console.error("HK rate limit: KV write failed");
+   return reply({error:"نوشتن شمارندهٔ KV ناموفق بود.",code:"KV_WRITE_FAILED"},503,cors);
  }
  const response=await next();const headers=new Headers(response.headers);for(const [k,v] of cors)headers.set(k,v);secure(headers);
  return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
