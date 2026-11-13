@@ -1345,6 +1345,13 @@ function prepareImage(file){
   });
 }
 
+function isImageGenerationRequest(text){
+  const value=String(text||"").trim();
+  const imageWord=/(تصویر|عکس|نقاشی|پوستر|لوگو|انځور|image|picture|illustration|poster|logo)/i;
+  const createVerb=/(بساز(?:ید)?|ایجاد کن|تولید کن|طراحی کن|درست کن|جوړ کړه|جوړ کړئ|generate|create|draw|make)/i;
+  return imageWord.test(value)&&createVerb.test(value);
+}
+
 async function sendMessage(customText=null){
   if(busy)return;
 
@@ -1406,10 +1413,41 @@ async function sendMessage(customText=null){
 
     let response;
 
+    const imageGenerationRequest=!imageForRequest&&!documentForRequest&&
+      isImageGenerationRequest(text);
     const imageEditRequest=!!imageForRequest&&
       /طبیعی|طبیعی‌تر|واقعی|واقعی‌تر|natural|realistic|retouch|ادیت|ویرایش|تغییر بده|تغییرش بده|اصلاح کن|زیباتر/i.test(text);
 
-    if(imageEditRequest){
+    if(imageGenerationRequest){
+      response=await fetch("/api/image",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({prompt:text}),
+        signal:controller.signal
+      });
+
+      if(!response.ok){
+        let error={};try{error=await response.json()}catch{}
+        throw new Error(error.error||"ساخت تصویر انجام نشد.");
+      }
+
+      const generatedBlob=await response.blob();
+      if(!generatedBlob.type.startsWith("image/")){
+        throw new Error("سرور تصویر ساخته‌شده را برنگرداند.");
+      }
+      const generatedURL=URL.createObjectURL(generatedBlob);
+      const assistantText="تصویر ساخته‌شده آماده است.";
+      messages.push({role:"assistant",content:assistantText,timestamp:Date.now()});
+      removeTyping();
+      const resultNode=addMessage("assistant",assistantText,false);
+      const resultImage=document.createElement("img");
+      resultImage.className="message-image";
+      resultImage.src=generatedURL;
+      resultImage.alt="تصویر ساخته‌شده";
+      resultNode.querySelector(".message-content").append(resultImage);
+      saveHistory();
+      clearSelectedFile();
+    }else if(imageEditRequest){
       let editPrompt=text;
       if(/طبیعی|طبیعی‌تر|واقعی|واقعی‌تر|natural|realistic/i.test(text)){
         editPrompt="Make the provided image look like a natural, realistic photograph. Preserve the original person's identity and facial features exactly, including face shape, eyes, nose, lips, skin tone, age, hairstyle, pose, clothing, and background. Keep the original composition and details. Only remove an artificial or AI-generated appearance. Do not beautify, stylize, replace the person, or invent new details.";
