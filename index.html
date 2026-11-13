@@ -989,7 +989,7 @@ body{direction:rtl;text-align:right}
     <p class="tool-hint">می‌توانید عکس یا فایل PDF ضمیمه کنید. پیش از فرستادن، اطلاعات شخصی و محرمانه را پنهان سازید.</p>
   </section>
   <section class="tool-panel" id="imageTool" hidden>
-    <div class="tool-heading"><strong>استودیوی پیشرفتهٔ ساخت تصویر</strong><button class="tool-close" data-close="imageTool" aria-label="Close">×</button></div>
+    <div class="tool-heading"><strong>استودیوی پیشرفتهٔ ساخت تصویر</strong><button class="tool-close" data-close="imageTool" aria-label="بستن">×</button></div>
     <p class="tool-hint">تصویرهای دقیق بسازید یا تا چهار عکس مرجع برای ویرایش اضافه کنید. روشن کنید چه چیز تغییر کند و چه چیز بدون تغییر بماند.</p>
     <textarea id="imagePrompt" rows="3" maxlength="1200" placeholder="تصویر مورد نظر را با جزئیات توصیف کنید..."></textarea>
     <div class="image-controls">
@@ -1183,7 +1183,7 @@ function conversationTitle(list){
   const first=list.find(m=>m&&m.role==="user"&&typeof m.content==="string");
   if(!first)return "گفت‌وگوی جدید";
   const title=first.content.replace(/\s+/g," ").trim();
-  return title.length>42?title.slice(0,42)+"…":title||"New conversation";
+  return title.length>42?title.slice(0,42)+"…":title||"گفت‌وگوی جدید";
 }
 
 function persistConversations(){
@@ -1209,7 +1209,7 @@ function saveHistory(){
     if(activeConversationId){
       let item=conversations.find(x=>x.id===activeConversationId);
       if(!item){
-        item={id:activeConversationId,title:"New conversation",updatedAt:Date.now(),messages:[]};
+        item={id:activeConversationId,title:"گفت‌وگوی جدید",updatedAt:Date.now(),messages:[]};
         conversations.unshift(item);
       }
       item.messages=recent.slice(-MAX_CONVERSATION_MESSAGES);
@@ -1839,7 +1839,7 @@ function renderConversationList(){
   filtered.forEach(item=>{
     const row=document.createElement("div");row.className="history-item";
     const open=document.createElement("button");open.className="history-open";open.type="button";
-    const title=document.createElement("span");title.textContent=item.title||"New conversation";
+    const title=document.createElement("span");title.textContent=item.title||"گفت‌وگوی جدید";
     const date=document.createElement("span");date.className="history-date";date.textContent=new Date(item.updatedAt).toLocaleString();
     open.append(title,date);open.addEventListener("click",()=>openConversation(item.id));
     const remove=document.createElement("button");remove.className="history-delete";remove.type="button";remove.textContent="حذف";remove.setAttribute("aria-label","حذف "+(item.title||"گفتگو"));
@@ -1871,7 +1871,7 @@ function restoreHistory(){
       if(Array.isArray(parsed)){
         conversations=parsed.filter(item=>item&&typeof item.id==="string"&&Array.isArray(item.messages)).map(item=>({
           id:item.id,
-          title:typeof item.title==="string"?item.title:"New conversation",
+          title:typeof item.title==="string"?item.title:"گفت‌وگوی جدید",
           updatedAt:Number(item.updatedAt)||Date.now(),
           messages:item.messages.filter(m=>m&&(m.role==="user"||m.role==="assistant")&&typeof m.content==="string"&&isRecent(m)).slice(-MAX_CONVERSATION_MESSAGES)
         })).filter(item=>item.messages.length).sort((a,b)=>b.updatedAt-a.updatedAt).slice(0,MAX_CONVERSATIONS);
@@ -2049,14 +2049,14 @@ $("generateImage").addEventListener("click",async()=>{
       throw new Error(error.error||"ساخت تصویر ناموفق بود.");
     }
     const blob=await response.blob();
-    if(!blob.type.startsWith("image/"))throw new Error("The server did not return an image.");
+    if(!blob.type.startsWith("image/"))throw new Error("سرور تصویر را برنگرداند.");
     if(generatedImageURL)URL.revokeObjectURL(generatedImageURL);
     generatedImageURL=URL.createObjectURL(blob);
     result.src=generatedImageURL;
     result.hidden=false;
     download.href=generatedImageURL;
     download.hidden=false;
-    status.textContent="تصویر شما آماده است. You can download it below.";
+    status.textContent="تصویر شما آماده است. می‌توانید آن را از پایین دریافت کنید.";
   }catch(error){
     status.textContent=error.message||"اتصال ناموفق بود. لطفاً دوباره تلاش کنید.";
   }finally{
@@ -2111,9 +2111,9 @@ async function speakReply(text){
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({text:spokenText})
     });
-    if(!response.ok){let error={};try{error=await response.json()}catch{};throw new Error(error.error||"Speech generation failed.");}
+    if(!response.ok){let error={};try{error=await response.json()}catch{};throw new Error(error.error||"ساخت صدای گفتار ناموفق بود.");}
     const audioBlob=await response.blob();
-    if(!audioBlob.type.includes("audio"))throw new Error("The audio file is invalid.");
+    if(!audioBlob.type.includes("audio"))throw new Error("فایل صوتی معتبر نیست.");
     voiceAudioUrl=URL.createObjectURL(audioBlob);
     voiceAudio=new Audio(voiceAudioUrl);
     voiceAudio.onended=()=>{voiceAudio=null;if(voiceAudioUrl)URL.revokeObjectURL(voiceAudioUrl);voiceAudioUrl=null;finishVoiceTurn();};
@@ -2246,7 +2246,7 @@ function renderTasks(){
     const check=document.createElement("input");check.type="checkbox";check.checked=!!task.done;
     check.addEventListener("change",()=>{const tasks=getTasks();tasks[index].done=check.checked;localStorage.setItem(TASK_KEY,JSON.stringify(tasks));renderTasks();});
     const label=document.createElement("label");label.textContent=task.text+(task.time?" · "+task.time:"");
-    const del=document.createElement("button");del.textContent="Delete";del.addEventListener("click",()=>{const tasks=getTasks();tasks.splice(index,1);localStorage.setItem(TASK_KEY,JSON.stringify(tasks));renderTasks();});
+    const del=document.createElement("button");del.textContent="حذف";del.addEventListener("click",()=>{const tasks=getTasks();tasks.splice(index,1);localStorage.setItem(TASK_KEY,JSON.stringify(tasks));renderTasks();});
     li.append(check,label,del);list.append(li);
   });
 }
@@ -2263,7 +2263,7 @@ function checkPlannerReminders(){
   const tasks=getTasks();let changed=false;
   tasks.forEach(task=>{
     if(task.time===clock&&!task.done&&task.remindedDay!==today){
-      new Notification("HK.AI Reminder",{body:task.text});task.remindedDay=today;changed=true;
+      new Notification("یادآوری HK.AI",{body:task.text});task.remindedDay=today;changed=true;
     }
   });
   if(changed)localStorage.setItem(TASK_KEY,JSON.stringify(tasks));
