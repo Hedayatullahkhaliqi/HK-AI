@@ -1394,8 +1394,9 @@ async function extractPDF(file){
   }
 
   // Validate the actual PDF signature, not only its extension or MIME type.
-  const header=new Uint8Array(await file.slice(0,5).arrayBuffer());
-  if(header.length!==5||String.fromCharCode(...header)!=="%PDF-"){
+  const header=new Uint8Array(await file.slice(0,1024).arrayBuffer());
+  const signature=String.fromCharCode(...header);
+  if(!signature.includes("%PDF-")){
     throw new Error("فایل انتخاب‌شده یک سند PDF معتبر نیست.");
   }
 
