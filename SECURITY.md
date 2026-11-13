@@ -7,7 +7,7 @@ The Pages Functions middleware protects all `/api/*` routes before their handler
 The current middleware uses **fail-closed** behavior: API requests return HTTP 503 when the KV binding is missing, unavailable, or cannot be read/written. The API does not silently bypass rate limiting.
 
 1. In Cloudflare Dashboard, open **Workers & Pages → KV** and create a namespace named `HK-AI-RATE-LIMITS`.
-2. Open **Workers & Pages → HK-AI → Settings → Bindings`.
+2. Open **Workers & Pages → HK-AI → Settings → Bindings**.
 3. Choose **Add → KV namespace**.
 4. Set the variable name to exactly `HK_RATE_LIMITS` and select the namespace `HK-AI-RATE-LIMITS`.
 5. Save, then redeploy the Pages project so the binding becomes available to Functions.
