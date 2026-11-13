@@ -13,20 +13,20 @@ function json(data, status = 200) {
 export async function onRequestPost({ request, env }) {
   try {
     if (!env.GEMINI_API_KEY) {
-      return json({ error: "کلید Gemini در تنظیمات امن Cloudflare تنظیم نشده است." }, 503);
+      return json({ error: "Gemini API key is not configured in Cloudflare secrets." }, 503);
     }
 
     const body = await request.json();
     const text = typeof body.text === "string" ? body.text.trim() : "";
 
-    if (!text) return json({ error: "متنی برای خواندن فرستاده نشده است." }, 400);
+    if (!text) return json({ error: "No text was provided for speech." }, 400);
     if (text.length > 1800) {
-      return json({ error: "متن برای صداسازی بیش از حد طولانی است." }, 413);
+      return json({ error: "The text is too long for speech generation." }, 413);
     }
 
     const prompt =
-      "Read the following text aloud in natural Persian as spoken in Afghanistan (Afghan Dari). " +
-      "Use an authentic Afghan Dari accent and pronunciation, not an Iranian Persian accent. " +
+      "Read the following text aloud in natural, clear English. " +
+      "Use natural English pronunciation. " +
       "Speak warmly, clearly, and conversationally at a natural pace. " +
       "Do not translate, summarize, or add any words. Read only the supplied text:\n\n" +
       text;
@@ -46,7 +46,7 @@ export async function onRequestPost({ request, env }) {
             text: prompt,
             annotations: [{
               type: "speech_metadata",
-              style: "Natural, warm, conversational Afghan Dari pronunciation. Speak clearly at a moderate pace."
+              style: "Natural, warm, conversational English pronunciation. Speak clearly at a moderate pace."
             }]
           }]
         }],
@@ -60,7 +60,7 @@ export async function onRequestPost({ request, env }) {
     const result = await upstream.json().catch(() => ({}));
 
     if (!upstream.ok) {
-      const message = "سرویس صداسازی درخواست را نپذیرفت (HTTP " + upstream.status + ").";
+      const message = "The speech service rejected the request (HTTP " + upstream.status + ").";
       return json({ error: message }, upstream.status >= 500 ? 502 : upstream.status);
     }
 
@@ -71,7 +71,7 @@ export async function onRequestPost({ request, env }) {
       result.outputAudio?.data;
 
     if (typeof audioBase64 !== "string" || !audioBase64) {
-      return json({ error: "Gemini فایل صوتی برنگرداند. لطفاً دوباره تلاش کن." }, 502);
+      return json({ error: "Gemini did not return an audio file. Please try again." }, 502);
     }
 
     const binary = atob(audioBase64);
@@ -88,7 +88,7 @@ export async function onRequestPost({ request, env }) {
     });
   } catch (error) {
     return json({
-      error: "سرویس صداسازی فعلاً در دسترس نیست. لطفاً بعداً دوباره کوشش کن."
+      error: "Speech generation is temporarily unavailable. Please try again later."
     }, 500);
   }
 }
