@@ -6,7 +6,7 @@ function isAllowedOrigin(origin){
    const url=new URL(origin);
    return url.protocol==="https:" &&
      url.origin===origin &&
-     /^[a-z0-9-]+\\.hk-ai\\.pages\\.dev$/i.test(url.hostname);
+     /^[a-z0-9-]+\.hk-ai\.pages\.dev$/i.test(url.hostname);
  } catch {
    return false;
  }
