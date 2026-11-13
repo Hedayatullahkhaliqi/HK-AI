@@ -368,18 +368,18 @@ function cleanReply(value) {
 // Validate uploaded image
 function validateImage(image) {
   if (typeof image !== "string") {
-    return "تصویر معتبر نیست.";
+    return "The image is invalid.";
   }
 
   if (image.length > MAX_IMAGE_LENGTH) {
-    return "حجم تصویر زیاد است. لطفاً تصویر کوچک‌تری انتخاب کن.";
+    return "The image is too large. Please choose a smaller image.";
   }
 
   const validImage =
     /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/i;
 
   if (!validImage.test(image)) {
-    return "فرمت تصویر پشتیبانی نمی‌شود. از JPG، PNG یا WebP استفاده کن.";
+    return "Unsupported image format. Please use JPG, PNG, or WebP.";
   }
 
   return null;
