@@ -2123,7 +2123,7 @@ async function speakReply(text){
     console.warn("Gemini Dari TTS:",error);
     if("speechSynthesis" in window){
       const utterance=new SpeechSynthesisUtterance(spokenText);
-      utterance.lang="en-US";utterance.rate=.94;utterance.pitch=1;
+      utterance.lang=document.documentElement.lang||navigator.language||"fa-AF";utterance.rate=.94;utterance.pitch=1;
       utterance.onend=finishVoiceTurn;
       utterance.onerror=finishVoiceTurn;
       window.speechSynthesis.cancel();
