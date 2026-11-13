@@ -990,7 +990,7 @@ body{
 
     <div class="input-box">
 
-      <button class="send-btn" id="sendBtn" title="Send" aria-label="Send message">↑</button>
+      <button class="attach-btn" id="attachBtn" title="Attach an image or PDF" aria-label="Attach file">＋</button>
 
       <button class="mic-btn" id="composerMicBtn" title="Record audio" aria-label="Record audio">🎙</button>
 
@@ -1000,7 +1000,7 @@ body{
         placeholder="Ask HK.AI"
       ></textarea>
 
-      <button class="attach-btn" id="attachBtn" title="Attach an image or PDF" aria-label="Attach file">＋</button>
+      <button class="send-btn" id="sendBtn" title="Send" aria-label="Send message">↑</button>
 
     </div>
 
@@ -1369,8 +1369,8 @@ async function sendMessage(customText=null){
   let userText=text;
 
   if(fileForRequest&&documentForRequest){
-    userText=(text?text+"\n\n":Please review the attached PDF: ")+
-      PDF file: "+fileForRequest.name;
+    userText=(text?text+"\n\n":"Please review the attached PDF: ")+
+      "PDF file: "+fileForRequest.name;
   }
 
   if(imageForRequest&&!userText){
