@@ -104,6 +104,6 @@ export async function onRequestPost({request,env}){
   }catch(error){
     console.error("HK image operation failed:",error);
     const detail=String(error?.message||error||"Unknown error").slice(0,300);
-    return json({error:"عملیات تصویر انجام نشد.",detail},500);
+    return json({error:"عملیات تصویر انجام نشد: "+detail},500);
   }
 }
