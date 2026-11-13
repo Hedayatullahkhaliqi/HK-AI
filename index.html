@@ -1289,7 +1289,7 @@ function addMessage(role,content,save=true,timestamp=Date.now()){
 
   const label=document.createElement("div");
   label.className="message-label";
-  label.textContent=role==="user"?"You":"HK.AI";
+  label.textContent=role==="user"?"شما":"HK.AI";
 
   const body=document.createElement("div");
   body.className="message-content";
@@ -1308,12 +1308,12 @@ function addMessage(role,content,save=true,timestamp=Date.now()){
 
     const copy=document.createElement("button");
     copy.className="copy-btn";
-    copy.textContent="Copy response";
+    copy.textContent="کاپی پاسخ";
 
     copy.addEventListener("click",async()=>{
       try{
         await navigator.clipboard.writeText(content);
-        copy.textContent="Copied ✓";
+        copy.textContent="کاپی شد ✓";
       }catch{
         const temp=document.createElement("textarea");
         temp.value=content;
@@ -1321,9 +1321,9 @@ function addMessage(role,content,save=true,timestamp=Date.now()){
         temp.select();
         try{
           document.execCommand("copy");
-          copy.textContent="Copied ✓";
+          copy.textContent="کاپی شد ✓";
         }catch{
-          copy.textContent="Copy failed";
+          copy.textContent="کاپی انجام نشد";
         }
         temp.remove();
       }
@@ -1351,7 +1351,7 @@ function showTyping(){
   const el=document.createElement("div");
   el.className="typing";
   el.id="typing";
-  el.innerHTML='HK.AI is thinking <span class="typing-dots"><span></span><span></span><span></span></span>';
+  el.innerHTML='HK.AI در حال فکر کردن است <span class="typing-dots"><span></span><span></span><span></span></span>';
 
   chat.append(el);
   chat.scrollTop=chat.scrollHeight;
@@ -1383,11 +1383,11 @@ function clearSelectedFile(){
 
 async function extractPDF(file){
   if(!window.pdfjsLib){
-    throw new Error("The PDF tool could not be loaded. Check your internet connection.");
+    throw new Error("ابزار PDF بارگذاری نشد. اتصال اینترنت خود را بررسی کنید.");
   }
 
   if(file.size>10*1024*1024){
-    throw new Error("The PDF file must not exceed 10 MB.");
+    throw new Error("حجم فایل PDF نباید بیشتر از ۱۰ مگابایت باشد.");
   }
 
   const pdf=await pdfjsLib.getDocument({
@@ -1395,7 +1395,7 @@ async function extractPDF(file){
   }).promise;
 
   if(pdf.numPages>30){
-    throw new Error("The PDF file must not exceed 30 pages.");
+    throw new Error("فایل PDF نباید بیشتر از ۳۰ صفحه باشد.");
   }
 
   let text="";
@@ -1413,7 +1413,7 @@ async function extractPDF(file){
   }
 
   if(!text.trim()){
-    throw new Error("No text was found in this PDF. It may be a scanned document.");
+    throw new Error("در این فایل PDF متنی پیدا نشد؛ شاید سند اسکن‌شده باشد.");
   }
 
   return text;
@@ -1440,7 +1440,7 @@ function prepareImage(file){
         const context=canvas.getContext("2d");
 
         if(!context){
-          throw new Error("Image processing is not supported in this browser.");
+          throw new Error("پردازش تصویر در این مرورگر پشتیبانی نمی‌شود.");
         }
 
         context.drawImage(img,0,0,canvas.width,canvas.height);
@@ -1454,7 +1454,7 @@ function prepareImage(file){
         }
 
         if(data.length>MAX_IMAGE_SIZE){
-          throw new Error("The image is still too large. Please choose a smaller image.");
+          throw new Error("حجم تصویر هنوز زیاد است. لطفاً تصویر کوچک‌تری انتخاب کنید.");
         }
 
         URL.revokeObjectURL(objectURL);
@@ -1469,7 +1469,7 @@ function prepareImage(file){
     img.onerror=()=>{
       URL.revokeObjectURL(objectURL);
       reject(new Error(
-        "This image could not be opened. Convert it to JPG or PNG and try again."
+        "این تصویر باز نشد. آن را به JPG یا PNG تبدیل کنید و دوباره تلاش نمایید."
       ));
     };
 
@@ -1488,12 +1488,12 @@ function prepareImageForModel(dataURL){
         canvas.width=Math.max(1,Math.round(img.naturalWidth*ratio));
         canvas.height=Math.max(1,Math.round(img.naturalHeight*ratio));
         const context=canvas.getContext("2d");
-        if(!context)throw new Error("Image processing is not supported in this browser.");
+        if(!context)throw new Error("پردازش تصویر در این مرورگر پشتیبانی نمی‌شود.");
         context.drawImage(img,0,0,canvas.width,canvas.height);
         resolve(canvas.toDataURL("image/jpeg",0.84));
       }catch(error){reject(error);}
     };
-    img.onerror=()=>reject(new Error("The reference photo could not be prepared for editing."));
+    img.onerror=()=>reject(new Error("آماده‌سازی عکس مرجع برای ویرایش ممکن نشد."));
     img.src=dataURL;
   });
 }
@@ -1521,12 +1521,12 @@ async function sendMessage(customText=null){
   let userText=text;
 
   if(fileForRequest&&documentForRequest){
-    userText=(text?text+"\n\n":"Please review the attached PDF: ")+
+    userText=(text?text+"\n\n":"لطفاً فایل PDF ضمیمه‌شده را بررسی کن: ")+
       "PDF file: "+fileForRequest.name;
   }
 
   if(imageForRequest&&!userText){
-    userText="Please examine and describe this image.";
+    userText="لطفاً این تصویر را بررسی و توصیف کن.";
   }
 
   if(!userText)return;
@@ -1582,15 +1582,15 @@ async function sendMessage(customText=null){
 
       if(!response.ok){
         let error={};try{error=await response.json()}catch{}
-        throw new Error(error.error||"Image generation failed.");
+        throw new Error(error.error||"ساخت تصویر ناموفق بود.");
       }
 
       const generatedBlob=await response.blob();
       if(!generatedBlob.type.startsWith("image/")){
-        throw new Error("The server did not return a generated image.");
+        throw new Error("سرور تصویر ساخته‌شده را برنگرداند.");
       }
       const generatedURL=URL.createObjectURL(generatedBlob);
-      const assistantText="Your image is ready.";
+      const assistantText="تصویر شما آماده است.";
       messages.push({role:"assistant",content:assistantText,timestamp:Date.now()});
       removeTyping();
       const resultNode=addMessage("assistant",assistantText,false);
@@ -1617,13 +1617,13 @@ async function sendMessage(customText=null){
 
       if(!response.ok){
         let error={};try{error=await response.json()}catch{}
-        throw new Error(error.error||error.details||"Image editing failed.");
+        throw new Error(error.error||error.details||"ویرایش تصویر ناموفق بود.");
       }
 
       const editedBlob=await response.blob();
-      if(!editedBlob.type.startsWith("image/"))throw new Error("The server did not return an edited image.");
+      if(!editedBlob.type.startsWith("image/"))throw new Error("سرور تصویر ویرایش‌شده را برنگرداند.");
       const editedURL=URL.createObjectURL(editedBlob);
-      const assistantText="Your edited image is ready.";
+      const assistantText="تصویر ویرایش‌شدهٔ شما آماده است.";
       messages.push({role:"assistant",content:assistantText,timestamp:Date.now()});
       removeTyping();
       const resultNode=addMessage("assistant",assistantText,false);
@@ -1657,15 +1657,15 @@ async function sendMessage(customText=null){
       try{
         data=await response.json();
       }catch{
-        throw new Error("The server response could not be read.");
+        throw new Error("پاسخ سرور خوانده نشد.");
       }
 
       if(!response.ok){
-        throw new Error(data.details||data.error||"A server communication error occurred.");
+        throw new Error(data.details||data.error||"در ارتباط با سرور خطا رخ داد.");
       }
 
       if(typeof data.reply!=="string"||!data.reply.trim()){
-        throw new Error("The server returned an empty response.");
+        throw new Error("سرور پاسخ خالی فرستاد.");
       }
 
       messages.push({role:"assistant",content:data.reply,timestamp:Date.now()});
@@ -1681,12 +1681,12 @@ async function sendMessage(customText=null){
     removeTyping();
 
     const msg=error.name==="AbortError"?
-      "The server timed out. Please try again.":
-      (error.message||"Could not connect to the server.");
+      "پاسخ سرور بیش از حد طول کشید. لطفاً دوباره تلاش کنید.":
+      (error.message||"اتصال به سرور برقرار نشد.");
 
     const node=addMessage(
       "assistant",
-      "Sorry, something went wrong:\n"+msg,
+      "متأسفانه مشکلی پیش آمد:\n"+msg,
       false
     );
 
@@ -1736,7 +1736,7 @@ fileInput.addEventListener("change",async()=>{
   ].includes(file.type);
 
   if(!isPDF&&!isImage){
-    alert("Please choose a PDF or an image in JPG, PNG, or WebP format.");
+    alert("لطفاً یک فایل PDF یا تصویر با فرمت JPG، PNG یا WebP انتخاب کنید.");
     clearSelectedFile();
     return;
   }
@@ -1747,11 +1747,11 @@ fileInput.addEventListener("change",async()=>{
   filePreview.classList.add("show");
 
   if(isPDF){
-    fileName.textContent="Reading: "+file.name;
+    fileName.textContent="در حال خواندن: "+file.name;
 
     try{
       selectedDocument=await extractPDF(file);
-      fileName.textContent= "✓ PDF ready to send: "+file.name;
+      fileName.textContent= "✓ فایل PDF آمادهٔ فرستادن است: "+file.name;
     }catch(e){
       alert(e.message);
       clearSelectedFile();
@@ -1761,7 +1761,7 @@ fileInput.addEventListener("change",async()=>{
   }
 
   // Prepare image and show compact preview
-  fileName.textContent="Preparing image...";
+  fileName.textContent="در حال آماده‌سازی تصویر...";
 
   try{
     selectedImageData=await prepareImage(file);
@@ -1769,7 +1769,7 @@ fileInput.addEventListener("change",async()=>{
     imagePreview.src=selectedImageData;
     imagePreview.classList.add("show");
 
-    fileName.textContent= "✓ Image ready to send: "+file.name;
+    fileName.textContent= "✓ تصویر آمادهٔ فرستادن است: "+file.name;
 
   }catch(e){
     alert(e.message);
@@ -1940,7 +1940,7 @@ function prepareImageReference(file){
         canvas.width=Math.max(1,Math.round(img.naturalWidth*ratio));
         canvas.height=Math.max(1,Math.round(img.naturalHeight*ratio));
         const context=canvas.getContext("2d");
-        if(!context)throw new Error("Image processing is not supported in this browser.");
+        if(!context)throw new Error("پردازش تصویر در این مرورگر پشتیبانی نمی‌شود.");
         context.drawImage(img,0,0,canvas.width,canvas.height);
         const data=canvas.toDataURL("image/jpeg",0.82);
         URL.revokeObjectURL(objectURL);
@@ -1975,23 +1975,23 @@ $("clearImageReferences").addEventListener("click",()=>{
 $("imageReferenceInput").addEventListener("change",async event=>{
   const files=Array.from(event.target.files||[]).slice(0,4);
   if(!files.length)return;
-  $("imageStatus").textContent="Preparing reference photos…";
+  $("imageStatus").textContent="در حال آماده‌سازی عکس‌های مرجع...";
   try{
     const prepared=[];
     for(const file of files){
       if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
-        throw new Error("Use JPG, PNG, or WebP reference photos.");
+        throw new Error("برای عکس‌های مرجع از فرمت JPG، PNG یا WebP استفاده کنید.");
       }
-      if(file.size>12*1024*1024)throw new Error("Each reference photo must be smaller than 12 MB.");
+      if(file.size>12*1024*1024)throw new Error("حجم هر عکس مرجع باید کمتر از ۱۲ مگابایت باشد.");
       prepared.push(await prepareImageReference(file));
     }
     imageReferences=prepared;
     updateImageReferenceList();
-    $("imageStatus").textContent="Reference photos are ready. Describe how they should guide the result.";
+    $("imageStatus").textContent="عکس‌های مرجع آماده‌اند. توضیح دهید چگونه در ساخت تصویر استفاده شوند.";
   }catch(error){
     imageReferences=[];
     updateImageReferenceList();
-    $("imageStatus").textContent=error.message||"Could not prepare reference photos.";
+    $("imageStatus").textContent=error.message||"آماده‌سازی عکس‌های مرجع ممکن نشد.";
   }
 });
 
@@ -1999,9 +1999,9 @@ $("enhanceImagePrompt").addEventListener("click",async()=>{
   const prompt=$("imagePrompt").value.trim();
   const status=$("imageStatus");
   const button=$("enhanceImagePrompt");
-  if(!prompt){status.textContent="Write a short description first.";return;}
+  if(!prompt){status.textContent="نخست یک توصیف کوتاه بنویسید.";return;}
   button.disabled=true;
-  status.textContent="Improving your prompt…";
+  status.textContent="در حال بهبود متن توصیف...";
   try{
     const response=await fetch("/api/image",{
       method:"POST",
@@ -2009,11 +2009,11 @@ $("enhanceImagePrompt").addEventListener("click",async()=>{
       body:JSON.stringify({action:"enhance",prompt})
     });
     const data=await response.json();
-    if(!response.ok)throw new Error(data.error||"Prompt improvement failed.");
+    if(!response.ok)throw new Error(data.error||"بهبود متن توصیف ناموفق بود.");
     if(data.prompt)$("imagePrompt").value=data.prompt;
-    status.textContent="Prompt improved. Review it, then generate your image.";
+    status.textContent="متن توصیف بهتر شد. آن را بررسی کنید و سپس تصویر بسازید.";
   }catch(error){
-    status.textContent=error.message||"Could not improve the prompt.";
+    status.textContent=error.message||"بهبود متن توصیف ممکن نشد.";
   }finally{
     button.disabled=false;
   }
@@ -2026,10 +2026,10 @@ $("generateImage").addEventListener("click",async()=>{
   const download=$("downloadGeneratedImage");
   const button=$("generateImage");
   const enhanceButton=$("enhanceImagePrompt");
-  if(!prompt){status.textContent="Please describe the image first.";return;}
+  if(!prompt){status.textContent="لطفاً نخست تصویر مورد نظر را توصیف کنید.";return;}
   button.disabled=true;
   enhanceButton.disabled=true;
-  status.textContent="Creating your image… This may take a little while.";
+  status.textContent="در حال ساخت تصویر... این کار ممکن است کمی زمان ببرد.";
   result.hidden=true;
   download.hidden=true;
   try{
@@ -2046,7 +2046,7 @@ $("generateImage").addEventListener("click",async()=>{
     });
     if(!response.ok){
       let error={};try{error=await response.json()}catch{}
-      throw new Error(error.error||"Image generation failed.");
+      throw new Error(error.error||"ساخت تصویر ناموفق بود.");
     }
     const blob=await response.blob();
     if(!blob.type.startsWith("image/"))throw new Error("The server did not return an image.");
@@ -2056,9 +2056,9 @@ $("generateImage").addEventListener("click",async()=>{
     result.hidden=false;
     download.href=generatedImageURL;
     download.hidden=false;
-    status.textContent="Your image is ready. You can download it below.";
+    status.textContent="تصویر شما آماده است. You can download it below.";
   }catch(error){
-    status.textContent=error.message||"Connection failed. Please try again.";
+    status.textContent=error.message||"اتصال ناموفق بود. لطفاً دوباره تلاش کنید.";
   }finally{
     button.disabled=false;
     enhanceButton.disabled=false;
@@ -2076,7 +2076,7 @@ function setVoiceStatus(message){
   const status=$("voiceStatus");
   if(status)status.textContent=message||"";
   const legacy=$("voiceBtn");
-  if(legacy)legacy.textContent=message||"🎙 Voice";
+  if(legacy)legacy.textContent=message||"🎙 صدا";
 }
 
 function setComposerMicRecording(active){
@@ -2084,8 +2084,8 @@ function setComposerMicRecording(active){
   if(!button)return;
   button.classList.toggle("is-recording",!!active);
   button.textContent=active?"■":"🎙";
-  button.title=active?"Tap to stop recording":"Start recording";
-  button.setAttribute("aria-label",active?"Stop recording":"Start recording");
+  button.title=active?"برای توقف ضبط لمس کنید":"شروع ضبط";
+  button.setAttribute("aria-label",active?"توقف ضبط":"شروع ضبط");
 }
 
 function finishVoiceTurn(finalMessage=null){
@@ -2098,13 +2098,13 @@ function finishVoiceTurn(finalMessage=null){
     try{voiceRecorder.stop()}catch{}
   }
   // Keep useful errors visible instead of immediately overwriting them.
-  setVoiceStatus(finalMessage||"🎙 Tap the microphone to speak again");
+  setVoiceStatus(finalMessage||"🎙 برای صحبت دوباره، میکروفون را لمس کنید");
 }
 
 async function speakReply(text){
   if(!voiceMode)return;
   const spokenText=String(text||"").replace(/```[\\s\\S]*?```/g,"Code is included in the response").slice(0,1800);
-  setVoiceStatus("🔊 HK.AI is speaking…");
+  setVoiceStatus("🔊 HK.AI در حال صحبت است...");
   try{
     const response=await fetch("/api/tts",{
       method:"POST",
@@ -2128,9 +2128,9 @@ async function speakReply(text){
       utterance.onerror=finishVoiceTurn;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
-      setVoiceStatus("🔊 Using browser voice");
+      setVoiceStatus("🔊 استفاده از صدای مرورگر");
     }else{
-      setVoiceStatus("🎙 Speech is unavailable");
+      setVoiceStatus("🎙 قابلیت گفتار در دسترس نیست");
       finishVoiceTurn();
     }
   }
@@ -2140,7 +2140,7 @@ async function startVoiceInput(){
   if(voiceRecorder)return;
   if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
     voiceMode=false;
-    setVoiceStatus("🎙 Audio recording is not supported in this browser");
+    setVoiceStatus("🎙 ضبط صدا در این مرورگر پشتیبانی نمی‌شود");
     return;
   }
   try{
@@ -2153,7 +2153,7 @@ async function startVoiceInput(){
     voiceRecorder.ondataavailable=event=>{if(event.data&&event.data.size)voiceChunks.push(event.data);};
     voiceRecorder.onerror=event=>{
       console.warn("Audio recording:",event.error);
-      setVoiceStatus("🎙 Audio recording failed");
+      setVoiceStatus("🎙 ضبط صدا ناموفق بود");
     };
     voiceRecorder.onstop=async()=>{
       const recorderMime=voiceRecorder?.mimeType||voiceChunks[0]?.type||"audio/mp4";
@@ -2165,16 +2165,16 @@ async function startVoiceInput(){
       voiceChunks=[];
       if(!voiceMode)return;
       if(!audioBlob.size){
-        setVoiceStatus("🎙 No audio was recorded. Try again.");
+        setVoiceStatus("🎙 صدایی ضبط نشد. دوباره تلاش کنید.");
         finishVoiceTurn();
         return;
       }
-      setVoiceStatus("⌛ Transcribing speech…");
+      setVoiceStatus("⌛ در حال نوشتن گفتار...");
       try{
         const reader=new FileReader();
         const audioBase64=await new Promise((resolve,reject)=>{
           reader.onload=()=>resolve(String(reader.result).split(",")[1]||"");
-          reader.onerror=()=>reject(new Error("Could not read the audio file."));
+          reader.onerror=()=>reject(new Error("خواندن فایل صوتی ممکن نشد."));
           reader.readAsDataURL(audioBlob);
         });
         const response=await fetch("/api/transcribe",{
@@ -2183,22 +2183,22 @@ async function startVoiceInput(){
           body:JSON.stringify({audio:audioBase64,mimeType:audioBlob.type||"audio/mp4"})
         });
         const data=await response.json().catch(()=>({}));
-        if(!response.ok)throw new Error(data.error||"Speech transcription failed.");
+        if(!response.ok)throw new Error(data.error||"تبدیل گفتار به متن ناموفق بود.");
         const transcript=String(data.transcript||"").trim();
-        if(!transcript)throw new Error("No speech was detected. Please try again.");
+        if(!transcript)throw new Error("صدایی تشخیص داده نشد. لطفاً دوباره تلاش کنید.");
         if(!voiceMode)return;
         $("messageInput").value=transcript;
         $("messageInput").dispatchEvent(new Event("input"));
         sendMessage(transcript);
       }catch(error){
         console.warn("Gemini Dari transcription:",error);
-        finishVoiceTurn( "⚠️ Speech recognition error: "+(error.message||"Speech-to-text conversion failed."));
+        finishVoiceTurn( "⚠️ خطا در تشخیص گفتار: "+(error.message||"تبدیل گفتار به متن ناموفق بود."));
       }
     };
     // Request periodic audio chunks for more reliable capture on iOS Safari.
     voiceRecorder.start(250);
     setComposerMicRecording(true);
-    setVoiceStatus("🔴 Listening… Tap again to stop");
+    setVoiceStatus("🔴 در حال شنیدن... برای توقف دوباره لمس کنید");
   }catch(error){
     console.warn("Microphone access:",error);
     voiceStream?.getTracks().forEach(track=>track.stop());
@@ -2206,14 +2206,14 @@ async function startVoiceInput(){
     voiceRecorder=null;
     voiceMode=false;
     setComposerMicRecording(false);
-    setVoiceStatus(error.name==="NotAllowedError"?"🎙 Microphone permission was denied":"🎙 Could not start the microphone. Try again.");
+    setVoiceStatus(error.name==="NotAllowedError"?"🎙 اجازهٔ دسترسی به میکروفون داده نشد":"🎙 میکروفون فعال نشد. دوباره تلاش کنید.");
   }
 }
 
 async function handleVoiceButton(){
   if(voiceMode){
     if(voiceRecorder&&voiceRecorder.state==="recording"){
-      setVoiceStatus("⌛ Converting speech to text…");
+      setVoiceStatus("⌛ در حال تبدیل گفتار به متن...");
       voiceRecorder.stop();
       return;
     }
@@ -2225,7 +2225,7 @@ async function handleVoiceButton(){
     if("speechSynthesis" in window)window.speechSynthesis.cancel();
     if(voiceAudio){voiceAudio.pause();voiceAudio=null;}
     if(voiceAudioUrl){URL.revokeObjectURL(voiceAudioUrl);voiceAudioUrl=null;}
-    setVoiceStatus("🎙 Voice");
+    setVoiceStatus("🎙 صدا");
     return;
   }
   voiceMode=true;
