@@ -295,10 +295,11 @@ function detectAutomaticLanguage(text) {
 function handleSimpleConversation(text) {
   const value=String(text||"").trim().toLowerCase()
     .replace(/[؟?!.,،؛:]+/g,"")
-    .replace(/\\s+/g," ");
+    .replace(/\s+/g," ");
 
   const dariGreetings=/^(سلام|سلام علیکم|صبح بخیر|عصر بخیر|شب بخیر)$/i;
   const englishGreetings=/^(hi|hello|hey|good morning|good afternoon|good evening)$/i;
+  const frenchGreetings=/^(bonjour|bonsoir|salut)$/i;
   const uzbekLatinGreetings=/^(salom|assalom|assalomu alaykum)$/i;
   const uzbekCyrillicGreetings=/^(салом|ассалом|ассалому алайкум)$/i;
   const dariWellbeing=/^(خوبی|خوب هستی|چطوری|حالت چطور است|حالت چطوره|حال شما چطور است|خوب هستید|چطور هستی|چه خبر)$/i;
@@ -315,6 +316,9 @@ function handleSimpleConversation(text) {
   }
   if(englishGreetings.test(value)) {
     return "Hello! How can I help you today?";
+  }
+  if(frenchGreetings.test(value)) {
+    return "Bonjour ! Comment puis-je vous aider aujourd’hui ?";
   }
   if(dariWellbeing.test(value)){
     return "تشکر، خوب هستم! 😊 تو چطوری؟ چه کمکی از دستم ساخته است؟";
@@ -573,21 +577,13 @@ LANGUAGE RULES:
 7. For Latin-script languages, do not assume that every Latin-script message is English. Distinguish languages such as Uzbek, Turkish, Spanish, French, German, Indonesian, Swahili, and others from their actual words and grammar.
 8. Preserve the user's script when practical. For example, answer Uzbek Latin in Uzbek Latin and Uzbek Cyrillic in Uzbek Cyrillic.
 9. If the user switches languages between messages, switch with them unless they have explicitly requested a fixed response language.
-10. Do not default to English merely because a language is absent from an example list.
-5. Do not confuse Dari, Persian and Pashto.
-6. Use natural Afghan Dari when responding in Dari.
-7. Use natural Pashto when responding in Pashto.
-8. Use natural Istanbul Turkish when responding in Turkish.
-9. For Uzbek, understand and support both Latin and Cyrillic writing.
-10. When the user writes Uzbek in Latin, respond in Uzbek Latin.
-11. When the user writes Uzbek in Cyrillic, respond in Uzbek Cyrillic.
-12. The word "Salom" is an Uzbek greeting. When a user writes only "Salom", answer in Uzbek Latin, for example "Salom! Qalaysiz?"
+11. Distinguish Dari, Persian and Pashto; use natural Afghan Dari and natural Pashto.
+12. Support Uzbek in both Latin and Cyrillic scripts. "Salom" is Uzbek; answer in Uzbek Latin, for example "Salom! Qalaysiz?"
 13. Recognize common Uzbek words such as Rahmat, Qalaysiz, Yaxshimisiz, Yaxshi and Xayr.
 14. For translation requests, use the exact target language requested.
-15. Never randomly change the response language.
-16. Do not assume that a user's language is their nationality.
-17. If a message contains multiple languages, prioritize the language used for the main question.
-18. If the user writes a short greeting, respond in the language of that greeting when identifiable.
+15. Never randomly change the response language or assume that a user's language is their nationality.
+16. If a message contains multiple languages, prioritize the language used for the main question.
+17. If the user writes a short greeting, respond in the language of that greeting when identifiable.
 
 CURRENT LANGUAGE PREFERENCE:
 ${languagePreference}
