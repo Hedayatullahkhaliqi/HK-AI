@@ -5,6 +5,8 @@ const VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
 const MAX_MESSAGES = 20;
 const MAX_MESSAGE_LENGTH = 5000;
 const MAX_DOCUMENT_LENGTH = 30000;
+import { readJsonBody } from "./_utils.js";
+
 const MAX_IMAGE_LENGTH = 8 * 1024 * 1024;
 
 function json(data, status = 200) {
@@ -452,7 +454,9 @@ function extractReply(result) {
 
 export async function onRequestPost({ request, env }) {
   try {
-    const body = await request.json();
+    const parsedBody = await readJsonBody(request, 11 * 1024 * 1024);
+    if (!parsedBody.ok) return json({ error: parsedBody.error }, parsedBody.status);
+    const body = parsedBody.value;
 
     if (!Array.isArray(body.messages)) {
       return json({ error: "Invalid messages" }, 400);
