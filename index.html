@@ -875,6 +875,9 @@ body:before{
 .history-date{display:block;color:#9cabb8;font-size:10px;margin-top:3px}
 .history-delete{border:0;border-radius:7px;padding:6px 9px;background:#ffffff12;color:#e6bcbc;font-size:12px}
 .history-empty{padding:12px;color:#aab8c4;text-align:center;font-size:12px}
+.history-actions{display:flex;gap:8px;margin-top:9px}
+.history-action{flex:1;min-width:0;border:1px solid #526779;border-radius:9px;padding:8px 6px;background:#ffffff0d;color:#e7edf2;font:inherit;font-size:11px}
+.history-action:disabled{opacity:.5}
 @media(max-width:480px){.header{padding:11px 10px}.header-actions{gap:5px}.history-toggle,.new-chat{padding:9px 8px;font-size:11px}.feature-bar{gap:6px}.feature-btn{font-size:11px;padding:7px 3px}.planner-entry input{flex-basis:40%}}
 @media(prefers-reduced-motion:reduce){.feature-btn,.tool-primary{transition:none}}
 
@@ -966,6 +969,11 @@ body{direction:rtl;text-align:right}
   <section class="history-panel" id="historyPanel" hidden aria-label="تاریخچهٔ گفتگوها">
     <div class="history-top"><span>گفتگوهای قبلی</span><button class="tool-close" id="closeHistory" aria-label="بستن تاریخچه">×</button></div>
     <input class="history-search" id="historySearch" type="search" placeholder="جستجوی گفتگوها..." autocomplete="off">
+    <div class="history-actions">
+      <button class="history-action" id="exportHistoryBtn" type="button">↓ پشتیبان‌گیری</button>
+      <button class="history-action" id="importHistoryBtn" type="button">↑ بازیابی گفتگوها</button>
+      <input id="importHistoryInput" type="file" accept="application/json,.json" hidden>
+    </div>
     <div class="history-list" id="historyList"></div>
   </section>
 
@@ -1881,6 +1889,82 @@ $("closeHistory").addEventListener("click",()=>{
   $("historyPanel").hidden=true;$("historyToggle").setAttribute("aria-expanded","false");
 });
 $("historySearch").addEventListener("input",renderConversationList);
+
+// Portable local backup: export never sends conversation data to a server.
+$("exportHistoryBtn").addEventListener("click",()=>{
+  if(busy)return;
+  saveHistory();
+  const backup={
+    app:"HK.AI",
+    formatVersion:1,
+    exportedAt:new Date().toISOString(),
+    conversations:conversations.slice(0,MAX_CONVERSATIONS)
+  };
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement("a");
+  link.href=url;
+  link.download="hk-ai-conversations-backup.json";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+
+$("importHistoryBtn").addEventListener("click",()=>{
+  if(!busy)$("importHistoryInput").click();
+});
+
+$("importHistoryInput").addEventListener("change",async event=>{
+  const file=event.target.files&&event.target.files[0];
+  event.target.value="";
+  if(!file)return;
+  if(busy)return;
+  if(file.size>5*1024*1024){
+    alert("حجم فایل پشتیبان نباید بیشتر از ۵ مگابایت باشد.");
+    return;
+  }
+  try{
+    const backup=JSON.parse(await file.text());
+    if(!backup||backup.app!=="HK.AI"||backup.formatVersion!==1||!Array.isArray(backup.conversations)){
+      throw new Error("ساختار فایل پشتیبان HK.AI معتبر نیست.");
+    }
+    const imported=backup.conversations
+      .filter(item=>item&&typeof item.id==="string"&&item.id.length<=120&&Array.isArray(item.messages))
+      .map(item=>{
+        const validMessages=item.messages
+          .filter(m=>m&&(m.role==="user"||m.role==="assistant")&&typeof m.content==="string"&&m.content.length<=100000&&isRecent(m))
+          .slice(-MAX_CONVERSATION_MESSAGES)
+          .map(m=>({role:m.role,content:m.content,timestamp:m.timestamp}));
+        return {
+          id:item.id,
+          title:typeof item.title==="string"?item.title.slice(0,120):conversationTitle(validMessages),
+          updatedAt:Number.isFinite(item.updatedAt)?item.updatedAt:Date.now(),
+          messages:validMessages
+        };
+      })
+      .filter(item=>item.messages.length>0);
+
+    if(!imported.length){
+      throw new Error("در فایل پشتیبان گفتگوی معتبر و تازه‌ای پیدا نشد.");
+    }
+
+    const merged=new Map(conversations.map(item=>[item.id,item]));
+    for(const item of imported){
+      const existing=merged.get(item.id);
+      if(!existing||item.updatedAt>existing.updatedAt)merged.set(item.id,item);
+    }
+    conversations=Array.from(merged.values())
+      .sort((a,b)=>b.updatedAt-a.updatedAt)
+      .slice(0,MAX_CONVERSATIONS);
+    persistConversations();
+    renderConversationList();
+    alert("بازیابی انجام شد. گفتگوهای قبلی حفظ شدند و موارد واردشده با آن‌ها ادغام شدند.");
+  }catch(error){
+    console.warn("Conversation backup import failed",error);
+    alert(error.message||"خواندن فایل پشتیبان ممکن نشد.");
+  }
+});
 
 function restoreHistory(){
   try{
