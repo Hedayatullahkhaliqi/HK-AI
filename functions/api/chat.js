@@ -402,7 +402,8 @@ async function searchWeb(query, env) {
         body: JSON.stringify({
           query,
           limit: 4
-        })
+        }),
+        signal: AbortSignal.timeout(15000)
       }
     );
 
