@@ -272,7 +272,12 @@ button{cursor:pointer}
 
 .message-content ul{padding-right:22px}
 
-.message-actions{margin:7px 5px}
+.message-actions{margin:7px 5px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+
+.feedback-btn{border:1px solid #56636e;border-radius:9px;padding:6px 10px;color:#cbd4dc;background:#252c33;font-size:11px}
+.feedback-btn:disabled{opacity:.6}
+.feedback-select{border:1px solid #56636e;border-radius:8px;padding:6px;color:#dce5eb;background:#252c33;font-size:11px}
+.feedback-status{font-size:11px;color:#9fb0bd}
 
 .copy-btn{
   border:1px solid #56636e;
@@ -1198,6 +1203,73 @@ function addMessage(role,content,save=true,timestamp=Date.now()){
     });
 
     actions.append(copy);
+
+    const useful=document.createElement("button");
+    useful.className="feedback-btn";
+    useful.type="button";
+    useful.textContent="مفید بود 👍";
+
+    const notUseful=document.createElement("button");
+    notUseful.className="feedback-btn";
+    notUseful.type="button";
+    notUseful.textContent="مشکل داشت 👎";
+
+    const feedbackStatus=document.createElement("span");
+    feedbackStatus.className="feedback-status";
+    feedbackStatus.setAttribute("aria-live","polite");
+
+    const reasonSelect=document.createElement("select");
+    reasonSelect.className="feedback-select";
+    reasonSelect.hidden=true;
+    [
+      ["accuracy","دقت پاسخ"],
+      ["language","زبان و ترجمه"],
+      ["incomplete","پاسخ ناقص"],
+      ["other","مشکل دیگر"]
+    ].forEach(([value,label])=>{
+      const option=document.createElement("option");
+      option.value=value;
+      option.textContent=label;
+      reasonSelect.append(option);
+    });
+
+    const submitReason=document.createElement("button");
+    submitReason.className="feedback-btn";
+    submitReason.type="button";
+    submitReason.textContent="ثبت دلیل";
+    submitReason.hidden=true;
+
+    async function sendFeedback(rating,category){
+      useful.disabled=true;
+      notUseful.disabled=true;
+      submitReason.disabled=true;
+      try{
+        const response=await fetch("/api/feedback",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({rating,category})
+        });
+        if(!response.ok) throw new Error("feedback failed");
+        feedbackStatus.textContent="تشکر از بازخوردت 🌱";
+        reasonSelect.hidden=true;
+        submitReason.hidden=true;
+      }catch{
+        useful.disabled=false;
+        notUseful.disabled=false;
+        submitReason.disabled=false;
+        feedbackStatus.textContent="ثبت نشد؛ دوباره کوشش کن.";
+      }
+    }
+
+    useful.addEventListener("click",()=>sendFeedback("positive","overall"));
+    notUseful.addEventListener("click",()=>{
+      reasonSelect.hidden=false;
+      submitReason.hidden=false;
+      notUseful.disabled=true;
+      useful.disabled=true;
+    });
+    submitReason.addEventListener("click",()=>sendFeedback("negative",reasonSelect.value));
+    actions.append(useful,notUseful,reasonSelect,submitReason,feedbackStatus);
     wrap.append(actions);
   }
 
