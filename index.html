@@ -1427,7 +1427,7 @@ async function extractPDF(file){
         const content=await page.getTextContent();
         for(const item of content.items){
           if(typeof item.str==="string")text+=item.str;
-          text+=item.hasEOL?"\\n":" ";
+          text+=item.hasEOL?"\n":" ";
           if(text.length>=30000)break;
         }
       }finally{
