@@ -1,3 +1,5 @@
+import { readJsonBody } from "./_utils.js";
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -14,7 +16,9 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "Gemini API key is not configured in Cloudflare secrets." }, 503);
     }
 
-    const body = await request.json();
+    const parsedBody = await readJsonBody(request, 16 * 1024 * 1024);
+    if (!parsedBody.ok) return json({ error: parsedBody.error }, parsedBody.status);
+    const body = parsedBody.value;
     const audio = typeof body.audio === "string" ? body.audio : "";
     const rawMime = typeof body.mimeType === "string" ? body.mimeType : "";
     const detectedMime = rawMime.split(";")[0].trim().toLowerCase();
