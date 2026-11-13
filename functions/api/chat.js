@@ -299,12 +299,20 @@ function handleSimpleConversation(text) {
 
   const dariGreetings=/^(سلام|سلام علیکم|صبح بخیر|عصر بخیر|شب بخیر)$/i;
   const englishGreetings=/^(hi|hello|hey|good morning|good afternoon|good evening)$/i;
+  const uzbekLatinGreetings=/^(salom|assalom|assalomu alaykum)$/i;
+  const uzbekCyrillicGreetings=/^(салом|ассалом|ассалому алайкум)$/i;
   const dariWellbeing=/^(خوبی|خوب هستی|چطوری|حالت چطور است|حالت چطوره|حال شما چطور است|خوب هستید|چطور هستی|چه خبر)$/i;
   const dariThanks=/^(تشکر|ممنون|سپاس|مرسی|متشکرم)$/i;
   const pashtoGreetings=/^(السلام علیکم|ستړی مه شې|څنګه یې|وعلیکم سلام)$/i;
   const pashtoWellbeing=/^(ښه یې|ښه یی|څنګه یې|ته څنګه یې|جوړ یې)$/i;
   const englishWellbeing=/^(how are you|how are you doing|are you well|you good)$/i;
 
+  if(uzbekLatinGreetings.test(value)) {
+    return "Salom! Qalaysiz? Sizga qanday yordam bera olaman?";
+  }
+  if(uzbekCyrillicGreetings.test(value)) {
+    return "Салом! Қалайсиз? Сизга қандай ёрдам бера оламан?";
+  }
   if(englishGreetings.test(value)) {
     return "Hello! How can I help you today?";
   }
@@ -504,10 +512,10 @@ export async function onRequestPost({ request, env }) {
 
     const explicitLanguage = detectLanguagePreference(messages);
 
+    // Let the multilingual model identify every language from the full message.
+    // Keep an explicit supported language choice when the user has made one.
     const languagePreference =
-      explicitLanguage !== "AUTO"
-        ? explicitLanguage
-        : detectAutomaticLanguage(latestUserMessage.content);
+      explicitLanguage !== "AUTO" ? explicitLanguage : "AUTO";
 
     const translationMode = isTranslationRequest(
       latestUserMessage.content
@@ -550,37 +558,22 @@ OFFICIAL NAME SPELLING RULE:
 
 MULTILINGUAL SUPPORT:
 
-You must understand and communicate in the following languages:
+You must understand and communicate in as many human languages and dialects as your underlying model can reliably support. This is NOT a closed or fixed list. The examples below are illustrative only, not limits: Dari, Pashto, Persian, English, Arabic, Turkish, Uzbek, French, German, Spanish, Russian, Chinese, Japanese, Korean, Hindi, Urdu, Portuguese, Italian, Bengali, Indonesian, Swahili, Somali, Kurdish, Punjabi, Nepali, Thai, Vietnamese, Malay, Filipino, Amharic, Hebrew, Greek, Dutch, Polish, Ukrainian, and many others.
 
-1. Dari
-2. Pashto
-3. Persian
-4. English
-5. Arabic
-6. Turkish (Istanbul Turkish)
-7. Uzbek (Latin and Cyrillic scripts)
-8. French
-9. German
-10. Spanish
-11. Russian
-12. Chinese
-13. Japanese
-14. Korean
-15. Hindi
-16. Urdu
-17. Portuguese
-18. Italian
-19. Bengali
-20. Indonesian
+Support the writing systems used by each language, including Latin, Cyrillic, Arabic-derived scripts, Devanagari, Bengali, Han characters, kana, Hangul, and other scripts supported by the model. Do not claim fluency when you cannot reliably understand or generate a language; briefly explain the limitation in the user's language when possible.
 
 LANGUAGE RULES:
 
-1. Automatically identify the language of the latest user message.
-2. If the user has explicitly selected a response language, use that language until they change it.
-2a. If the message language is unclear or unsupported, use English by default.
-2b. Treat a plain "سلام" or "سلام علیکم" as Afghan Dari unless Pashto-specific words or letters clearly identify Pashto.
-3. A newer language instruction replaces an older language instruction.
-4. If the language preference is AUTO, answer in the same language as the latest user message.
+1. Identify the language of the latest user message yourself from its vocabulary, grammar, script, and context. Do not depend on a hard-coded language list or a few keyword checks.
+2. The language of the latest user message is the default response language, including languages not named in the examples above.
+3. If the user explicitly requests a response language in any language, follow that request until they change it.
+4. A newer language instruction replaces an older language instruction.
+5. If a short message is ambiguous between languages, use the conversation context; if still uncertain, ask a brief clarification instead of silently assuming English or Dari.
+6. Treat a plain "سلام" or "سلام علیکم" as Afghan Dari unless Pashto-specific words or context clearly identify Pashto.
+7. For Latin-script languages, do not assume that every Latin-script message is English. Distinguish languages such as Uzbek, Turkish, Spanish, French, German, Indonesian, Swahili, and others from their actual words and grammar.
+8. Preserve the user's script when practical. For example, answer Uzbek Latin in Uzbek Latin and Uzbek Cyrillic in Uzbek Cyrillic.
+9. If the user switches languages between messages, switch with them unless they have explicitly requested a fixed response language.
+10. Do not default to English merely because a language is absent from an example list.
 5. Do not confuse Dari, Persian and Pashto.
 6. Use natural Afghan Dari when responding in Dari.
 7. Use natural Pashto when responding in Pashto.
