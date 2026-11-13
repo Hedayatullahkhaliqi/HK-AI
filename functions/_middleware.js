@@ -19,11 +19,11 @@ export async function onRequest({request,env,next}){
  // Fail closed: never bypass rate limiting when KV is unavailable.
  if(!env.HK_RATE_LIMITS){
    console.error("HK rate limit: KV binding missing");
-   return reply({error:"اتصال KV برای نسخهٔ آزمایشی تنظیم نشده است.",code:"KV_BINDING_MISSING"},503,cors);
+   return reply({error:"The KV binding is not configured for the preview environment.",code:"KV_BINDING_MISSING"},503,cors);
  }
  const ip=request.headers.get("CF-Connecting-IP");
  if(!ip){
-   return reply({error:"امکان بررسی امنیت درخواست وجود ندارد."},503,cors);
+   return reply({error:"The request could not be security-validated."},503,cors);
  }
  const isImage=url.pathname==="/api/image";
  const maxRequests=isImage?5:30;
@@ -34,22 +34,22 @@ export async function onRequest({request,env,next}){
    stored=await env.HK_RATE_LIMITS.get(key);
  }catch(error){
    console.error("HK rate limit: KV read failed");
-   return reply({error:"خواندن شمارندهٔ KV ناموفق بود.",code:"KV_READ_FAILED"},503,cors);
+   return reply({error:"Could not read the KV counter.",code:"KV_READ_FAILED"},503,cors);
  }
  const current=stored===null?0:Number(stored);
  if(!Number.isSafeInteger(current)||current<0){
    console.error("HK rate limit: invalid KV counter");
-   return reply({error:"مقدار شمارندهٔ KV نامعتبر است.",code:"KV_COUNTER_INVALID"},503,cors);
+   return reply({error:"The KV counter value is invalid.",code:"KV_COUNTER_INVALID"},503,cors);
  }
  if(current>=maxRequests){
    cors.set("Retry-After","60");
-   return reply({error:"تعداد درخواست‌ها زیاد است. کمی بعد دوباره کوشش کن."},429,cors);
+   return reply({error:"Too many requests. Please try again later."},429,cors);
  }
  try{
    await env.HK_RATE_LIMITS.put(key,String(current+1),{expirationTtl:120});
  }catch(error){
    console.error("HK rate limit: KV write failed");
-   return reply({error:"نوشتن شمارندهٔ KV ناموفق بود.",code:"KV_WRITE_FAILED"},503,cors);
+   return reply({error:"Could not write the KV counter.",code:"KV_WRITE_FAILED"},503,cors);
  }
  const response=await next();const headers=new Headers(response.headers);for(const [k,v] of cors)headers.set(k,v);secure(headers);
  return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
