@@ -951,6 +951,7 @@ body{
       <button class="helper-action" data-helper="letter"><span>✎</span>Write a formal letter</button>
       <button class="helper-action" data-helper="cv"><span>▣</span>Create a CV and job application</button>
       <button class="helper-action" data-helper="study"><span>🎓</span>Study help and practice</button>
+      <button class="helper-action" data-helper="data"><span>▦</span>Analyze data and tables</button>
     </div>
     <p class="tool-hint">You can attach an image or PDF. Hide personal or confidential information before sending.</p>
   </section>
@@ -1088,7 +1089,8 @@ const helperPrompts={
   translate:"Please translate the text below. Ask me for the target language if I have not specified one. Make the translation natural and accurate, and explain difficult terms simply. Text:",
   letter:"Help me write a respectful, professional letter or formal request. Ask for essential details such as the recipient, purpose, and any required names or dates. Do not invent information I have not provided.",
   cv:"Help me create a professional CV and job application. First ask brief questions about my education, work experience, skills, languages, and target job. Never invent experience or qualifications.",
-  study:"Act as a patient study tutor. First ask what subject, topic, and school level I am studying if these are not clear. Explain concepts step by step in the language I use, give a simple example, then offer a short practice question. Do not invent facts; clearly say when information is uncertain."
+  study:"Act as a patient study tutor. First ask what subject, topic, and school level I am studying if these are not clear. Explain concepts step by step in the language I use, give a simple example, then offer a short practice question. Do not invent facts; clearly say when information is uncertain.",
+  data:"Help me analyze the data, table, or CSV text I provide. First ask what question I want answered if it is not clear. Check the column names and values, summarize important patterns, compare relevant figures, and show calculations transparently. Never invent missing values; point out unclear or incomplete data."
 };
 $("openHelper").addEventListener("click",()=>{
   const panel=$("helperTool");
