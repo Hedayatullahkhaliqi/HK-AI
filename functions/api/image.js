@@ -49,21 +49,21 @@ async function prepareImagePrompt(env,userPrompt){
 
 export async function onRequestPost({request,env}){
   try{
-    if(!env.AI)return json({error:"سرویس ساخت و ویرایش تصویر در این پروژه فعال نیست."},503);
+    if(!env.AI)return json({error:"Image generation and editing are not enabled for this project."},503);
     const body=await request.json();
     const prompt=typeof body.prompt==="string"?body.prompt.trim():"";
     const inputImage=typeof body.image==="string"?body.image:"";
 
     if(!prompt||prompt.length>MAX_PROMPT_LENGTH){
-      return json({error:"توضیح تصویر خالی یا بیش از حد طولانی است."},400);
+      return json({error:"The image prompt is empty or too long."},400);
     }
 
     if(inputImage){
       if(inputImage.length>MAX_IMAGE_LENGTH){
-        return json({error:"حجم تصویر زیاد است. لطفاً عکس کوچک‌تری انتخاب کن."},413);
+        return json({error:"The image is too large. Please choose a smaller image."},413);
       }
       if(!/^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/i.test(inputImage)){
-        return json({error:"فرمت تصویر برای ویرایش پشتیبانی نمی‌شود."},400);
+        return json({error:"This image format is not supported for editing."},400);
       }
 
       const imageMatch=inputImage.match(/^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/i);
@@ -100,7 +100,7 @@ export async function onRequestPost({request,env}){
         for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
         return new Response(bytes,{headers:{"Content-Type":"image/png","Cache-Control":"no-store"}});
       }
-      throw new Error("مدل رایگان/سهمیه‌ای ویرایش تصویر خروجی قابل استفاده برنگرداند.");
+      throw new Error("The image editing model did not return a usable result.");
     }
 
     // Translate/clarify Dari and other language descriptions before FLUX,
@@ -124,7 +124,7 @@ export async function onRequestPost({request,env}){
     }
     if(typeof image==="string"&&image.startsWith("data:image/")){
       const match=image.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/i);
-      if(!match)throw new Error("فرمت تصویر خروجی معتبر نیست.");
+      if(!match)throw new Error("The output image format is invalid.");
       const binary=atob(match[2]),bytes=new Uint8Array(binary.length);
       for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
       return new Response(bytes,{headers:{"Content-Type":"image/"+(match[1]==="jpg"?"jpeg":match[1]),"Cache-Control":"no-store"}});
@@ -135,15 +135,15 @@ export async function onRequestPost({request,env}){
     if(typeof image?.image==="string"){
       // FLUX.1 schnell returns raw base64 in image, not a URL or data URI.
       const base64=image.image.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/,"");
-      if(!/^[A-Za-z0-9+/]+={0,2}$/.test(base64))throw new Error("مدل تصویر را با فرمت base64 معتبر برنگرداند.");
+      if(!/^[A-Za-z0-9+/]+={0,2}$/.test(base64))throw new Error("The image model did not return valid base64 data.");
       const binary=atob(base64);
       const bytes=new Uint8Array(binary.length);
       for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
       return new Response(bytes,{headers:{"Content-Type":"image/jpeg","Cache-Control":"no-store"}});
     }
-    throw new Error("مدل ساخت تصویر خروجی قابل استفاده برنگرداند.");
+    throw new Error("The image generation model did not return a usable result.");
   }catch(error){
     console.error("HK image operation failed:",error);
-    return json({error:"عملیات تصویر فعلاً انجام نشد. لطفاً بعداً دوباره کوشش کن."},500);
+    return json({error:"The image operation failed. Please try again later."},500);
   }
 }
