@@ -29,10 +29,10 @@ export async function onRequestPost({ request, env }) {
     }
 
     const prompt =
-      "Read the following text aloud in natural, clear English. " +
-      "Use natural English pronunciation. " +
-      "Speak warmly, clearly, and conversationally at a natural pace. " +
-      "Do not translate, summarize, or add any words. Read only the supplied text:\n\n" +
+      "Read the supplied text aloud naturally in the language it is written in. " +
+      "Do not assume English and do not translate, transliterate, summarize, or add words. " +
+      "Preserve the original wording and pronunciation as accurately as possible. " +
+      "Speak clearly, warmly, and conversationally at a natural pace. Read only the supplied text:\n\n" +
       text;
 
     const upstream = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
