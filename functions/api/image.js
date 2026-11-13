@@ -1,3 +1,5 @@
+import { readJsonBody } from "./_utils.js";
+
 const MAX_PROMPT_LENGTH=1200;
 const MAX_IMAGE_LENGTH=8*1024*1024;
 const MAX_REFERENCE_IMAGES=4;
@@ -104,7 +106,9 @@ const STYLE_PRESETS={
 export async function onRequestPost({request,env}){
   try{
     if(!env.AI)return json({error:"Image generation and editing are not enabled for this project."},503);
-    const body=await request.json();
+    const parsedBody=await readJsonBody(request,11*1024*1024);
+    if(!parsedBody.ok)return json({error:parsedBody.error},parsedBody.status);
+    const body=parsedBody.value;
     const prompt=typeof body.prompt==="string"?body.prompt.trim():"";
 
     if(!prompt||prompt.length>MAX_PROMPT_LENGTH){
