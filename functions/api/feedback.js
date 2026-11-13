@@ -1,5 +1,5 @@
 const ALLOWED_RATINGS = new Set(["positive", "negative"]);
-const ALLOWED_CATEGORIES = new Set(["overall"]);
+const ALLOWED_CATEGORIES = new Set(["overall", "accuracy", "language", "incomplete", "other"]);
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
