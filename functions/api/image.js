@@ -93,7 +93,7 @@ export async function onRequestPost({request,env}){
     }
     if(typeof image?.image==="string"){
       // FLUX.1 schnell returns raw base64 in image, not a URL or data URI.
-      const base64=image.image.replace(/^data:image\\/[a-zA-Z0-9.+-]+;base64,/,"");
+      const base64=image.image.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/,"");
       if(!/^[A-Za-z0-9+/]+={0,2}$/.test(base64))throw new Error("مدل تصویر را با فرمت base64 معتبر برنگرداند.");
       const binary=atob(base64);
       const bytes=new Uint8Array(binary.length);
