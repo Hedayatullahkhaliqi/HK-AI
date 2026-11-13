@@ -1204,8 +1204,10 @@ function persistConversations(){
         messages:item.messages.slice(-MAX_CONVERSATION_MESSAGES)
       }))
     ));
+    return true;
   }catch(e){
     console.warn("Conversation archive could not be saved",e);
+    return false;
   }
 }
 
@@ -1949,7 +1951,8 @@ $("importHistoryInput").addEventListener("change",async event=>{
       throw new Error("در فایل پشتیبان گفتگوی معتبر و تازه‌ای پیدا نشد.");
     }
 
-    const merged=new Map(conversations.map(item=>[item.id,item]));
+    const previous=conversations;
+    const merged=new Map(previous.map(item=>[item.id,item]));
     for(const item of imported){
       const existing=merged.get(item.id);
       if(!existing||item.updatedAt>existing.updatedAt)merged.set(item.id,item);
@@ -1957,7 +1960,10 @@ $("importHistoryInput").addEventListener("change",async event=>{
     conversations=Array.from(merged.values())
       .sort((a,b)=>b.updatedAt-a.updatedAt)
       .slice(0,MAX_CONVERSATIONS);
-    persistConversations();
+    if(!persistConversations()){
+      conversations=previous;
+      throw new Error("فضای ذخیره‌سازی دستگاه کافی نیست؛ گفتگوهای قبلی دست‌نخورده باقی ماندند.");
+    }
     renderConversationList();
     alert("بازیابی انجام شد. گفتگوهای قبلی حفظ شدند و موارد واردشده با آن‌ها ادغام شدند.");
   }catch(error){
