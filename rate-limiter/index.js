@@ -12,6 +12,11 @@ export class RateLimiter {
   }
 
   async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname !== "/check") {
+      return json({ error: "Not found." }, 404);
+    }
+
     if (request.method !== "POST") {
       return json({ error: "Method not allowed." }, 405);
     }
@@ -36,7 +41,8 @@ export class RateLimiter {
     try {
       const result = await this.ctx.storage.transaction(async (txn) => {
         const previous = await txn.get("counter");
-        const count = previous?.windowStart === windowStart
+        const count = previous?.windowStart === windowStart &&
+          Number.isSafeInteger(previous?.count) && previous.count >= 0
           ? previous.count
           : 0;
 
