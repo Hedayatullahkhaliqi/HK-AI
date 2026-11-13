@@ -454,6 +454,10 @@ function extractReply(result) {
 
 export async function onRequestPost({ request, env }) {
   try {
+    if (!env.AI) {
+      return json({ error: "The AI service is not enabled for this project." }, 503);
+    }
+
     const parsedBody = await readJsonBody(request, 11 * 1024 * 1024);
     if (!parsedBody.ok) return json({ error: parsedBody.error }, parsedBody.status);
     const body = parsedBody.value;
