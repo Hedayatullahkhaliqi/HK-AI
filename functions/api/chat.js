@@ -519,7 +519,7 @@ export async function onRequestPost({ request, env }) {
     // Let the multilingual model identify every language from the full message.
     // Keep an explicit supported language choice when the user has made one.
     const languagePreference =
-      explicitLanguage !== "AUTO" ? explicitLanguage : "AUTO";
+      explicitLanguage !== "AUTO" ? explicitLanguage : (body.language || "English");
 
     const translationMode = isTranslationRequest(
       latestUserMessage.content
