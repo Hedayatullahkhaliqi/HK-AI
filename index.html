@@ -935,7 +935,7 @@ body{direction:rtl;text-align:right}
 .message-label{text-align:right}
 .message.user{margin-right:auto;margin-left:0}
 .message.assistant{margin-left:auto;margin-right:0}
-.message-content{direction:auto;text-align:start}
+.message-content{text-align:start}
 @media(max-width:560px){.header-actions{gap:5px}}
 </style>
 </head>
@@ -976,7 +976,7 @@ body{direction:rtl;text-align:right}
     <button class="feature-btn" id="openHelper">✦ ابزارهای دستیار</button>
   </nav>
   <section class="tool-panel helper-panel" id="helperTool" hidden>
-    <div class="tool-heading"><strong>دستیار هوشمند HK.AI</strong><button class="tool-close" data-close="helperTool" aria-label="Close">×</button></div>
+    <div class="tool-heading"><strong>دستیار هوشمند HK.AI</strong><button class="tool-close" data-close="helperTool" aria-label="بستن">×</button></div>
     <p class="tool-hint">یک کار را انتخاب کنید؛ متن راهنما برای ویرایش شما آماده می‌شود.</p>
     <div class="helper-grid">
       <button class="helper-action" data-helper="document"><span>▤</span>خواندن و توضیح سند</button>
@@ -1008,11 +1008,11 @@ body{direction:rtl;text-align:right}
       </label>
       <label class="image-control">اندازهٔ تصویر
         <select id="imageAspect">
-          <option value="square">Square · 1:1</option>
-          <option value="portrait">Portrait · 4:5</option>
-          <option value="vertical">Story / TikTok · 9:16</option>
-          <option value="landscape">Landscape · 4:3</option>
-          <option value="widescreen">Wide · 16:9</option>
+          <option value="square">مربع · ۱:۱</option>
+          <option value="portrait">عمودی · ۴:۵</option>
+          <option value="vertical">استوری / تیک‌تاک · ۹:۱۶</option>
+          <option value="landscape">افقی · ۴:۳</option>
+          <option value="widescreen">عریض · ۱۶:۹</option>
         </select>
       </label>
     </div>
@@ -1181,7 +1181,7 @@ function makeConversationId(){
 
 function conversationTitle(list){
   const first=list.find(m=>m&&m.role==="user"&&typeof m.content==="string");
-  if(!first)return "New conversation";
+  if(!first)return "گفت‌وگوی جدید";
   const title=first.content.replace(/\s+/g," ").trim();
   return title.length>42?title.slice(0,42)+"…":title||"New conversation";
 }
@@ -1832,7 +1832,7 @@ function renderConversationList(){
   if(!filtered.length){
     const empty=document.createElement("div");
     empty.className="history-empty";
-    empty.textContent=conversations.length?"No matching conversations.":"Your saved conversations will appear here.";
+    empty.textContent=conversations.length?"گفتگویی با این عبارت پیدا نشد.":"گفتگوهای ذخیره‌شدهٔ شما اینجا نمایش داده می‌شوند.";
     list.append(empty);
     return;
   }
@@ -1842,7 +1842,7 @@ function renderConversationList(){
     const title=document.createElement("span");title.textContent=item.title||"New conversation";
     const date=document.createElement("span");date.className="history-date";date.textContent=new Date(item.updatedAt).toLocaleString();
     open.append(title,date);open.addEventListener("click",()=>openConversation(item.id));
-    const remove=document.createElement("button");remove.className="history-delete";remove.type="button";remove.textContent="Delete";remove.setAttribute("aria-label","Delete "+(item.title||"conversation"));
+    const remove=document.createElement("button");remove.className="history-delete";remove.type="button";remove.textContent="حذف";remove.setAttribute("aria-label","حذف "+(item.title||"گفتگو"));
     remove.addEventListener("click",()=>{
       if(busy)return;
       conversations=conversations.filter(x=>x.id!==item.id);
