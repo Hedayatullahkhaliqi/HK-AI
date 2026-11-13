@@ -41,6 +41,7 @@ export async function onRequestPost({ request, env }) {
         "x-goog-api-key": env.GEMINI_API_KEY,
         "Content-Type": "application/json"
       },
+      signal: AbortSignal.timeout(60000),
       body: JSON.stringify({
         model: MODEL,
         input: [{
