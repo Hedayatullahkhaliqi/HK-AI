@@ -103,6 +103,7 @@ export async function onRequestPost({request,env}){
     throw new Error("مدل ساخت تصویر خروجی قابل استفاده برنگرداند.");
   }catch(error){
     console.error("HK image operation failed:",error);
-    return json({error:"عملیات تصویر فعلاً انجام نشد. لطفاً بعداً دوباره کوشش کن."},500);
+    const detail=String(error?.message||error||"Unknown error").slice(0,300);
+    return json({error:"عملیات تصویر انجام نشد.",detail},500);
   }
 }
