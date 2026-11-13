@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "hk-ai",
+  "pages_build_output_dir": ".",
+  "compatibility_date": "2026-11-13",
+  "kv_namespaces": [
+    {
+      "binding": "HK_RATE_LIMITS",
+      "id": "66376e2c9d304960b316798da75f45ed"
+    }
+  ],
+  "ai": {
+    "binding": "AI"
+  },
+  "env": {
+    "preview": {
+      "kv_namespaces": [
+        {
+          "binding": "HK_RATE_LIMITS",
+          "id": "66376e2c9d304960b316798da75f45ed"
+        }
+      ],
+      "ai": {
+        "binding": "AI"
+      }
+    }
+  }
+}
