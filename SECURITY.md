@@ -39,7 +39,7 @@ Cloudflare Pages deploys automatically when changes are merged into the producti
 
 ### Later Worker deployments
 
-The **Deploy HK.AI rate limiter** GitHub Actions workflow is manual and restricted to `main). It becomes available after this workflow file reaches the default branch. It uses the `cloudflare-production` GitHub environment and requires the repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+The **Deploy HK.AI rate limiter** GitHub Actions workflow is manual and restricted to `main`. It becomes available after this workflow file reaches the default branch. It uses the `cloudflare-production` GitHub environment and requires the repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 
 Do not merge this PR until the first Worker deployment has been completed. Do not run the production deployment workflow from a feature branch.
 
