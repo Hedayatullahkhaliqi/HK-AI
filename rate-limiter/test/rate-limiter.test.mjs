@@ -143,6 +143,29 @@ test("alarm keeps later active timestamps and reschedules cleanup", async () => 
   }
 });
 
+test("concurrent cleanup and a new request keep the new alarm scheduled", async () => {
+  const { limiter, storage } = createLimiter();
+  const originalNow = Date.now;
+  let now = 4_000_000;
+  Date.now = () => now;
+
+  try {
+    await limiter.fetch(request({ limit: 2, windowMs: 10_000 }));
+    now += 10_001;
+
+    await Promise.all([
+      limiter.alarm(),
+      limiter.fetch(request({ limit: 2, windowMs: 10_000 }))
+    ]);
+
+    const stored = storage.values.get("request-timestamps");
+    assert.deepEqual(stored.timestamps, [now]);
+    assert.equal(storage.alarmAt, now + 10_000);
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
 test("rejects invalid limits and methods", async () => {
   const { limiter } = createLimiter();
   const invalid = await limiter.fetch(request({ limit: 0, windowMs: 60_000 }));
