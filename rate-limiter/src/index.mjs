@@ -54,9 +54,9 @@ export class RateLimiter {
         const previous = stored && Array.isArray(stored.timestamps)
           ? stored.timestamps
           : [];
-        const timestamps = previous.filter(timestamp =>
-          Number.isSafeInteger(timestamp) && timestamp > now - windowMs
-        );
+        const timestamps = previous
+          .filter(timestamp => Number.isSafeInteger(timestamp) && timestamp > now - windowMs)
+          .sort((a, b) => a - b);
 
         let allowed = true;
         let retryAfter = 0;
@@ -72,31 +72,23 @@ export class RateLimiter {
 
         if (timestamps.length) {
           await transaction.put(STORAGE_KEY, { windowMs, timestamps });
+          await transaction.setAlarm(timestamps[0] + windowMs);
         } else {
           await transaction.delete(STORAGE_KEY);
+          await transaction.deleteAlarm();
         }
 
         return {
           allowed,
           remaining: Math.max(0, limit - timestamps.length),
           retryAfter,
-          resetAt: timestamps.length ? timestamps[0] + windowMs : now,
-          nextAlarm: timestamps.length ? timestamps[0] + windowMs : null
+          resetAt: timestamps.length ? timestamps[0] + windowMs : now
         };
       });
 
-      // Alarms are the supported Durable Object mechanism for background
-      // cleanup. Schedule the oldest timestamp's expiry, or clear stale alarms.
-      if (decision.nextAlarm === null) {
-        await this.ctx.storage.deleteAlarm();
-      } else {
-        await this.ctx.storage.setAlarm(decision.nextAlarm);
-      }
-
-      const { nextAlarm, ...publicDecision } = decision;
-      return json(publicDecision);
+      return json(decision);
     } catch (error) {
-      console.error("HK rate limiter storage operation failed");
+      console.error("HK rate limiter storage transaction failed");
       return json({ error: "Rate limiter storage unavailable" }, 503);
     }
   }
@@ -105,37 +97,33 @@ export class RateLimiter {
     const now = Date.now();
 
     try {
-      const nextAlarm = await this.ctx.storage.transaction(async transaction => {
+      await this.ctx.storage.transaction(async transaction => {
         const stored = await transaction.get(STORAGE_KEY);
         if (!stored || !Array.isArray(stored.timestamps) ||
             !Number.isSafeInteger(stored.windowMs) ||
             stored.windowMs < MIN_WINDOW_MS ||
             stored.windowMs > MAX_WINDOW_MS) {
           await transaction.delete(STORAGE_KEY);
-          return null;
+          await transaction.deleteAlarm();
+          return;
         }
 
-        const timestamps = stored.timestamps.filter(timestamp =>
-          Number.isSafeInteger(timestamp) && timestamp > now - stored.windowMs
-        );
+        const timestamps = stored.timestamps
+          .filter(timestamp => Number.isSafeInteger(timestamp) && timestamp > now - stored.windowMs)
+          .sort((a, b) => a - b);
 
         if (!timestamps.length) {
           await transaction.delete(STORAGE_KEY);
-          return null;
+          await transaction.deleteAlarm();
+          return;
         }
 
         await transaction.put(STORAGE_KEY, {
           windowMs: stored.windowMs,
           timestamps
         });
-        return timestamps[0] + stored.windowMs;
+        await transaction.setAlarm(timestamps[0] + stored.windowMs);
       });
-
-      if (nextAlarm === null) {
-        await this.ctx.storage.deleteAlarm();
-      } else {
-        await this.ctx.storage.setAlarm(nextAlarm);
-      }
     } catch (error) {
       console.error("HK rate limiter cleanup alarm failed");
       // Let Cloudflare retry the alarm. The next API request also repairs the
