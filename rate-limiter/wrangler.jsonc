@@ -1,0 +1,12 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "hk-ai-rate-limiter",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-11-13",
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RateLimiter"]
+    }
+  ]
+}

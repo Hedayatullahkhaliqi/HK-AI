@@ -6,10 +6,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: hk-ai-rate-limiter-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Deploy Durable Object worker
     runs-on: ubuntu-latest
+    environment: cloudflare-production
     steps:
       - name: Check out selected branch
         uses: actions/checkout@v4
@@ -19,4 +24,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --config rate-limiter/wrangler.jsonc
+          workingDirectory: rate-limiter
+          wranglerVersion: "4"
+          command: deploy
