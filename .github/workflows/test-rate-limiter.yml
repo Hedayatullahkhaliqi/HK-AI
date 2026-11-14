@@ -12,6 +12,7 @@ jobs:
   test:
     name: Test Durable Object rate limiter
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out source
         uses: actions/checkout@v4
