@@ -1,0 +1,60 @@
+name: Verify live HK.AI rate limiter
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-rate-limiter-verification
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify production /api/chat returns 429
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Send bounded, non-AI requests to production
+        env:
+          TARGET_URL: https://hk-ai.pages.dev/api/chat
+        run: |
+          node --input-type=module <<'NODE'
+          const target = process.env.TARGET_URL;
+          const origin = "https://hk-ai.pages.dev";
+          const statuses = [];
+
+          for (let i = 1; i <= 31; i++) {
+            const response = await fetch(target, {
+              method: "POST",
+              headers: {
+                "Origin": origin,
+                "Content-Type": "application/json"
+              },
+              // Invalid application payload: middleware is exercised,
+              // but the AI/model handler is never invoked for allowed requests.
+              body: "{}"
+            });
+
+            statuses.push(response.status);
+            console.log(`Request ${i}: HTTP ${response.status}`);
+
+            if (i <= 30 && response.status === 429) {
+              throw new Error(
+                `Rate limit triggered early on request ${i}. The runner IP may already have recent traffic; no further requests were sent.`
+              );
+            }
+
+            if (i === 31 && response.status !== 429) {
+              const body = await response.text();
+              throw new Error(
+                `Expected HTTP 429 on request 31, received ${response.status}. Response: ${body.slice(0, 300)}`
+              );
+            }
+
+            if (i < 31) await new Promise(resolve => setTimeout(resolve, 100));
+          }
+
+          console.log("PASS: requests 1-30 were not rate-limited and request 31 returned HTTP 429.");
+          NODE
