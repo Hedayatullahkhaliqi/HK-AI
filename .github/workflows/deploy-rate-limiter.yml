@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: hk-ai-rate-limiter-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Deploy Durable Object worker
@@ -19,4 +23,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --config rate-limiter/wrangler.jsonc
+          workingDirectory: rate-limiter
+          wranglerVersion: "4"
+          command: deploy
