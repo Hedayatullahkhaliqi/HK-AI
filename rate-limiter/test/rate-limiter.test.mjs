@@ -6,6 +6,7 @@ class MemoryStorage {
   constructor() {
     this.values = new Map();
     this.tail = Promise.resolve();
+    this.alarmAt = null;
   }
 
   async transaction(callback) {
@@ -13,7 +14,8 @@ class MemoryStorage {
       const staged = new Map(this.values);
       const transaction = {
         get: async key => staged.get(key),
-        put: async (key, value) => staged.set(key, structuredClone(value))
+        put: async (key, value) => staged.set(key, structuredClone(value)),
+        delete: async key => staged.delete(key)
       };
       const result = await callback(transaction);
       this.values = staged;
@@ -22,6 +24,16 @@ class MemoryStorage {
     this.tail = operation.catch(() => {});
     return operation;
   }
+
+  async setAlarm(timestamp) {
+    this.alarmAt = timestamp;
+  }
+
+  async deleteAlarm() {
+    this.alarmAt = null;
+  }
+
+  failTransactions = false;
 }
 
 function createLimiter() {
@@ -38,8 +50,8 @@ function request(body, method = "POST") {
   });
 }
 
-test("allows requests below the configured limit", async () => {
-  const { limiter } = createLimiter();
+test("allows requests below the configured limit and schedules cleanup", async () => {
+  const { limiter, storage } = createLimiter();
   const response = await limiter.fetch(request({ limit: 2, windowMs: 60_000 }));
   assert.equal(response.status, 200);
   const body = await response.json();
@@ -48,6 +60,7 @@ test("allows requests below the configured limit", async () => {
   assert.equal(body.retryAfter, 0);
   assert.ok(body.resetAt >= Date.now() + 59_000);
   assert.ok(body.resetAt <= Date.now() + 60_000);
+  assert.equal(storage.alarmAt, body.resetAt);
 });
 
 test("blocks requests at the limit and returns Retry-After", async () => {
@@ -93,6 +106,47 @@ test("expires old timestamps outside the sliding window", async () => {
   }
 });
 
+test("alarm removes expired timestamps and clears its schedule", async () => {
+  const { limiter, storage } = createLimiter();
+  const originalNow = Date.now;
+  let now = 2_000_000;
+  Date.now = () => now;
+
+  try {
+    await limiter.fetch(request({ limit: 2, windowMs: 10_000 }));
+    assert.ok(storage.values.has("request-timestamps"));
+    assert.equal(storage.alarmAt, now + 10_000);
+
+    now += 10_001;
+    await limiter.alarm();
+    assert.equal(storage.values.has("request-timestamps"), false);
+    assert.equal(storage.alarmAt, null);
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
+test("alarm keeps later active timestamps and reschedules cleanup", async () => {
+  const { limiter, storage } = createLimiter();
+  const originalNow = Date.now;
+  let now = 3_000_000;
+  Date.now = () => now;
+
+  try {
+    await limiter.fetch(request({ limit: 3, windowMs: 10_000 }));
+    now += 5_000;
+    await limiter.fetch(request({ limit: 3, windowMs: 10_000 }));
+    now += 5_001;
+    await limiter.alarm();
+
+    const stored = storage.values.get("request-timestamps");
+    assert.deepEqual(stored.timestamps, [3_005_000]);
+    assert.equal(storage.alarmAt, 3_015_000);
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
 test("rejects invalid limits and methods", async () => {
   const { limiter } = createLimiter();
   const invalid = await limiter.fetch(request({ limit: 0, windowMs: 60_000 }));
@@ -100,6 +154,17 @@ test("rejects invalid limits and methods", async () => {
 
   const method = await limiter.fetch(request({}, "GET"));
   assert.equal(method.status, 405);
+});
+
+test("fails closed when Durable Object storage fails", async () => {
+  const storage = {
+    transaction: async () => { throw new Error("storage unavailable"); },
+    setAlarm: async () => {},
+    deleteAlarm: async () => {}
+  };
+  const limiter = new RateLimiter({ storage });
+  const response = await limiter.fetch(request({ limit: 1, windowMs: 60_000 }));
+  assert.equal(response.status, 503);
 });
 
 test("does not expose the Worker as a public HTTP API", async () => {
