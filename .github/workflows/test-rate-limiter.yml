@@ -21,5 +21,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Run rate limiter tests
+      - name: Run Durable Object and middleware tests
         run: npm run test:rate-limiter
+
+      - name: Validate Worker configuration and bundle
+        run: npx --yes wrangler@4 deploy --dry-run --config rate-limiter/wrangler.jsonc
