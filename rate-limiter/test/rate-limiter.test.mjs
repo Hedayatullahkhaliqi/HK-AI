@@ -42,12 +42,12 @@ test("allows requests below the configured limit", async () => {
   const { limiter } = createLimiter();
   const response = await limiter.fetch(request({ limit: 2, windowMs: 60_000 }));
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), {
-    allowed: true,
-    remaining: 1,
-    retryAfter: 0,
-    resetAt: Date.now() + 60_000
-  });
+  const body = await response.json();
+  assert.equal(body.allowed, true);
+  assert.equal(body.remaining, 1);
+  assert.equal(body.retryAfter, 0);
+  assert.ok(body.resetAt >= Date.now() + 59_000);
+  assert.ok(body.resetAt <= Date.now() + 60_000);
 });
 
 test("blocks requests at the limit and returns Retry-After", async () => {
