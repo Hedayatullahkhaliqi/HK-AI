@@ -49,46 +49,98 @@ export class RateLimiter {
     const now = Date.now();
 
     try {
-      // Durable Object storage transactions serialize competing updates. Unlike
-      // KV read/modify/write counters, concurrent requests cannot lose increments.
       const decision = await this.ctx.storage.transaction(async transaction => {
         const stored = await transaction.get(STORAGE_KEY);
-        const timestamps = Array.isArray(stored)
-          ? stored.filter(timestamp =>
-              Number.isSafeInteger(timestamp) && timestamp > now - windowMs
-            )
+        const previous = stored && Array.isArray(stored.timestamps)
+          ? stored.timestamps
           : [];
+        const timestamps = previous.filter(timestamp =>
+          Number.isSafeInteger(timestamp) && timestamp > now - windowMs
+        );
 
+        let allowed = true;
+        let retryAfter = 0;
         if (timestamps.length >= limit) {
-          const retryAfter = Math.max(
+          allowed = false;
+          retryAfter = Math.max(
             1,
             Math.ceil((timestamps[0] + windowMs - now) / 1000)
           );
-          return {
-            allowed: false,
-            remaining: 0,
-            retryAfter,
-            resetAt: timestamps[0] + windowMs
-          };
+        } else {
+          timestamps.push(now);
         }
 
-        timestamps.push(now);
-        await transaction.put(STORAGE_KEY, timestamps, {
-          expirationTtl: Math.ceil(windowMs / 1000) * 2
-        });
+        if (timestamps.length) {
+          await transaction.put(STORAGE_KEY, { windowMs, timestamps });
+        } else {
+          await transaction.delete(STORAGE_KEY);
+        }
 
         return {
-          allowed: true,
+          allowed,
           remaining: Math.max(0, limit - timestamps.length),
-          retryAfter: 0,
-          resetAt: timestamps[0] + windowMs
+          retryAfter,
+          resetAt: timestamps.length ? timestamps[0] + windowMs : now,
+          nextAlarm: timestamps.length ? timestamps[0] + windowMs : null
         };
       });
 
-      return json(decision);
+      // Alarms are the supported Durable Object mechanism for background
+      // cleanup. Schedule the oldest timestamp's expiry, or clear stale alarms.
+      if (decision.nextAlarm === null) {
+        await this.ctx.storage.deleteAlarm();
+      } else {
+        await this.ctx.storage.setAlarm(decision.nextAlarm);
+      }
+
+      const { nextAlarm, ...publicDecision } = decision;
+      return json(publicDecision);
     } catch (error) {
-      console.error("HK rate limiter storage transaction failed");
+      console.error("HK rate limiter storage operation failed");
       return json({ error: "Rate limiter storage unavailable" }, 503);
+    }
+  }
+
+  async alarm() {
+    const now = Date.now();
+
+    try {
+      const nextAlarm = await this.ctx.storage.transaction(async transaction => {
+        const stored = await transaction.get(STORAGE_KEY);
+        if (!stored || !Array.isArray(stored.timestamps) ||
+            !Number.isSafeInteger(stored.windowMs) ||
+            stored.windowMs < MIN_WINDOW_MS ||
+            stored.windowMs > MAX_WINDOW_MS) {
+          await transaction.delete(STORAGE_KEY);
+          return null;
+        }
+
+        const timestamps = stored.timestamps.filter(timestamp =>
+          Number.isSafeInteger(timestamp) && timestamp > now - stored.windowMs
+        );
+
+        if (!timestamps.length) {
+          await transaction.delete(STORAGE_KEY);
+          return null;
+        }
+
+        await transaction.put(STORAGE_KEY, {
+          windowMs: stored.windowMs,
+          timestamps
+        });
+        return timestamps[0] + stored.windowMs;
+      });
+
+      if (nextAlarm === null) {
+        await this.ctx.storage.deleteAlarm();
+      } else {
+        await this.ctx.storage.setAlarm(nextAlarm);
+      }
+    } catch (error) {
+      console.error("HK rate limiter cleanup alarm failed");
+      // Let Cloudflare retry the alarm. The next API request also repairs the
+      // schedule, so a transient cleanup failure does not disable rate checks.
+      throw error;
     }
   }
 }
