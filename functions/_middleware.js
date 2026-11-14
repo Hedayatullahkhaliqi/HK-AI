@@ -34,6 +34,26 @@ function reply(data, status, cors) {
   return new Response(JSON.stringify(data), { status, headers });
 }
 
+async function bodyExceedsLimit(request, maxBytes) {
+  if (!request.body) return false;
+
+  const reader = request.clone().body.getReader();
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) return false;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel();
+        return true;
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 async function rateLimitIdentity(ip, pathname) {
   const input = new TextEncoder().encode(`${pathname}\n${ip}`);
   const digest = await crypto.subtle.digest("SHA-256", input);
@@ -74,15 +94,28 @@ export async function onRequest({ request, env, next }) {
   if (!maxBodySize) return reply({ error: "Not found" }, 404, cors);
 
   const contentLength = request.headers.get("Content-Length");
-  if (
-    contentLength !== null &&
-    (!/^\d+$/.test(contentLength) || Number(contentLength) > maxBodySize)
-  ) {
-    return reply({ error: "Request body too large" }, 413, cors);
+  if (contentLength !== null) {
+    if (!/^\d+$/.test(contentLength)) {
+      return reply({ error: "Invalid Content-Length header" }, 400, cors);
+    }
+    if (Number(contentLength) > maxBodySize) {
+      return reply({ error: "Request body too large" }, 413, cors);
+    }
   }
 
   if (!request.headers.get("Content-Type")?.toLowerCase().includes("application/json")) {
     return reply({ error: "Content-Type must be application/json" }, 415, cors);
+  }
+
+  // Enforce the limit on the actual streamed bytes as well as Content-Length.
+  // This covers chunked requests and callers that omit or understate the header.
+  try {
+    if (await bodyExceedsLimit(request, maxBodySize)) {
+      return reply({ error: "Request body too large" }, 413, cors);
+    }
+  } catch (error) {
+    console.error("HK API middleware: request body could not be validated");
+    return reply({ error: "Request body could not be validated." }, 400, cors);
   }
 
   // Origin checks are not authentication. Rate limiting is therefore enforced
@@ -128,7 +161,12 @@ export async function onRequest({ request, env, next }) {
     if (
       typeof decision.allowed !== "boolean" ||
       !Number.isSafeInteger(decision.remaining) ||
-      !Number.isSafeInteger(decision.resetAt)
+      decision.remaining < 0 ||
+      decision.remaining > limit ||
+      !Number.isSafeInteger(decision.retryAfter) ||
+      decision.retryAfter < 0 ||
+      !Number.isSafeInteger(decision.resetAt) ||
+      decision.resetAt < 0
     ) {
       console.error("HK rate limit: invalid Durable Object response");
       return reply({
@@ -142,9 +180,7 @@ export async function onRequest({ request, env, next }) {
     cors.set("X-RateLimit-Reset", String(Math.ceil(decision.resetAt / 1000)));
 
     if (!decision.allowed) {
-      const retryAfter = Number.isSafeInteger(decision.retryAfter)
-        ? Math.max(1, decision.retryAfter)
-        : 60;
+      const retryAfter = Math.max(1, decision.retryAfter);
       cors.set("Retry-After", String(retryAfter));
       return reply({
         error: "Too many requests. Please try again later.",
