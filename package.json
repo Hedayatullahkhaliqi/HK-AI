@@ -5,6 +5,7 @@
   "description": "HK.AI — Hedayatullah Khaliqi AI",
   "scripts": {
     "build": "node scripts/prepare-web.mjs",
+    "test:rate-limiter": "node --test rate-limiter/test/*.test.mjs functions/*.test.mjs",
     "cap:add:android": "cap add android",
     "cap:add:ios": "cap add ios",
     "cap:sync": "npm run build && cap sync"
