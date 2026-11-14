@@ -13,9 +13,11 @@ concurrency:
 jobs:
   deploy:
     name: Deploy Durable Object worker
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: cloudflare-production
     steps:
-      - name: Check out selected branch
+      - name: Check out main
         uses: actions/checkout@v4
 
       - name: Deploy rate limiter
