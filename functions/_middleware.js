@@ -45,7 +45,9 @@ async function bodyExceedsLimit(request, maxBytes) {
       if (done) return false;
       total += value.byteLength;
       if (total > maxBytes) {
-        await reader.cancel();
+        // Do not await cancellation: clone() tees the stream, and cancellation
+        // can wait for the original request branch that Pages will consume later.
+        reader.cancel().catch(() => {});
         return true;
       }
     }
