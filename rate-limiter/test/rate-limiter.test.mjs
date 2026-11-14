@@ -12,28 +12,24 @@ class MemoryStorage {
   async transaction(callback) {
     const operation = this.tail.then(async () => {
       const staged = new Map(this.values);
+      let stagedAlarm = this.alarmAt;
       const transaction = {
         get: async key => staged.get(key),
         put: async (key, value) => staged.set(key, structuredClone(value)),
-        delete: async key => staged.delete(key)
+        delete: async key => staged.delete(key),
+        getAlarm: async () => stagedAlarm,
+        setAlarm: async timestamp => { stagedAlarm = timestamp; },
+        deleteAlarm: async () => { stagedAlarm = null; }
       };
       const result = await callback(transaction);
       this.values = staged;
+      this.alarmAt = stagedAlarm;
       return result;
     });
     this.tail = operation.catch(() => {});
     return operation;
   }
 
-  async setAlarm(timestamp) {
-    this.alarmAt = timestamp;
-  }
-
-  async deleteAlarm() {
-    this.alarmAt = null;
-  }
-
-  failTransactions = false;
 }
 
 function createLimiter() {
@@ -158,9 +154,7 @@ test("rejects invalid limits and methods", async () => {
 
 test("fails closed when Durable Object storage fails", async () => {
   const storage = {
-    transaction: async () => { throw new Error("storage unavailable"); },
-    setAlarm: async () => {},
-    deleteAlarm: async () => {}
+    transaction: async () => { throw new Error("storage unavailable"); }
   };
   const limiter = new RateLimiter({ storage });
   const response = await limiter.fetch(request({ limit: 1, windowMs: 60_000 }));
