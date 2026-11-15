@@ -366,7 +366,7 @@ function cleanReply(value) {
   // Remove exact duplicate paragraphs, preserving their first occurrence.
   const seenParagraphs = new Set();
   text = text
-    .split(/\n\s*\n/)
+     .split(/\n[ \t]*\n+/)
     .filter(paragraph => {
       const normalized = paragraph.replace(/\s+/g, " ").trim().toLowerCase();
       if (!normalized || seenParagraphs.has(normalized)) return false;
