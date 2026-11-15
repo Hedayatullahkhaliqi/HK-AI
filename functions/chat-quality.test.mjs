@@ -47,6 +47,10 @@ test("system prompt explicitly rejects false premises and contradictions", async
   assert.match(systemPrompt, /MARS SURFACE SURVIVAL FACTS/);
   assert.match(systemPrompt, /600 pascals \(0\.6 kilopascals\)/);
   assert.match(systemPrompt, /Mars has a very thin atmosphere, not no atmosphere/);
+  assert.match(systemPrompt, /solar energy received per unit area is lower than at Earth/);
+  assert.match(systemPrompt, /do not say sunlight is stronger there/);
+  assert.match(systemPrompt, /Do not claim that oxygen simply "leaves the blood"/);
+  assert.match(systemPrompt, /Avoid repeating the same hazard under different names/);
   assert.doesNotMatch(systemPrompt, /^ss they have/m);
 });
 
