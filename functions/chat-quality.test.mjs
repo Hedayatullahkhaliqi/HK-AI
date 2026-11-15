@@ -221,5 +221,5 @@ test("system prompt clearly marks live search as unavailable when no search key 
   const systemPrompt = calls[0].options.messages[0].content;
   assert.match(systemPrompt, /WEB SEARCH STATUS:/);
   assert.match(systemPrompt, /Unavailable: live search is not configured on this deployment/);
-  assert.match(systemPrompt, /Do not claim that the information was verified online/);
+  assert.match(systemPrompt, /could not verify it online/);
 });
