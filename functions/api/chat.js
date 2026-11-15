@@ -348,20 +348,44 @@ function isTranslationRequest(text) {
 function cleanReply(value) {
   if (typeof value !== "string") return "";
 
-  let text = value.trim();
+  let text = value.replace(/\r\n?/g, "\n").trim();
 
+  // Remove consecutive duplicate lines without changing distinct content.
+  const lines = text.split("\n");
+  const uniqueLines = [];
+  for (const line of lines) {
+    const current = line.trim();
+    const previous = uniqueLines.length
+      ? uniqueLines[uniqueLines.length - 1].trim()
+      : null;
+    if (current && current === previous) continue;
+    uniqueLines.push(line);
+  }
+  text = uniqueLines.join("\n");
+
+  // Remove exact duplicate paragraphs, preserving their first occurrence.
+  const seenParagraphs = new Set();
+  text = text
+    .split(/\n\s*\n/)
+    .filter(paragraph => {
+      const normalized = paragraph.replace(/\s+/g, " ").trim().toLowerCase();
+      if (!normalized || seenParagraphs.has(normalized)) return false;
+      seenParagraphs.add(normalized);
+      return true;
+    })
+    .join("\n\n");
+
+  // Collapse obvious consecutive word and number loops.
   text = text.replace(
-    /(\b[\w\u0600-\u06FF]+\b)(?:\s+\1){4,}/giu,
+    /(\b[\w\u0600-\u06FF]+\b)(?:\s+\1){3,}/giu,
+    "$1"
+  );
+  text = text.replace(
+    /(\d{1,10})(?:\s*\1){3,}/g,
     "$1"
   );
 
-  text = text.replace(
-    /(\d{1,10})(?:\s*\1){4,}/g,
-    "$1"
-  );
-
-  text = text.replace(/\n{4,}/g, "\n\n\n");
-
+  text = text.replace(/\n{3,}/g, "\n\n");
   return text.trim().slice(0, 12000);
 }
 
@@ -576,7 +600,17 @@ LANGUAGE RULES:
 6. Treat a plain "سلام" or "سلام علیکم" as Afghan Dari unless Pashto-specific words or context clearly identify Pashto.
 7. For Latin-script languages, do not assume that every Latin-script message is English. Distinguish languages such as Uzbek, Turkish, Spanish, French, German, Indonesian, Swahili, and others from their actual words and grammar.
 8. Preserve the user's script when practical. For example, answer Uzbek Latin in Uzbek Latin and Uzbek Cyrillic in Uzbek Cyrillic.
-9. If the user switches languages between messages, switch with them unless they have explicitly requested a fixed response language.
+9. If the user switches languages between messages, switch with them unleFACT-CHECKING AND FALSE PREMISES:
+
+1. Evaluate the factual claim in the user's question before agreeing with it.
+2. Never begin with "yes", "correct", or an equivalent affirmation when the user's central claim is false or misleading.
+3. If a premise is false, state clearly and politely that it is incorrect, then give the accurate explanation.
+4. Keep the direct answer consistent with the explanation and conclusion. Do not contradict yourself.
+5. Check units, quantities, and comparisons before presenting them. Include the unit name, not an ambiguous abbreviation, when confusion is possible.
+6. If the evidence is insufficient, say what is uncertain instead of guessing.
+7. Before sending, check that the opening sentence, body, and summary agree with one another.
+
+ss they have explicitly requested a fixed response language.
 11. Distinguish Dari, Persian and Pashto; use natural Afghan Dari and natural Pashto.
 12. Support Uzbek in both Latin and Cyrillic scripts. "Salom" is Uzbek; answer in Uzbek Latin, for example "Salom! Qalaysiz?"
 13. Recognize common Uzbek words such as Rahmat, Qalaysiz, Yaxshimisiz, Yaxshi and Xayr.
