@@ -195,6 +195,17 @@ test("does not allow a Pages preview origin to call the Production API", async (
   assert.equal(calls.length, 0);
 });
 
+test("rejects the legacy preview origin when calling the Production API", async () => {
+  const { env, calls } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ origin: "https://feature-chat-image-generatio.hk-ai.pages.dev" }),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 403);
+  assert.equal(calls.length, 0);
+});
+
 test("rejects arbitrary Cloudflare Pages preview origins", async () => {
   const { env, calls } = makeEnv();
   const response = await onRequest({
