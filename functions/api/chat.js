@@ -455,8 +455,18 @@ function validateImage(image) {
   return null;
 }
 
+function logSearchDiagnostic(status, details = {}) {
+  // Never log the API key, search query, request headers, or provider body.
+  console.warn("[HK.AI live-search]", JSON.stringify({
+    event: "firecrawl_search",
+    status,
+    ...details
+  }));
+}
+
 async function searchWeb(query, env) {
   if (!env.FIRECRAWL_API_KEY) {
+    logSearchDiagnostic("unavailable", { reason: "missing_api_key" });
     return { status: "unavailable", context: "" };
   }
 
@@ -477,11 +487,29 @@ async function searchWeb(query, env) {
     );
 
     if (!response.ok) {
+      logSearchDiagnostic("failed", {
+        reason: "provider_http_error",
+        provider_status: response.status
+      });
       return { status: "failed", context: "" };
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      logSearchDiagnostic("failed", {
+        reason: "invalid_json",
+        provider_status: response.status
+      });
+      return { status: "failed", context: "" };
+    }
+
     if (!Array.isArray(data?.data)) {
+      logSearchDiagnostic("failed", {
+        reason: "invalid_payload",
+        provider_status: response.status
+      });
       return { status: "failed", context: "" };
     }
 
@@ -505,10 +533,19 @@ async function searchWeb(query, env) {
       .filter(Boolean);
 
     const context = results.join("\n\n").slice(0, 7000);
+    const status = context ? "success" : "empty";
+    logSearchDiagnostic(status, {
+      result_count: results.length,
+      provider_status: response.status
+    });
     return context
       ? { status: "success", context }
       : { status: "empty", context: "" };
-  } catch {
+  } catch (error) {
+    logSearchDiagnostic("failed", {
+      reason: "network_or_runtime_error",
+      error_type: error instanceof Error ? error.name : "unknown"
+    });
     return { status: "failed", context: "" };
   }
 }
