@@ -189,3 +189,37 @@ test("keeps the language instructions and fact-checking section separated", asyn
   assert.doesNotMatch(systemPrompt, /unleFACT-CHECKING/);
   assert.match(systemPrompt, /FACT-CHECKING AND FALSE PREMISES/);
 });
+
+
+test("system prompt requires truthful capability and memory claims", async () => {
+  const { env, calls } = makeEnv({ response: "نمی‌دانم." });
+
+  const response = await onRequestPost({
+    request: makeRequest("آیا از این گفتگو همیشه یاد می‌گیری؟"),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  const systemPrompt = calls[0].options.messages[0].content;
+  assert.match(systemPrompt, /CAPABILITY HONESTY AND EPISTEMIC LIMITS/);
+  assert.match(systemPrompt, /A conversation alone is not model training/);
+  assert.match(systemPrompt, /Never claim to remember a user across separate chats/);
+  assert.match(systemPrompt, /Do not present a guess as a verified fact/);
+});
+
+test("system prompt clearly marks live search as unavailable when no search key is configured", async () => {
+  const { env, calls } = makeEnv({
+    response: "در این نسخه به جست‌وجوی زنده دسترسی ندارم."
+  });
+
+  const response = await onRequestPost({
+    request: makeRequest("آخرین خبر علمی امروز را در اینترنت پیدا کن."),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  const systemPrompt = calls[0].options.messages[0].content;
+  assert.match(systemPrompt, /WEB SEARCH STATUS:/);
+  assert.match(systemPrompt, /Unavailable: live search is not configured on this deployment/);
+  assert.match(systemPrompt, /Do not claim that the information was verified online/);
+});
