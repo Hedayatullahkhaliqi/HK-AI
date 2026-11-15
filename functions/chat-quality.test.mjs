@@ -350,3 +350,39 @@ test("records provider HTTP status safely when Firecrawl rejects the request", a
   assert.match(warnings[0], /401/);
   assert.doesNotMatch(warnings[0], /test-secret-key|private provider body|آخرین خبر علمی/);
 });
+
+
+test("fails closed without invoking the model when a requested live search is unavailable", async () => {
+  const { env, calls } = makeEnv({
+    response: "این متن مدل نباید به کاربر برسد و نباید تولید شود."
+  });
+
+  const response = await onRequestPost({
+    request: makeRequest("لطفاً در اینترنت جستجو کن و آخرین خبرهای علمی مریخ را پیدا کن."),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.length, 0);
+  const body = await response.json();
+  assert.match(body.reply, /جستجوی زنده در حال حاضر موفق نشد/);
+  assert.match(body.reply, /لینک‌های تأییدنشده/);
+});
+
+test("fails closed when the live search provider returns an error", async t => {
+  const { env, calls } = makeEnv({
+    response: "این متن مدل نباید به کاربر برسد و نباید تولید شود."
+  });
+  env.FIRECRAWL_API_KEY = "test-key";
+  t.mock.method(globalThis, "fetch", async () => new Response("provider error", { status: 503 }));
+
+  const response = await onRequestPost({
+    request: makeRequest("لطفاً در اینترنت جستجو کن و آخرین خبرهای علمی مریخ را پیدا کن."),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.length, 0);
+  const body = await response.json();
+  assert.match(body.reply, /جستجوی زنده در حال حاضر موفق نشد/);
+});
