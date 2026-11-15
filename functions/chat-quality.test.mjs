@@ -132,7 +132,7 @@ test("rejects conflicting English Mars survival claims in either word order", as
     response: [
       "Humans can survive on Mars without a spacesuit.",
       "Without a spacesuit, humans cannot survive on Mars."
-    ].join("\\n\\n")
+    ].join(String.fromCharCode(10, 10))
   });
 
   const response = await onRequestPost({
@@ -148,7 +148,7 @@ test("rejects conflicting Dari Mars survival claims", async () => {
     response: [
       "انسان‌ها می‌توانند بدون لباس فضایی در مریخ زنده بمانند.",
       "انسان‌ها بدون لباس فضایی نمی‌توانند در مریخ زنده بمانند."
-    ].join("\\n\\n")
+    ].join(String.fromCharCode(10, 10))
   });
 
   const response = await onRequestPost({
