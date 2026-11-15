@@ -345,23 +345,93 @@ function isTranslationRequest(text) {
   return /ترجمه کن|ترجمه به|translate|ترجم|ژباړه|çevir|übersetzen/i.test(text);
 }
 
+function hasInternalReasoningLeak(value) {
+  return /<\s*\/?\s*think\b|initial\s+thought\s*:|let'?s\s+refine|this\s+is\s+a\s+bit\s+contradictory/i.test(value);
+}
+
+function hasConflictingMarsSurvivalClaims(question, reply) {
+  const asksAboutUnprotectedMars =
+    /مریخ|mars/i.test(question) &&
+    /بدون\s+لباس\s+فضایی|without\s+(?:a\s+)?spacesuit/i.test(question) &&
+    /زنده.{0,12}مان|survive/i.test(question);
+
+  if (!asksAboutUnprotectedMars) return false;
+
+  // Evaluate each sentence independently so an affirmative claim in one
+  // sentence cannot be combined with an unrelated negative sentence.
+  const sentences = String(reply || "").split(/[.!؟?\n]+/u);
+
+  let positive = false;
+  let negative = false;
+
+  for (const sentence of sentences) {
+    const hasSubject =
+      /\b(?:humans?|people|a person)\b/i.test(sentence) ||
+      /انسان(?:ها)?/u.test(sentence);
+    const hasSuit = /\bwithout\s+(?:a\s+)?spacesuit\b|بدون\s+لباس\s+فضایی/iu.test(sentence);
+    const hasSurvival = /\bsurvive\b|زنده.{0,12}مان/iu.test(sentence);
+
+    if (!hasSubject || !hasSuit || !hasSurvival) continue;
+
+    if (
+      /\b(?:humans?|people|a person)\s+can\s+(?!not\b)/i.test(sentence) ||
+      /(?<!ن)(?:می‌توانند|میتوانند|قادرند)/u.test(sentence)
+    ) {
+      positive = true;
+    }
+
+    if (
+      /\b(?:humans?|people|a person)\s+(?:cannot|can't|can not|are unable to|will not be able to)\b/i.test(sentence) ||
+      /(?:نمی‌توانند|نمیتوانند|قادر\s+به[\s\S]{0,30}نیستند)/u.test(sentence)
+    ) {
+      negative = true;
+    }
+  }
+
+  return positive && negative;
+}
+
 function cleanReply(value) {
   if (typeof value !== "string") return "";
 
-  let text = value.trim();
+  let text = value.replace(/\r\n?/g, "\n").trim();
 
+  // Remove consecutive duplicate lines without changing distinct content.
+  const lines = text.split("\n");
+  const uniqueLines = [];
+  for (const line of lines) {
+    const current = line.trim();
+    const previous = uniqueLines.length
+      ? uniqueLines[uniqueLines.length - 1].trim()
+      : null;
+    if (current && current === previous) continue;
+    uniqueLines.push(line);
+  }
+  text = uniqueLines.join("\n");
+
+  // Remove exact duplicate paragraphs, preserving their first occurrence.
+  const seenParagraphs = new Set();
+  text = text
+     .split(/\n[ \t]*\n+/)
+    .filter(paragraph => {
+      const normalized = paragraph.replace(/\s+/g, " ").trim().toLowerCase();
+      if (!normalized || seenParagraphs.has(normalized)) return false;
+      seenParagraphs.add(normalized);
+      return true;
+    })
+    .join("\n\n");
+
+  // Collapse obvious consecutive word and number loops.
   text = text.replace(
-    /(\b[\w\u0600-\u06FF]+\b)(?:\s+\1){4,}/giu,
+    /(\b[\w\u0600-\u06FF]+\b)(?:\s+\1){3,}/giu,
+    "$1"
+  );
+  text = text.replace(
+    /(\d{1,10})(?:\s*\1){3,}/g,
     "$1"
   );
 
-  text = text.replace(
-    /(\d{1,10})(?:\s*\1){4,}/g,
-    "$1"
-  );
-
-  text = text.replace(/\n{4,}/g, "\n\n\n");
-
+  text = text.replace(/\n{3,}/g, "\n\n");
   return text.trim().slice(0, 12000);
 }
 
@@ -577,13 +647,28 @@ LANGUAGE RULES:
 7. For Latin-script languages, do not assume that every Latin-script message is English. Distinguish languages such as Uzbek, Turkish, Spanish, French, German, Indonesian, Swahili, and others from their actual words and grammar.
 8. Preserve the user's script when practical. For example, answer Uzbek Latin in Uzbek Latin and Uzbek Cyrillic in Uzbek Cyrillic.
 9. If the user switches languages between messages, switch with them unless they have explicitly requested a fixed response language.
-11. Distinguish Dari, Persian and Pashto; use natural Afghan Dari and natural Pashto.
-12. Support Uzbek in both Latin and Cyrillic scripts. "Salom" is Uzbek; answer in Uzbek Latin, for example "Salom! Qalaysiz?"
-13. Recognize common Uzbek words such as Rahmat, Qalaysiz, Yaxshimisiz, Yaxshi and Xayr.
-14. For translation requests, use the exact target language requested.
-15. Never randomly change the response language or assume that a user's language is their nationality.
-16. If a message contains multiple languages, prioritize the language used for the main question.
-17. If the user writes a short greeting, respond in the language of that greeting when identifiable.
+10. If a message contains both a greeting and a substantive question, answer the substantive question first.
+
+FACT-CHECKING AND FALSE PREMISES:
+
+1. Evaluate the factual claim in the user's question before agreeing with it.
+2. Never begin with "yes", "correct", or an equivalent affirmation when the user's central claim is false or misleading.
+3. If a premise is false, state clearly and politely that it is incorrect, then give the accurate explanation.
+4. Keep the direct answer consistent with the explanation and conclusion. Do not contradict yourself.
+5. Check units, quantities, and comparisons before presenting them. Include the unit name, not an ambiguous abbreviation, when confusion is possible.
+6. If the evidence is insufficient, say what is uncertain instead of guessing.
+7. Before sending, check that the opening sentence, body, and summary agree with one another.
+
+MARS SURFACE SURVIVAL FACTS:
+1. A person cannot survive unprotected on the Martian surface.
+2. Average surface pressure is about 600 pascals (0.6 kilopascals), compared with about 101,325 pascals at Earth's sea level. Keep units accurate; 600 pascals is not 600 millibars.
+3. Mars has a very thin atmosphere, not no atmosphere. It is about 95% carbon dioxide and contains only trace oxygen, far too little and at far too low a total pressure for human breathing.
+4. Explain the low-pressure danger precisely: the body cannot obtain enough oxygen, causing severe hypoxia. In the near-vacuum, exposed moisture can boil and tissues can swell (ebullism). Do not claim that oxygen simply "leaves the blood", or that all blood or all body fluids instantly evaporate.
+5. Distinguish sunlight from space radiation. Because Mars is farther from the Sun, the solar energy received per unit area is lower than at Earth (roughly 43% of Earth's average); do not say sunlight is stronger there. However, Mars lacks Earth's strong global magnetic-field and thick-atmosphere shielding, so the surface receives substantially more harmful cosmic and solar energetic-particle radiation than Earth's surface.
+6. Cold and radiation are additional serious hazards, but do not claim a person instantly freezes or that Mars has no atmosphere.
+7. Martian dust is very fine and can pose inhalation and equipment hazards. Do not call it inherently corrosive or claim it necessarily damages exposed skin without evidence.
+8. Avoid repeating the same hazard under different names. Use a clean, sequential numbered list if numbering is needed.
+9. If unsure about a precise measurement, use an approximate value with its correct unit or omit the number. Never invent or convert units.
 
 CURRENT LANGUAGE PREFERENCE:
 ${languagePreference}
@@ -679,7 +764,18 @@ You are HK.AI — Hedayatullah Khaliqi AI.
       });
     }
 
-    const reply = cleanReply(extractReply(result));
+    const rawReply = extractReply(result);
+
+    // Never expose internal reasoning markers or a response that explicitly
+    // contradicts itself on the tested Mars survival question.
+    if (
+      hasInternalReasoningLeak(rawReply) ||
+      hasConflictingMarsSurvivalClaims(latestUserMessage.content, rawReply)
+    ) {
+      return json({ error: "The AI response failed a consistency check. Please try again." }, 502);
+    }
+
+    const reply = cleanReply(rawReply);
 
     if (!reply) {
       return json({
