@@ -312,3 +312,41 @@ test("distinguishes a successful search with no usable results from provider fai
   assert.equal(response.status, 200);
   assert.match(calls[0].options.messages[0].content, /Search completed but returned no usable results/);
 });
+
+
+test("records safe diagnostics for missing Firecrawl configuration without exposing secrets", async t => {
+  const { env } = makeEnv({ response: "جستجوی زنده فعال نیست." });
+  const warnings = [];
+  t.mock.method(console, "warn", (...args) => warnings.push(args.join(" ")));
+
+  const response = await onRequestPost({
+    request: makeRequest("آخرین خبر علمی امروز را در اینترنت پیدا کن."),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /firecrawl_search/);
+  assert.match(warnings[0], /unavailable/);
+  assert.match(warnings[0], /missing_api_key/);
+  assert.doesNotMatch(warnings[0], /آخرین خبر علمی/);
+});
+
+test("records provider HTTP status safely when Firecrawl rejects the request", async t => {
+  const { env } = makeEnv({ response: "جستجو ناموفق بود." });
+  env.FIRECRAWL_API_KEY = "test-secret-key";
+  const warnings = [];
+  t.mock.method(console, "warn", (...args) => warnings.push(args.join(" ")));
+  t.mock.method(globalThis, "fetch", async () => new Response("private provider body", { status: 401 }));
+
+  const response = await onRequestPost({
+    request: makeRequest("آخرین خبر علمی امروز را در اینترنت پیدا کن."),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /provider_http_error/);
+  assert.match(warnings[0], /401/);
+  assert.doesNotMatch(warnings[0], /test-secret-key|private provider body|آخرین خبر علمی/);
+});
