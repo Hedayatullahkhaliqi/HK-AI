@@ -686,6 +686,18 @@ export async function onRequestPost({ request, env }) {
       } else {
         webSearchStatus = "Search failed because the search provider could not be reached or returned an invalid response. Do not claim that the information was verified online.";
       }
+
+      // Fail closed: when a user explicitly requests live search, never ask
+      // the language model to improvise from memory after search failure.
+      if (searchResult.status !== "success") {
+        const failureReply =
+          languagePreference === "Dari" || languagePreference === "Persian"
+            ? "جستجوی زنده در حال حاضر موفق نشد؛ بنابراین نمی‌توانم خبرهای تازه یا لینک‌های تأییدنشده ارائه کنم. لطفاً بعداً دوباره تلاش کنید."
+            : languagePreference === "Pashto"
+              ? "ژوندۍ پلټنه اوس بریالۍ نه شوه؛ نو زه تازه خبرونه یا نه‌تایید شوي لینکونه نه شم وړاندې کولی. مهرباني وکړئ وروسته بیا هڅه وکړئ."
+              : "Live search was unsuccessful, so I can't provide current news or unverified links. Please try again later.";
+        return json({ reply: failureReply });
+      }
     }
 
     const systemPrompt = `
