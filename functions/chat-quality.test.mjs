@@ -91,3 +91,45 @@ test("returns a gateway error instead of an empty malformed model response", asy
   assert.equal(response.status, 502);
   assert.equal((await response.json()).error, "No valid AI response received");
 });
+
+test("rejects leaked internal reasoning markers instead of exposing them", async () => {
+  const { env } = makeEnv({
+    response: "initial thought: this answer is inconsistent. Let's refine.\n</think>خیر، انسان بدون لباس فضایی در مریخ زنده نمی‌ماند."
+  });
+
+  const response = await onRequestPost({
+    request: makeRequest("آیا انسان بدون لباس فضایی در مریخ زنده می‌ماند؟"),
+    env
+  });
+
+  assert.equal(response.status, 502);
+  assert.doesNotMatch(await response.text(), /initial thought|think|Let's refine/i);
+});
+
+test("rejects directly conflicting yes/no Mars survival claims", async () => {
+  const { env } = makeEnv({
+    response: "بله، انسان‌ها می‌توانند بدون لباس فضایی در مریخ زنده بمانند.\n\nخیر، انسان‌ها نمی‌توانند بدون لباس فضایی در مریخ زنده بمانند."
+  });
+
+  const response = await onRequestPost({
+    request: makeRequest("آیا انسان بدون لباس فضایی در مریخ زنده می‌ماند؟"),
+    env
+  });
+
+  assert.equal(response.status, 502);
+});
+
+test("keeps the language instructions and fact-checking section separated", async () => {
+  const { env, calls } = makeEnv({ response: "پاسخ آزمایشی." });
+
+  const response = await onRequestPost({
+    request: makeRequest("یک پرسش آزمایشی"),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  const systemPrompt = calls[0].options.messages[0].content;
+  assert.match(systemPrompt, /switch with them unless they have explicitly requested/);
+  assert.doesNotMatch(systemPrompt, /unleFACT-CHECKING/);
+  assert.match(systemPrompt, /FACT-CHECKING AND FALSE PREMISES/);
+});
