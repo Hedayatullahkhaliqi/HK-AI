@@ -223,3 +223,92 @@ test("system prompt clearly marks live search as unavailable when no search key 
   assert.match(systemPrompt, /Unavailable: live search is not configured on this deployment/);
   assert.match(systemPrompt, /could not verify it online/);
 });
+
+
+test("marks live search unavailable when no provider key is configured", async () => {
+  const { env, calls } = makeEnv({ response: "نمی‌توانم آنلاین بررسی کنم." });
+  const response = await onRequestPost({
+    request: makeRequest("آخرین خبر علمی امروز را در اینترنت پیدا کن."),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  assert.match(calls[0].options.messages[0].content, /Unavailable: live search is not configured/);
+});
+
+test("does not claim verification when the search provider returns an HTTP error", async t => {
+  const { env, calls } = makeEnv({ response: "نتوانستم آنلاین بررسی کنم." });
+  env.FIRECRAWL_API_KEY = "test-key";
+  t.mock.method(globalThis, "fetch", async () => new Response("provider error", { status: 503 }));
+
+  const response = await onRequestPost({
+    request: makeRequest("آخرین خبر علمی امروز را در اینترنت پیدا کن."),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  const prompt = calls[0].options.messages[0].content;
+  assert.match(prompt, /Search failed because the search provider could not be reached/);
+  assert.match(prompt, /do not claim that the information was verified online/i);
+});
+
+test("rejects malformed search-provider payloads as failed searches", async t => {
+  const { env, calls } = makeEnv({ response: "نتوانستم آنلاین بررسی کنم." });
+  env.FIRECRAWL_API_KEY = "test-key";
+  t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ data: "not-an-array" }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  }));
+
+  const response = await onRequestPost({
+    request: makeRequest("آخرین خبر علمی امروز را در اینترنت پیدا کن."),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  assert.match(calls[0].options.messages[0].content, /Search failed because the search provider/);
+});
+
+test("passes only valid HTTP search result URLs to the model", async t => {
+  const { env, calls } = makeEnv({ response: "این نتیجه نیاز به بررسی بیشتر دارد." });
+  env.FIRECRAWL_API_KEY = "test-key";
+  t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({
+    data: [
+      { title: "Valid result", description: "A useful result.", url: "https://example.com/article" },
+      { title: "Invalid result", description: "Not a web URL.", url: "javascript:alert(1)" },
+      { title: "Missing URL", description: "No source URL." }
+    ]
+  }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  }));
+
+  const response = await onRequestPost({
+    request: makeRequest("آخرین خبر علمی امروز را در اینترنت پیدا کن."),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  const prompt = calls[0].options.messages[0].content;
+  assert.match(prompt, /Search returned results/);
+  assert.match(prompt, /https:\/\/example\.com\/article/);
+  assert.doesNotMatch(prompt, /javascript:alert/);
+  assert.doesNotMatch(prompt, /Missing URL/);
+});
+
+test("distinguishes a successful search with no usable results from provider failure", async t => {
+  const { env, calls } = makeEnv({ response: "نتیجه قابل اتکا پیدا نشد." });
+  env.FIRECRAWL_API_KEY = "test-key";
+  t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ data: [] }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  }));
+
+  const response = await onRequestPost({
+    request: makeRequest("آخرین خبر علمی امروز را در اینترنت پیدا کن."),
+    env
+  });
+
+  assert.equal(response.status, 200);
+  assert.match(calls[0].options.messages[0].content, /Search completed but returned no usable results/);
+});
