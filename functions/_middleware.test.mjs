@@ -8,9 +8,10 @@ function makeRequest({
   origin = "https://hk-ai.pages.dev",
   ip = "203.0.113.10",
   contentLength,
+  contentType = "application/json",
   requestHost = "hk-ai.pages.dev"
 } = {}) {
-  const headers = new Headers({ "Content-Type": "application/json" });
+  const headers = new Headers({ "Content-Type": contentType });
   if (origin) headers.set("Origin", origin);
   if (ip) headers.set("CF-Connecting-IP", ip);
   if (contentLength !== undefined) headers.set("Content-Length", String(contentLength));
@@ -67,6 +68,27 @@ test("allows a valid API request and applies security headers", async () => {
   assert.equal(response.headers.get("X-Content-Type-Options"), "nosniff");
   assert.equal(response.headers.get("Access-Control-Allow-Origin"), "https://hk-ai.pages.dev");
   assert.equal(response.headers.get("X-RateLimit-Limit"), "30");
+});
+
+test("accepts application/json with a charset parameter", async () => {
+  const { env } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ contentType: "application/json; charset=utf-8" }),
+    env,
+    next: async () => new Response(JSON.stringify({ ok: true }), { status: 200 })
+  });
+  assert.equal(response.status, 200);
+});
+
+test("rejects Content-Type values that only contain application/json as a substring", async () => {
+  const { env, calls } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ contentType: "application/jsonp" }),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 415);
+  assert.equal(calls.length, 0);
 });
 
 test("fails closed when the Durable Object binding is missing", async () => {
