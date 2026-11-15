@@ -1,6 +1,5 @@
 const ALLOWED_ORIGINS = new Set([
   "https://hk-ai.pages.dev",
-  "https://feature-chat-image-generatio.hk-ai.pages.dev",
   "capacitor://localhost",
   "https://localhost",
   "http://localhost"
