@@ -83,6 +83,24 @@ test("fails closed when the Durable Object binding is missing", async () => {
   assert.equal(nextCalled, false);
 });
 
+test("returns 503 when the Durable Object responds with HTTP 503", async () => {
+  const { env } = makeEnv({ status: 503 });
+  let nextCalled = false;
+  const response = await onRequest({
+    request: makeRequest(),
+    env,
+    next: async () => {
+      nextCalled = true;
+      return new Response("should not run");
+    }
+  });
+
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).code, "RATE_LIMITER_UNAVAILABLE");
+  assert.equal(response.headers.get("X-Content-Type-Options"), "nosniff");
+  assert.equal(nextCalled, false);
+});
+
 test("returns 429 with Retry-After when the Durable Object denies a request", async () => {
   const { env } = makeEnv({ allowed: false });
   const response = await onRequest({
