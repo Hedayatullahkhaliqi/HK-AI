@@ -1,7 +1,6 @@
 const ALLOWED_ORIGINS = new Set([
   "https://hk-ai.pages.dev",
   "https://feature-chat-image-generatio.hk-ai.pages.dev",
-  "https://security-early-rate-limit-re.hk-ai.pages.dev",
   "capacitor://localhost",
   "https://localhost",
   "http://localhost"
@@ -14,10 +13,18 @@ const BODY_LIMITS = {
   "/api/tts": 64 * 1024
 };
 
-function isAllowedOrigin(origin) {
-  // Only explicitly trusted app and development origins are allowed.
-  // Do not trust every Pages preview hostname: preview URLs are not identities.
-  return ALLOWED_ORIGINS.has(origin);
+function isAllowedOrigin(origin, requestUrl) {
+  // Explicitly trusted app and development origins are allowed everywhere.
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+
+  // A Pages preview may call only its own same-origin API. This keeps preview
+  // testing functional without allowing a preview origin to call Production.
+  return (
+    origin === requestUrl.origin &&
+    requestUrl.protocol === "https:" &&
+    requestUrl.hostname.endsWith(".hk-ai.pages.dev") &&
+    requestUrl.hostname !== "hk-ai.pages.dev"
+  );
 }
 
 function secure(headers) {
@@ -71,7 +78,7 @@ export async function onRequest({ request, env, next }) {
   if (!url.pathname.startsWith("/api/")) return next();
 
   const origin = request.headers.get("Origin");
-  if (origin && !isAllowedOrigin(origin)) {
+  if (origin && !isAllowedOrigin(origin, url)) {
     return reply({ error: "Origin not allowed" }, 403);
   }
 
