@@ -356,8 +356,8 @@ function hasConflictingMarsSurvivalClaims(question, reply) {
 
   if (!asksAboutUnprotectedMars) return false;
 
-  const positive = /(?:^|[.!؟?\\n])\\s*(?:بله|آری)|(?<!ن)(?:می‌توانند|میتوانند|قادرند)[\\s\\S]{0,140}(?:بدون\\s+لباس\\s+فضایی|without\\s+(?:a\\s+)?spacesuit)[\\s\\S]{0,140}(?:زنده.{0,12}مان|survive)/i.test(reply);
-  const negative = /(?:خیر|نه|نمی‌توانند|نمیتوانند|cannot|can't)[\\s\\S]{0,140}(?:بدون\\s+لباس\\s+فضایی|without\\s+(?:a\\s+)?spacesuit)[\\s\\S]{0,140}(?:زنده.{0,12}مان|survive)/i.test(reply);
+  const positive = /(?:^|[.!؟?\n])\s*(?:بله|آری)|(?<!ن)(?:می‌توانند|میتوانند|قادرند)[\s\S]{0,140}(?:بدون\s+لباس\s+فضایی|without\s+(?:a\s+)?spacesuit)[\s\S]{0,140}(?:زنده.{0,12}مان|survive)/i.test(reply);
+  const negative = /(?:خیر|نه|نمی‌توانند|نمیتوانند|cannot|can't)[\s\S]{0,140}(?:بدون\s+لباس\s+فضایی|without\s+(?:a\s+)?spacesuit)[\s\S]{0,140}(?:زنده.{0,12}مان|survive)/i.test(reply);
 
   return positive && negative;
 }
