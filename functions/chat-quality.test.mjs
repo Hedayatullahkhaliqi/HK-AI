@@ -44,6 +44,10 @@ test("system prompt explicitly rejects false premises and contradictions", async
   assert.match(systemPrompt, /Never begin with "yes", "correct"/);
   assert.match(systemPrompt, /Keep the direct answer consistent/);
   assert.match(systemPrompt, /Check units, quantities/);
+  assert.match(systemPrompt, /MARS SURFACE SURVIVAL FACTS/);
+  assert.match(systemPrompt, /600 pascals \(0\.6 kilopascals\)/);
+  assert.match(systemPrompt, /Mars has a very thin atmosphere, not no atmosphere/);
+  assert.doesNotMatch(systemPrompt, /^ss they have/m);
 });
 
 test("removes consecutive duplicate lines and exact duplicate paragraphs", async () => {
