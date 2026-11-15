@@ -1,8 +1,6 @@
 const ALLOWED_ORIGINS = new Set([
   "https://hk-ai.pages.dev",
-  "capacitor://localhost",
-  "https://localhost",
-  "http://localhost"
+  "capacitor://localhost"
 ]);
 
 const BODY_LIMITS = {
@@ -19,11 +17,19 @@ function isJsonContentType(value) {
 }
 
 function isAllowedOrigin(origin, requestUrl) {
-  // Explicitly trusted app and development origins are allowed everywhere.
+  // Explicitly trusted production and native-app origins are allowed.
   if (ALLOWED_ORIGINS.has(origin)) return true;
 
-  // A Pages preview may call only its own same-origin API. This keeps preview
-  // testing functional without allowing a preview origin to call Production.
+  // Local development is allowed only when the request is same-origin.
+  // A localhost page must never be trusted when calling the Production API.
+  if (
+    origin === requestUrl.origin &&
+    (requestUrl.hostname === "localhost" || requestUrl.hostname === "127.0.0.1")
+  ) {
+    return requestUrl.protocol === "http:" || requestUrl.protocol === "https:";
+  }
+
+  // A Pages preview may call only its own same-origin API.
   return (
     origin === requestUrl.origin &&
     requestUrl.protocol === "https:" &&
