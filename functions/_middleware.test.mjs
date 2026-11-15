@@ -149,6 +149,17 @@ test("rejects disallowed browser origins", async () => {
   assert.equal(calls.length, 0);
 });
 
+test("rejects arbitrary Cloudflare Pages preview origins", async () => {
+  const { env, calls } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ origin: "https://untrusted-preview.hk-ai.pages.dev" }),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 403);
+  assert.equal(calls.length, 0);
+});
+
 test("rejects requests when Content-Length is malformed", async () => {
   const { env, calls } = makeEnv();
   const response = await onRequest({
