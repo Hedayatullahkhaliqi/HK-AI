@@ -1599,9 +1599,15 @@ async function sendMessage(customText=null){
   }catch(error){
     removeTyping();
 
+    const rawError=(error.message||"").trim();
+    const isNetworkFailure=
+      /load failed|failed to fetch|networkerror|network request failed|connection reset/i.test(rawError);
+
     const msg=error.name==="AbortError"?
       "The server timed out. Please try again.":
-      (error.message||"Could not connect to the server.");
+      (isNetworkFailure?
+        "The connection was interrupted. Check your internet connection and try again. Your message and attachment are still available for retry.":
+        (rawError||"Could not connect to the server."));
 
     const node=addMessage(
       "assistant",
