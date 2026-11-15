@@ -12,6 +12,9 @@ concurrency:
 
 jobs:
   deploy:
+    # workflow_dispatch can target any branch; never expose production
+    # deployment credentials or run Wrangler from an unreviewed branch.
+    if: github.ref == 'refs/heads/main'
     name: Deploy Durable Object worker
     runs-on: ubuntu-latest
     environment: cloudflare-production
