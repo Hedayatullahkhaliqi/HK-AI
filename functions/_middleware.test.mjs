@@ -9,13 +9,14 @@ function makeRequest({
   ip = "203.0.113.10",
   contentLength,
   contentType = "application/json",
-  requestHost = "hk-ai.pages.dev"
+  requestHost = "hk-ai.pages.dev",
+  requestProtocol = "https:"
 } = {}) {
   const headers = new Headers({ "Content-Type": contentType });
   if (origin) headers.set("Origin", origin);
   if (ip) headers.set("CF-Connecting-IP", ip);
   if (contentLength !== undefined) headers.set("Content-Length", String(contentLength));
-  return new Request(`https://${requestHost}${path}`, {
+  return new Request(`${requestProtocol}//${requestHost}${path}`, {
     method: "POST",
     headers,
     body
@@ -199,6 +200,32 @@ test("rejects the legacy preview origin when calling the Production API", async 
   const { env, calls } = makeEnv();
   const response = await onRequest({
     request: makeRequest({ origin: "https://feature-chat-image-generatio.hk-ai.pages.dev" }),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 403);
+  assert.equal(calls.length, 0);
+});
+
+test("allows localhost only for its own same-origin local API", async () => {
+  const { env } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({
+      origin: "http://localhost",
+      requestHost: "localhost",
+      requestProtocol: "http:"
+    }),
+    env,
+    next: async () => new Response(JSON.stringify({ ok: true }), { status: 200 })
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Access-Control-Allow-Origin"), "http://localhost");
+});
+
+test("rejects localhost origin when calling the Production API", async () => {
+  const { env, calls } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ origin: "http://localhost" }),
     env,
     next: async () => new Response("should not run")
   });
