@@ -352,7 +352,7 @@ function hasInternalReasoningLeak(value) {
 function hasConflictingMarsSurvivalClaims(question, reply) {
   const asksAboutUnprotectedMars = /مریخ|mars/i.test(question) &&
     /بدون\s+لباس\s+فضایی|without\s+(?:a\s+)?spacesuit/i.test(question) &&
-    /زنده\s+بمان|survive/i.test(question);
+    /زنده.{0,12}مان|survive/i.test(question);
 
   if (!asksAboutUnprotectedMars) return false;
 
