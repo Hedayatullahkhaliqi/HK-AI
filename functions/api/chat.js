@@ -350,16 +350,36 @@ function hasInternalReasoningLeak(value) {
 }
 
 function hasConflictingMarsSurvivalClaims(question, reply) {
-  const asksAboutUnprotectedMars = /مریخ|mars/i.test(question) &&
+  const asksAboutUnprotectedMars =
+    /مریخ|mars/i.test(question) &&
     /بدون\s+لباس\s+فضایی|without\s+(?:a\s+)?spacesuit/i.test(question) &&
     /زنده.{0,12}مان|survive/i.test(question);
 
   if (!asksAboutUnprotectedMars) return false;
 
-  const positive = /(?:^|[.!؟?\n])\s*(?:بله|آری)|(?<!ن)(?:می‌توانند|میتوانند|قادرند)[\s\S]{0,140}(?:بدون\s+لباس\s+فضایی|without\s+(?:a\s+)?spacesuit)[\s\S]{0,140}(?:زنده.{0,12}مان|survive)/i.test(reply);
-  const negative = /(?:خیر|نه|نمی‌توانند|نمیتوانند|cannot|can't)[\s\S]{0,140}(?:بدون\s+لباس\s+فضایی|without\s+(?:a\s+)?spacesuit)[\s\S]{0,140}(?:زنده.{0,12}مان|survive)/i.test(reply);
+  const text = String(reply || "");
 
-  return positive && negative;
+  // Match the claim itself rather than relying on a leading "yes" or "no".
+  // Check both word orders because natural answers may mention the suit
+  // before or after the survival verb.
+  const englishPositive =
+    /\b(?:humans?|people|a person)\s+can\s+(?!not\b)survive\b[\s\S]{0,180}\bwithout\s+(?:a\s+)?spacesuit\b/i.test(text) ||
+    /\bwithout\s+(?:a\s+)?spacesuit\b[\s\S]{0,180}\b(?:humans?|people|a person)\s+can\s+(?!not\b)survive\b/i.test(text);
+
+  const englishNegative =
+    /\b(?:humans?|people|a person)\s+(?:cannot|can't|can not|are unable to|will not be able to)\s+survive\b[\s\S]{0,180}\bwithout\s+(?:a\s+)?spacesuit\b/i.test(text) ||
+    /\bwithout\s+(?:a\s+)?spacesuit\b[\s\S]{0,180}\b(?:humans?|people|a person)\s+(?:cannot|can't|can not|are unable to|will not be able to)\s+survive\b/i.test(text);
+
+  const dariPositive =
+    /انسان(?:ها)?[\s\S]{0,100}(?<!ن)(?:می‌توانند|میتوانند|قادرند)[\s\S]{0,180}زنده.{0,12}مان[\s\S]{0,100}بدون\s+لباس\s+فضایی/u.test(text) ||
+    /بدون\s+لباس\s+فضایی[\s\S]{0,100}انسان(?:ها)?[\s\S]{0,100}(?<!ن)(?:می‌توانند|میتوانند|قادرند)[\s\S]{0,180}زنده.{0,12}مان/u.test(text);
+
+  const dariNegative =
+    /انسان(?:ها)?[\s\S]{0,100}(?:نمی‌توانند|نمیتوانند|قادر\s+به[\s\S]{0,30}نیستند)[\s\S]{0,180}زنده.{0,12}مان[\s\S]{0,100}بدون\s+لباس\s+فضایی/u.test(text) ||
+    /بدون\s+لباس\s+فضایی[\s\S]{0,100}انسان(?:ها)?[\s\S]{0,100}(?:نمی‌توانند|نمیتوانند|قادر\s+به[\s\S]{0,30}نیستند)[\s\S]{0,180}زنده.{0,12}مان/u.test(text);
+
+  return (englishPositive || dariPositive) &&
+    (englishNegative || dariNegative);
 }
 
 function cleanReply(value) {
