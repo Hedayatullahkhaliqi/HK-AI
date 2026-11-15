@@ -1,12 +1,8 @@
 const ALLOWED_ORIGINS = new Set([
   "https://hk-ai.pages.dev",
-  "https://feature-chat-image-generatio.hk-ai.pages.dev",
-  "capacitor://localhost",
-  "https://localhost",
-  "http://localhost"
+  "capacitor://localhost"
 ]);
 
-const PREVIEW_ORIGIN = /^https:\/\/[a-z0-9-]+\.hk-ai\.pages\.dev$/i;
 const BODY_LIMITS = {
   "/api/chat": 11 * 1024 * 1024,
   "/api/image": 11 * 1024 * 1024,
@@ -14,8 +10,32 @@ const BODY_LIMITS = {
   "/api/tts": 64 * 1024
 };
 
-function isAllowedOrigin(origin) {
-  return ALLOWED_ORIGINS.has(origin) || PREVIEW_ORIGIN.test(origin);
+function isJsonContentType(value) {
+  if (typeof value !== "string") return false;
+  const mediaType = value.split(";", 1)[0].trim().toLowerCase();
+  return mediaType === "application/json";
+}
+
+function isAllowedOrigin(origin, requestUrl) {
+  // Explicitly trusted production and native-app origins are allowed.
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+
+  // Local development is allowed only when the request is same-origin.
+  // A localhost page must never be trusted when calling the Production API.
+  if (
+    origin === requestUrl.origin &&
+    (requestUrl.hostname === "localhost" || requestUrl.hostname === "127.0.0.1")
+  ) {
+    return requestUrl.protocol === "http:" || requestUrl.protocol === "https:";
+  }
+
+  // A Pages preview may call only its own same-origin API.
+  return (
+    origin === requestUrl.origin &&
+    requestUrl.protocol === "https:" &&
+    requestUrl.hostname.endsWith(".hk-ai.pages.dev") &&
+    requestUrl.hostname !== "hk-ai.pages.dev"
+  );
 }
 
 function secure(headers) {
@@ -69,7 +89,7 @@ export async function onRequest({ request, env, next }) {
   if (!url.pathname.startsWith("/api/")) return next();
 
   const origin = request.headers.get("Origin");
-  if (origin && !isAllowedOrigin(origin)) {
+  if (origin && !isAllowedOrigin(origin, url)) {
     return reply({ error: "Origin not allowed" }, 403);
   }
 
@@ -105,19 +125,8 @@ export async function onRequest({ request, env, next }) {
     }
   }
 
-  if (!request.headers.get("Content-Type")?.toLowerCase().includes("application/json")) {
+  if (!isJsonContentType(request.headers.get("Content-Type"))) {
     return reply({ error: "Content-Type must be application/json" }, 415, cors);
-  }
-
-  // Enforce the limit on the actual streamed bytes as well as Content-Length.
-  // This covers chunked requests and callers that omit or understate the header.
-  try {
-    if (await bodyExceedsLimit(request, maxBodySize)) {
-      return reply({ error: "Request body too large" }, 413, cors);
-    }
-  } catch (error) {
-    console.error("HK API middleware: request body could not be validated");
-    return reply({ error: "Request body could not be validated." }, 400, cors);
   }
 
   // Origin checks are not authentication. Rate limiting is therefore enforced
@@ -196,6 +205,17 @@ export async function onRequest({ request, env, next }) {
       error: "The rate limiter is temporarily unavailable.",
       code: "RATE_LIMITER_UNAVAILABLE"
     }, 503, cors);
+  }
+
+  // Enforce the limit on the actual streamed bytes as well as Content-Length.
+  // This covers chunked requests and callers that omit or understate the header.
+  try {
+    if (await bodyExceedsLimit(request, maxBodySize)) {
+      return reply({ error: "Request body too large" }, 413, cors);
+    }
+  } catch (error) {
+    console.error("HK API middleware: request body could not be validated");
+    return reply({ error: "Request body could not be validated." }, 400, cors);
   }
 
   const response = await next();

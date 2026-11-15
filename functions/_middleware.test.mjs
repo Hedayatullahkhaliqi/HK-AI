@@ -7,13 +7,16 @@ function makeRequest({
   body = JSON.stringify({ messages: [{ role: "user", content: "hello" }] }),
   origin = "https://hk-ai.pages.dev",
   ip = "203.0.113.10",
-  contentLength
+  contentLength,
+  contentType = "application/json",
+  requestHost = "hk-ai.pages.dev",
+  requestProtocol = "https:"
 } = {}) {
-  const headers = new Headers({ "Content-Type": "application/json" });
+  const headers = new Headers({ "Content-Type": contentType });
   if (origin) headers.set("Origin", origin);
   if (ip) headers.set("CF-Connecting-IP", ip);
   if (contentLength !== undefined) headers.set("Content-Length", String(contentLength));
-  return new Request(`https://hk-ai.pages.dev${path}`, {
+  return new Request(`${requestProtocol}//${requestHost}${path}`, {
     method: "POST",
     headers,
     body
@@ -66,6 +69,27 @@ test("allows a valid API request and applies security headers", async () => {
   assert.equal(response.headers.get("X-Content-Type-Options"), "nosniff");
   assert.equal(response.headers.get("Access-Control-Allow-Origin"), "https://hk-ai.pages.dev");
   assert.equal(response.headers.get("X-RateLimit-Limit"), "30");
+});
+
+test("accepts application/json with a charset parameter", async () => {
+  const { env } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ contentType: "application/json; charset=utf-8" }),
+    env,
+    next: async () => new Response(JSON.stringify({ ok: true }), { status: 200 })
+  });
+  assert.equal(response.status, 200);
+});
+
+test("rejects Content-Type values that only contain application/json as a substring", async () => {
+  const { env, calls } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ contentType: "application/jsonp" }),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 415);
+  assert.equal(calls.length, 0);
 });
 
 test("fails closed when the Durable Object binding is missing", async () => {
@@ -134,13 +158,85 @@ test("rejects oversized streamed bodies even without Content-Length", async () =
     next: async () => new Response("should not run")
   });
   assert.equal(response.status, 413);
-  assert.equal(calls.length, 0);
+  // The request is charged against the per-IP limit before its streamed body is read.
+  assert.equal(calls.length, 2);
 });
 
 test("rejects disallowed browser origins", async () => {
   const { env, calls } = makeEnv();
   const response = await onRequest({
     request: makeRequest({ origin: "https://attacker.example" }),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 403);
+  assert.equal(calls.length, 0);
+});
+
+test("allows a Pages preview to call only its own same-origin API", async () => {
+  const { env } = makeEnv();
+  const previewOrigin = "https://security-early-rate-limit-re.hk-ai.pages.dev";
+  const response = await onRequest({
+    request: makeRequest({ origin: previewOrigin, requestHost: "security-early-rate-limit-re.hk-ai.pages.dev" }),
+    env,
+    next: async () => new Response(JSON.stringify({ ok: true }), { status: 200 })
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Access-Control-Allow-Origin"), previewOrigin);
+});
+
+test("does not allow a Pages preview origin to call the Production API", async () => {
+  const { env, calls } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ origin: "https://security-early-rate-limit-re.hk-ai.pages.dev" }),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 403);
+  assert.equal(calls.length, 0);
+});
+
+test("rejects the legacy preview origin when calling the Production API", async () => {
+  const { env, calls } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ origin: "https://feature-chat-image-generatio.hk-ai.pages.dev" }),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 403);
+  assert.equal(calls.length, 0);
+});
+
+test("allows localhost only for its own same-origin local API", async () => {
+  const { env } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({
+      origin: "http://localhost",
+      requestHost: "localhost",
+      requestProtocol: "http:"
+    }),
+    env,
+    next: async () => new Response(JSON.stringify({ ok: true }), { status: 200 })
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Access-Control-Allow-Origin"), "http://localhost");
+});
+
+test("rejects localhost origin when calling the Production API", async () => {
+  const { env, calls } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ origin: "http://localhost" }),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 403);
+  assert.equal(calls.length, 0);
+});
+
+test("rejects arbitrary Cloudflare Pages preview origins", async () => {
+  const { env, calls } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ origin: "https://untrusted-preview.hk-ai.pages.dev" }),
     env,
     next: async () => new Response("should not run")
   });
