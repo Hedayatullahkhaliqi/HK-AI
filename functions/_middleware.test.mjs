@@ -134,7 +134,8 @@ test("rejects oversized streamed bodies even without Content-Length", async () =
     next: async () => new Response("should not run")
   });
   assert.equal(response.status, 413);
-  assert.equal(calls.length, 0);
+  // The request is charged against the per-IP limit before its streamed body is read.
+  assert.equal(calls.length, 2);
 });
 
 test("rejects disallowed browser origins", async () => {
