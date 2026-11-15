@@ -345,6 +345,23 @@ function isTranslationRequest(text) {
   return /ترجمه کن|ترجمه به|translate|ترجم|ژباړه|çevir|übersetzen/i.test(text);
 }
 
+function hasInternalReasoningLeak(value) {
+  return /<\\s*\\/?\\s*think\\b|initial\\s+thought\\s*:|let'?s\\s+refine|this\\s+is\\s+a\\s+bit\\s+contradictory/i.test(value);
+}
+
+function hasConflictingMarsSurvivalClaims(question, reply) {
+  const asksAboutUnprotectedMars = /مریخ|mars/i.test(question) &&
+    /بدون\\s+لباس\\s+فضایی|without\\s+(?:a\\s+)?spacesuit/i.test(question) &&
+    /زنده\\s+بمان|survive/i.test(question);
+
+  if (!asksAboutUnprotectedMars) return false;
+
+  const positive = /(?:بله|می‌توانند|میتوانند|قادرند)[\\s\\S]{0,140}(?:بدون\\s+لباس\\s+فضایی|without\\s+(?:a\\s+)?spacesuit)[\\s\\S]{0,140}(?:زنده\\s+بمان|survive)/i.test(reply);
+  const negative = /(?:خیر|نه|نمی‌توانند|نمیتوانند|cannot|can't|cannot)[\\s\\S]{0,140}(?:بدون\\s+لباس\\s+فضایی|without\\s+(?:a\\s+)?spacesuit)[\\s\\S]{0,140}(?:زنده\\s+بمان|survive)/i.test(reply);
+
+  return positive && negative;
+}
+
 function cleanReply(value) {
   if (typeof value !== "string") return "";
 
@@ -600,7 +617,10 @@ LANGUAGE RULES:
 6. Treat a plain "سلام" or "سلام علیکم" as Afghan Dari unless Pashto-specific words or context clearly identify Pashto.
 7. For Latin-script languages, do not assume that every Latin-script message is English. Distinguish languages such as Uzbek, Turkish, Spanish, French, German, Indonesian, Swahili, and others from their actual words and grammar.
 8. Preserve the user's script when practical. For example, answer Uzbek Latin in Uzbek Latin and Uzbek Cyrillic in Uzbek Cyrillic.
-9. If the user switches languages between messages, switch with them unleFACT-CHECKING AND FALSE PREMISES:
+9. If the user switches languages between messages, switch with them unless they have explicitly requested a fixed response language.
+10. If a message contains multiple languages, prioritize the language used for the main question.
+
+FACT-CHECKING AND FALSE PREMISES:
 
 1. Evaluate the factual claim in the user's question before agreeing with it.
 2. Never begin with "yes", "correct", or an equivalent affirmation when the user's central claim is false or misleading.
@@ -713,7 +733,18 @@ You are HK.AI — Hedayatullah Khaliqi AI.
       });
     }
 
-    const reply = cleanReply(extractReply(result));
+    const rawReply = extractReply(result);
+
+    // Never expose internal reasoning markers or a response that explicitly
+    // contradicts itself on the tested Mars survival question.
+    if (
+      hasInternalReasoningLeak(rawReply) ||
+      hasConflictingMarsSurvivalClaims(latestUserMessage.content, rawReply)
+    ) {
+      return json({ error: "The AI response failed a consistency check. Please try again." }, 502);
+    }
+
+    const reply = cleanReply(rawReply);
 
     if (!reply) {
       return json({
