@@ -7,13 +7,14 @@ function makeRequest({
   body = JSON.stringify({ messages: [{ role: "user", content: "hello" }] }),
   origin = "https://hk-ai.pages.dev",
   ip = "203.0.113.10",
-  contentLength
+  contentLength,
+  requestHost = "hk-ai.pages.dev"
 } = {}) {
   const headers = new Headers({ "Content-Type": "application/json" });
   if (origin) headers.set("Origin", origin);
   if (ip) headers.set("CF-Connecting-IP", ip);
   if (contentLength !== undefined) headers.set("Content-Length", String(contentLength));
-  return new Request(`https://hk-ai.pages.dev${path}`, {
+  return new Request(`https://${requestHost}${path}`, {
     method: "POST",
     headers,
     body
@@ -149,15 +150,27 @@ test("rejects disallowed browser origins", async () => {
   assert.equal(calls.length, 0);
 });
 
-test("allows the exact trusted security branch preview origin", async () => {
+test("allows a Pages preview to call only its own same-origin API", async () => {
   const { env } = makeEnv();
+  const previewOrigin = "https://security-early-rate-limit-re.hk-ai.pages.dev";
   const response = await onRequest({
-    request: makeRequest({ origin: "https://security-early-rate-limit-re.hk-ai.pages.dev" }),
+    request: makeRequest({ origin: previewOrigin, requestHost: "security-early-rate-limit-re.hk-ai.pages.dev" }),
     env,
     next: async () => new Response(JSON.stringify({ ok: true }), { status: 200 })
   });
   assert.equal(response.status, 200);
-  assert.equal(response.headers.get("Access-Control-Allow-Origin"), "https://security-early-rate-limit-re.hk-ai.pages.dev");
+  assert.equal(response.headers.get("Access-Control-Allow-Origin"), previewOrigin);
+});
+
+test("does not allow a Pages preview origin to call the Production API", async () => {
+  const { env, calls } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ origin: "https://security-early-rate-limit-re.hk-ai.pages.dev" }),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 403);
+  assert.equal(calls.length, 0);
 });
 
 test("rejects arbitrary Cloudflare Pages preview origins", async () => {
