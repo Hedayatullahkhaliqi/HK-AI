@@ -13,6 +13,12 @@ const BODY_LIMITS = {
   "/api/tts": 64 * 1024
 };
 
+function isJsonContentType(value) {
+  if (typeof value !== "string") return false;
+  const mediaType = value.split(";", 1)[0].trim().toLowerCase();
+  return mediaType === "application/json";
+}
+
 function isAllowedOrigin(origin, requestUrl) {
   // Explicitly trusted app and development origins are allowed everywhere.
   if (ALLOWED_ORIGINS.has(origin)) return true;
@@ -114,7 +120,7 @@ export async function onRequest({ request, env, next }) {
     }
   }
 
-  if (!request.headers.get("Content-Type")?.toLowerCase().includes("application/json")) {
+  if (!isJsonContentType(request.headers.get("Content-Type"))) {
     return reply({ error: "Content-Type must be application/json" }, 415, cors);
   }
 
