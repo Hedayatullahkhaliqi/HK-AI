@@ -1,6 +1,8 @@
 name: Test HK.AI rate limiter
 
 on:
+  push:
+    branches: [quality/response-integrity-review]
   pull_request:
     branches: [main]
   workflow_dispatch:
