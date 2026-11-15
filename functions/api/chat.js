@@ -456,7 +456,9 @@ function validateImage(image) {
 }
 
 async function searchWeb(query, env) {
-  if (!env.FIRECRAWL_API_KEY) return "";
+  if (!env.FIRECRAWL_API_KEY) {
+    return { status: "unavailable", context: "" };
+  }
 
   try {
     const response = await fetch(
@@ -474,17 +476,40 @@ async function searchWeb(query, env) {
       }
     );
 
-    if (!response.ok) return "";
+    if (!response.ok) {
+      return { status: "failed", context: "" };
+    }
 
     const data = await response.json();
-    const results = data.data || [];
+    if (!Array.isArray(data?.data)) {
+      return { status: "failed", context: "" };
+    }
 
-    return results.map(item => {
-      return `${item.title || ""}\n${item.description || ""}\n${item.url || ""}`;
-    }).join("\n\n").slice(0, 7000);
+    const results = data.data
+      .filter(item => {
+        if (!item || typeof item.url !== "string") return false;
+        try {
+          const url = new URL(item.url);
+          return url.protocol === "http:" || url.protocol === "https:";
+        } catch {
+          return false;
+        }
+      })
+      .map(item => {
+        const title = typeof item.title === "string" ? item.title : "";
+        const description = typeof item.description === "string"
+          ? item.description
+          : "";
+        return `${title}\n${description}\n${item.url}`.trim();
+      })
+      .filter(Boolean);
 
+    const context = results.join("\n\n").slice(0, 7000);
+    return context
+      ? { status: "success", context }
+      : { status: "empty", context: "" };
   } catch {
-    return "";
+    return { status: "failed", context: "" };
   }
 }
 
@@ -608,16 +633,21 @@ export async function onRequestPost({ request, env }) {
     let webSearchStatus = "Not requested for this message.";
 
     if (shouldSearch(latestUserMessage.content)) {
-      if (!env.FIRECRAWL_API_KEY) {
+      const searchResult = await searchWeb(
+        latestUserMessage.content,
+        env
+      );
+
+      webContext = searchResult.context;
+
+      if (searchResult.status === "unavailable") {
         webSearchStatus = "Unavailable: live search is not configured on this deployment.";
+      } else if (searchResult.status === "success") {
+        webSearchStatus = "Search returned results. Use only the supplied results and identify their URLs; do not invent sources.";
+      } else if (searchResult.status === "empty") {
+        webSearchStatus = "Search completed but returned no usable results. Do not claim that the information was verified online.";
       } else {
-        webContext = await searchWeb(
-          latestUserMessage.content,
-          env
-        );
-        webSearchStatus = webContext
-          ? "Search returned results. Use only the supplied results and identify their URLs; do not invent sources."
-          : "Search was attempted but returned no usable results. Do not claim that the information was verified online.";
+        webSearchStatus = "Search failed because the search provider could not be reached or returned an invalid response. Do not claim that the information was verified online.";
       }
     }
 
