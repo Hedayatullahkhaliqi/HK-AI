@@ -352,37 +352,37 @@ function hasInternalReasoningLeak(value) {
 function hasConflictingMarsSurvivalClaims(question, reply) {
   const asksAboutUnprotectedMars =
     /مریخ|mars/i.test(question) &&
-    /بدون\\s+لباس\\s+فضایی|without\\s+(?:a\\s+)?spacesuit/i.test(question) &&
+    /بدون\s+لباس\s+فضایی|without\s+(?:a\s+)?spacesuit/i.test(question) &&
     /زنده.{0,12}مان|survive/i.test(question);
 
   if (!asksAboutUnprotectedMars) return false;
 
   // Evaluate each sentence independently so an affirmative claim in one
   // sentence cannot be combined with an unrelated negative sentence.
-  const sentences = String(reply || "").split(/[.!؟?\\n]+/u);
+  const sentences = String(reply || "").split(/[.!؟?\n]+/u);
 
   let positive = false;
   let negative = false;
 
   for (const sentence of sentences) {
     const hasSubject =
-      /\\b(?:humans?|people|a person)\\b/i.test(sentence) ||
+      /\b(?:humans?|people|a person)\b/i.test(sentence) ||
       /انسان(?:ها)?/u.test(sentence);
-    const hasSuit = /\\bwithout\\s+(?:a\\s+)?spacesuit\\b|بدون\\s+لباس\\s+فضایی/iu.test(sentence);
-    const hasSurvival = /\\bsurvive\\b|زنده.{0,12}مان/iu.test(sentence);
+    const hasSuit = /\bwithout\s+(?:a\s+)?spacesuit\b|بدون\s+لباس\s+فضایی/iu.test(sentence);
+    const hasSurvival = /\bsurvive\b|زنده.{0,12}مان/iu.test(sentence);
 
     if (!hasSubject || !hasSuit || !hasSurvival) continue;
 
     if (
-      /\\b(?:humans?|people|a person)\\s+can\\s+(?!not\\b)/i.test(sentence) ||
+      /\b(?:humans?|people|a person)\s+can\s+(?!not\b)/i.test(sentence) ||
       /(?<!ن)(?:می‌توانند|میتوانند|قادرند)/u.test(sentence)
     ) {
       positive = true;
     }
 
     if (
-      /\\b(?:humans?|people|a person)\\s+(?:cannot|can't|can not|are unable to|will not be able to)\\b/i.test(sentence) ||
-      /(?:نمی‌توانند|نمیتوانند|قادر\\s+به[\\s\\S]{0,30}نیستند)/u.test(sentence)
+      /\b(?:humans?|people|a person)\s+(?:cannot|can't|can not|are unable to|will not be able to)\b/i.test(sentence) ||
+      /(?:نمی‌توانند|نمیتوانند|قادر\s+به[\s\S]{0,30}نیستند)/u.test(sentence)
     ) {
       negative = true;
     }
