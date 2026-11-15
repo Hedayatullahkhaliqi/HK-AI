@@ -127,6 +127,54 @@ test("rejects directly conflicting yes/no Mars survival claims", async () => {
   assert.equal(response.status, 502);
 });
 
+test("rejects conflicting English Mars survival claims in either word order", async () => {
+  const { env } = makeEnv({
+    response: [
+      "Humans can survive on Mars without a spacesuit.",
+      "Without a spacesuit, humans cannot survive on Mars."
+    ].join("\\n\\n")
+  });
+
+  const response = await onRequestPost({
+    request: makeRequest("Can humans survive on Mars without a spacesuit?"),
+    env
+  });
+
+  assert.equal(response.status, 502);
+});
+
+test("rejects conflicting Dari Mars survival claims", async () => {
+  const { env } = makeEnv({
+    response: [
+      "انسان‌ها می‌توانند بدون لباس فضایی در مریخ زنده بمانند.",
+      "انسان‌ها بدون لباس فضایی نمی‌توانند در مریخ زنده بمانند."
+    ].join("\\n\\n")
+  });
+
+  const response = await onRequestPost({
+    request: makeRequest("آیا انسان بدون لباس فضایی در مریخ زنده می‌ماند؟"),
+    env
+  });
+
+  assert.equal(response.status, 502);
+});
+
+test("does not reject a consistent English or Dari negative answer", async () => {
+  for (const message of [
+    "Humans cannot survive on Mars without a spacesuit.",
+    "انسان‌ها بدون لباس فضایی در مریخ نمی‌توانند زنده بمانند."
+  ]) {
+    const { env } = makeEnv({ response: message });
+    const response = await onRequestPost({
+      request: makeRequest("آیا انسان بدون لباس فضایی در مریخ زنده می‌ماند؟"),
+      env
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).reply, message);
+  }
+});
+
 test("keeps the language instructions and fact-checking section separated", async () => {
   const { env, calls } = makeEnv({ response: "پاسخ آزمایشی." });
 
