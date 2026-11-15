@@ -346,18 +346,18 @@ function isTranslationRequest(text) {
 }
 
 function hasInternalReasoningLeak(value) {
-  return /<\\s*\\/?\\s*think\\b|initial\\s+thought\\s*:|let'?s\\s+refine|this\\s+is\\s+a\\s+bit\\s+contradictory/i.test(value);
+  return /<\s*\/?\s*think\b|initial\s+thought\s*:|let'?s\s+refine|this\s+is\s+a\s+bit\s+contradictory/i.test(value);
 }
 
 function hasConflictingMarsSurvivalClaims(question, reply) {
   const asksAboutUnprotectedMars = /مریخ|mars/i.test(question) &&
-    /بدون\\s+لباس\\s+فضایی|without\\s+(?:a\\s+)?spacesuit/i.test(question) &&
-    /زنده\\s+بمان|survive/i.test(question);
+    /بدون\s+لباس\s+فضایی|without\s+(?:a\s+)?spacesuit/i.test(question) &&
+    /زنده\s+بمان|survive/i.test(question);
 
   if (!asksAboutUnprotectedMars) return false;
 
-  const positive = /(?:بله|می‌توانند|میتوانند|قادرند)[\\s\\S]{0,140}(?:بدون\\s+لباس\\s+فضایی|without\\s+(?:a\\s+)?spacesuit)[\\s\\S]{0,140}(?:زنده\\s+بمان|survive)/i.test(reply);
-  const negative = /(?:خیر|نه|نمی‌توانند|نمیتوانند|cannot|can't|cannot)[\\s\\S]{0,140}(?:بدون\\s+لباس\\s+فضایی|without\\s+(?:a\\s+)?spacesuit)[\\s\\S]{0,140}(?:زنده\\s+بمان|survive)/i.test(reply);
+  const positive = /(?:بله|می‌توانند|میتوانند|قادرند)[\s\S]{0,140}(?:بدون\s+لباس\s+فضایی|without\s+(?:a\s+)?spacesuit)[\s\S]{0,140}(?:زنده\s+بمان|survive)/i.test(reply);
+  const negative = /(?:خیر|نه|نمی‌توانند|نمیتوانند|cannot|can't|cannot)[\s\S]{0,140}(?:بدون\s+لباس\s+فضایی|without\s+(?:a\s+)?spacesuit)[\s\S]{0,140}(?:زنده\s+بمان|survive)/i.test(reply);
 
   return positive && negative;
 }
@@ -618,7 +618,7 @@ LANGUAGE RULES:
 7. For Latin-script languages, do not assume that every Latin-script message is English. Distinguish languages such as Uzbek, Turkish, Spanish, French, German, Indonesian, Swahili, and others from their actual words and grammar.
 8. Preserve the user's script when practical. For example, answer Uzbek Latin in Uzbek Latin and Uzbek Cyrillic in Uzbek Cyrillic.
 9. If the user switches languages between messages, switch with them unless they have explicitly requested a fixed response language.
-10. If a message contains multiple languages, prioritize the language used for the main question.
+10. If a message contains both a greeting and a substantive question, answer the substantive question first.
 
 FACT-CHECKING AND FALSE PREMISES:
 
