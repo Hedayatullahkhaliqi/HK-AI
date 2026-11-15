@@ -109,17 +109,6 @@ export async function onRequest({ request, env, next }) {
     return reply({ error: "Content-Type must be application/json" }, 415, cors);
   }
 
-  // Enforce the limit on the actual streamed bytes as well as Content-Length.
-  // This covers chunked requests and callers that omit or understate the header.
-  try {
-    if (await bodyExceedsLimit(request, maxBodySize)) {
-      return reply({ error: "Request body too large" }, 413, cors);
-    }
-  } catch (error) {
-    console.error("HK API middleware: request body could not be validated");
-    return reply({ error: "Request body could not be validated." }, 400, cors);
-  }
-
   // Origin checks are not authentication. Rate limiting is therefore enforced
   // for every API request, including requests without an Origin header.
   if (!env.HK_RATE_LIMITER) {
@@ -196,6 +185,17 @@ export async function onRequest({ request, env, next }) {
       error: "The rate limiter is temporarily unavailable.",
       code: "RATE_LIMITER_UNAVAILABLE"
     }, 503, cors);
+  }
+
+  // Enforce the limit on the actual streamed bytes as well as Content-Length.
+  // This covers chunked requests and callers that omit or understate the header.
+  try {
+    if (await bodyExceedsLimit(request, maxBodySize)) {
+      return reply({ error: "Request body too large" }, 413, cors);
+    }
+  } catch (error) {
+    console.error("HK API middleware: request body could not be validated");
+    return reply({ error: "Request body could not be validated." }, 400, cors);
   }
 
   const response = await next();
