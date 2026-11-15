@@ -149,6 +149,17 @@ test("rejects disallowed browser origins", async () => {
   assert.equal(calls.length, 0);
 });
 
+test("allows the exact trusted security branch preview origin", async () => {
+  const { env } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ origin: "https://security-early-rate-limit-re.hk-ai.pages.dev" }),
+    env,
+    next: async () => new Response(JSON.stringify({ ok: true }), { status: 200 })
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Access-Control-Allow-Origin"), "https://security-early-rate-limit-re.hk-ai.pages.dev");
+});
+
 test("rejects arbitrary Cloudflare Pages preview origins", async () => {
   const { env, calls } = makeEnv();
   const response = await onRequest({
