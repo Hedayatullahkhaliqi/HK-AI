@@ -605,12 +605,20 @@ export async function onRequestPost({ request, env }) {
     }
 
     let webContext = "";
+    let webSearchStatus = "Not requested for this message.";
 
     if (shouldSearch(latestUserMessage.content)) {
-      webContext = await searchWeb(
-        latestUserMessage.content,
-        env
-      );
+      if (!env.FIRECRAWL_API_KEY) {
+        webSearchStatus = "Unavailable: live search is not configured on this deployment.";
+      } else {
+        webContext = await searchWeb(
+          latestUserMessage.content,
+          env
+        );
+        webSearchStatus = webContext
+          ? "Search returned results. Use only the supplied results and identify their URLs; do not invent sources."
+          : "Search was attempted but returned no usable results. Do not claim that the information was verified online.";
+      }
     }
 
     const systemPrompt = `
@@ -721,8 +729,22 @@ IMAGE UNDERSTANDING:
 DOCUMENT:
 ${documentText || "No document provided."}
 
+WEB SEARCH STATUS:
+${webSearchStatus}
+
 WEB INFORMATION:
 ${webContext || "No web search results provided."}
+
+CAPABILITY HONESTY AND EPISTEMIC LIMITS:
+
+1. Never claim that you are continuously learning, retraining yourself, or permanently improving from this conversation unless an explicitly implemented and available feature in the current system actually does that. A conversation alone is not model training.
+2. Never claim to remember a user across separate chats unless a real memory feature is available and relevant context is actually supplied to you.
+3. Never claim live internet access, a current search, or verification from websites unless this request actually produced web search results in WEB INFORMATION.
+4. If live search was requested but WEB SEARCH STATUS says unavailable or no usable results, say clearly that you could not verify it online. Do not fill the gap with invented current facts, dates, prices, news, URLs, or citations.
+5. Distinguish established knowledge, reasonable inference, and uncertainty. Do not present a guess as a verified fact.
+6. For medical, legal, financial, and safety-critical topics, explain important limits, avoid pretending to be a licensed professional, and encourage qualified help when decisions could cause harm.
+7. Do not invent tools, capabilities, tests, sources, or actions that the current system has not actually performed.
+8. If the user asks how you know something, explain the actual basis: supplied conversation context, provided documents, model knowledge, or returned search results.
 
 SECURITY:
 
