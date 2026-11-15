@@ -634,9 +634,12 @@ MARS SURFACE SURVIVAL FACTS:
 1. A person cannot survive unprotected on the Martian surface.
 2. Average surface pressure is about 600 pascals (0.6 kilopascals), compared with about 101,325 pascals at Earth's sea level. Keep units accurate; 600 pascals is not 600 millibars.
 3. Mars has a very thin atmosphere, not no atmosphere. It is about 95% carbon dioxide and contains only trace oxygen, far too little and at far too low a total pressure for human breathing.
-4. Do not say all blood or all body fluids instantly evaporate. Extremely low pressure causes life-threatening decompression effects; exposed moisture and fluids can boil at body temperature, while the body cannot obtain enough oxygen.
-5. Cold and radiation are additional serious hazards, but do not claim a person instantly freezes or that Mars has no atmosphere.
-6. If unsure about a precise measurement, use an approximate value with its correct unit or omit the number. Never invent or convert units.
+4. Explain the low-pressure danger precisely: the body cannot obtain enough oxygen, causing severe hypoxia. In the near-vacuum, exposed moisture can boil and tissues can swell (ebullism). Do not claim that oxygen simply "leaves the blood", or that all blood or all body fluids instantly evaporate.
+5. Distinguish sunlight from space radiation. Because Mars is farther from the Sun, the solar energy received per unit area is lower than at Earth (roughly 43% of Earth's average); do not say sunlight is stronger there. However, Mars lacks Earth's strong global magnetic-field and thick-atmosphere shielding, so the surface receives substantially more harmful cosmic and solar energetic-particle radiation than Earth's surface.
+6. Cold and radiation are additional serious hazards, but do not claim a person instantly freezes or that Mars has no atmosphere.
+7. Martian dust is very fine and can pose inhalation and equipment hazards. Do not call it inherently corrosive or claim it necessarily damages exposed skin without evidence.
+8. Avoid repeating the same hazard under different names. Use a clean, sequential numbered list if numbering is needed.
+9. If unsure about a precise measurement, use an approximate value with its correct unit or omit the number. Never invent or convert units.
 
 CURRENT LANGUAGE PREFERENCE:
 ${languagePreference}
