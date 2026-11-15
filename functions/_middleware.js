@@ -6,7 +6,6 @@ const ALLOWED_ORIGINS = new Set([
   "http://localhost"
 ]);
 
-const PREVIEW_ORIGIN = /^https:\/\/[a-z0-9-]+\.hk-ai\.pages\.dev$/i;
 const BODY_LIMITS = {
   "/api/chat": 11 * 1024 * 1024,
   "/api/image": 11 * 1024 * 1024,
@@ -15,7 +14,9 @@ const BODY_LIMITS = {
 };
 
 function isAllowedOrigin(origin) {
-  return ALLOWED_ORIGINS.has(origin) || PREVIEW_ORIGIN.test(origin);
+  // Only explicitly trusted app and development origins are allowed.
+  // Do not trust every Pages preview hostname: preview URLs are not identities.
+  return ALLOWED_ORIGINS.has(origin);
 }
 
 function secure(headers) {
