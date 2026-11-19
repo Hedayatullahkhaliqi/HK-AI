@@ -131,6 +131,14 @@ button{cursor:pointer}
   box-shadow:0 0 9px #dce8f2;
 }
 
+#turnstile-widget{
+  display:flex;
+  justify-content:center;
+  min-height:0;
+  margin:0 auto 8px;
+}
+#turnstile-widget:empty{display:none}
+
 .chat{
   flex:1;
   min-height:300px;
@@ -935,6 +943,8 @@ body{
     HK.AI is ready to help
   </div>
 
+  <div id="turnstile-widget" aria-label="Security verification"></div>
+
   
   <nav class="feature-bar" aria-label="HK.AI features">
     <button class="feature-btn" id="openImageTool">✦ Generate Image</button>
@@ -1425,6 +1435,79 @@ function isImageGenerationRequest(text){
   return createVerb.test(value)&&(imageWord.test(value)||visualScene.test(value));
 }
 
+// Cloudflare Turnstile: one fresh, server-verified token per API request.
+const TURNSTILE_SITEKEY="0x4AAAAAAGIrHDZwJfCcBFdA";
+let turnstileWidgetId=null;
+let turnstileToken="";
+let turnstileWaiter=null;
+let turnstileLoading=null;
+
+function loadTurnstile(){
+  if(window.turnstile)return Promise.resolve();
+  if(turnstileLoading)return turnstileLoading;
+  turnstileLoading=new Promise((resolve,reject)=>{
+    const script=document.createElement("script");
+    script.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async=true;
+    script.defer=true;
+    script.onload=()=>window.turnstile?resolve():reject(new Error("Security verification could not start."));
+    script.onerror=()=>reject(new Error("Could not load security verification. Check your connection."));
+    document.head.append(script);
+  });
+  return turnstileLoading;
+}
+
+async function getTurnstileToken(){
+  await loadTurnstile();
+  if(turnstileToken)return turnstileToken;
+  return new Promise((resolve,reject)=>{
+    turnstileWaiter={resolve,reject};
+    const options={
+      sitekey:TURNSTILE_SITEKEY,
+      theme:"dark",
+      callback(token){
+        turnstileToken=token;
+        if(turnstileWaiter){
+          turnstileWaiter.resolve(token);
+          turnstileWaiter=null;
+        }
+      },
+      "expired-callback"(){turnstileToken="";},
+      "error-callback"(){
+        turnstileToken="";
+        if(turnstileWaiter){
+          turnstileWaiter.reject(new Error("Security check failed. Please try again."));
+          turnstileWaiter=null;
+        }
+      }
+    };
+    try{
+      if(turnstileWidgetId===null){
+        turnstileWidgetId=window.turnstile.render("#turnstile-widget",options);
+      }else{
+        window.turnstile.reset(turnstileWidgetId);
+      }
+    }catch(error){
+      turnstileWaiter=null;
+      reject(new Error("Security verification could not start. Please reload the page."));
+    }
+  });
+}
+
+async function apiFetch(url,options={}){
+  const token=await getTurnstileToken();
+  const headers=new Headers(options.headers||{});
+  headers.set("CF-Turnstile-Response",token);
+  try{
+    return await fetch(url,{...options,headers});
+  }finally{
+    turnstileToken="";
+    if(window.turnstile&&turnstileWidgetId!==null){
+      try{window.turnstile.reset(turnstileWidgetId)}catch(error){console.warn("Turnstile reset:",error)}
+    }
+  }
+}
+
 async function sendMessage(customText=null){
   if(busy)return;
 
@@ -1492,7 +1575,7 @@ async function sendMessage(customText=null){
       /طبیعی|طبیعی‌تر|واقعی|واقعی‌تر|natural|realistic|retouch|ادیت|ویرایش|تغییر بده|تغییرش بده|اصلاح کن|زیباتر/i.test(text);
 
     if(imageGenerationRequest){
-      response=await fetch("/api/image",{
+      response=await apiFetch("/api/image",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({prompt:text}),
@@ -1527,7 +1610,7 @@ async function sendMessage(customText=null){
       }
 
       const editReference=await prepareImageForModel(imageForRequest);
-      response=await fetch("/api/image",{
+      response=await apiFetch("/api/image",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({prompt:editPrompt,image:editReference}),
@@ -1555,7 +1638,7 @@ async function sendMessage(customText=null){
       clearSelectedFile();
     }else{
       try{
-        response=await fetch("/api/chat",{
+        response=await apiFetch("/api/chat",{
           method:"POST",
           headers:{"Content-Type":"application/json"},
           body:JSON.stringify({
@@ -1851,7 +1934,7 @@ $("enhanceImagePrompt").addEventListener("click",async()=>{
   button.disabled=true;
   status.textContent="Improving your prompt…";
   try{
-    const response=await fetch("/api/image",{
+    const response=await apiFetch("/api/image",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({action:"enhance",prompt})
@@ -1881,7 +1964,7 @@ $("generateImage").addEventListener("click",async()=>{
   result.hidden=true;
   download.hidden=true;
   try{
-    const response=await fetch("/api/image",{
+    const response=await apiFetch("/api/image",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
@@ -1954,7 +2037,7 @@ async function speakReply(text){
   const spokenText=String(text||"").replace(/```[\\s\\S]*?```/g,"Code is included in the response").slice(0,1800);
   setVoiceStatus("🔊 HK.AI is speaking…");
   try{
-    const response=await fetch("/api/tts",{
+    const response=await apiFetch("/api/tts",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({text:spokenText})
@@ -2025,7 +2108,7 @@ async function startVoiceInput(){
           reader.onerror=()=>reject(new Error("Could not read the audio file."));
           reader.readAsDataURL(audioBlob);
         });
-        const response=await fetch("/api/transcribe",{
+        const response=await apiFetch("/api/transcribe",{
           method:"POST",
           headers:{"Content-Type":"application/json"},
           body:JSON.stringify({audio:audioBase64,mimeType:audioBlob.type||"audio/mp4"})
