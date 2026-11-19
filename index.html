@@ -1443,7 +1443,7 @@ let turnstileWaiter=null;
 let turnstileLoading=null;
 let turnstileFrame=null;
 const useTurnstileBridge=location.protocol==="capacitor:"||
-  (location.protocol==="http:"&&location.hostname==="localhost"&&!!window.Capacitor);
+  (location.protocol==="http:"&&location.hostname==="localhost");
 
 window.addEventListener("message",event=>{
   if(!turnstileFrame||event.origin!=="https://hk-ai.pages.dev"||event.source!==turnstileFrame.contentWindow)return;
