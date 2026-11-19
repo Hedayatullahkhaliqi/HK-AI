@@ -257,6 +257,7 @@ export async function onRequest({ request, env, next }) {
     const verification = await verificationResponse.json();
     if (
       verification?.success !== true ||
+      verification.action !== "api" ||
       verification.hostname !== expectedHostname
     ) {
       return reply({
