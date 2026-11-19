@@ -99,7 +99,7 @@ export async function onRequest({ request, env, next }) {
     cors.set("Vary", "Origin");
   }
   cors.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  cors.set("Access-Control-Allow-Headers", "Content-Type");
+  cors.set("Access-Control-Allow-Headers", "Content-Type, CF-Turnstile-Response");
   cors.set("Access-Control-Max-Age", "86400");
 
   if (request.method === "OPTIONS") {
@@ -204,6 +204,71 @@ export async function onRequest({ request, env, next }) {
     return reply({
       error: "The rate limiter is temporarily unavailable.",
       code: "RATE_LIMITER_UNAVAILABLE"
+    }, 503, cors);
+  }
+
+  // Require a fresh Turnstile token for every API request. Rate limiting runs
+  // first so abusive traffic cannot freely consume Siteverify requests.
+  const turnstileSecret = env.TURNSTILE_SECRET_KEY;
+  const turnstileToken = request.headers.get("CF-Turnstile-Response");
+  if (!turnstileSecret) {
+    console.error("HK Turnstile: secret binding missing");
+    return reply({
+      error: "Security verification is not configured.",
+      code: "TURNSTILE_NOT_CONFIGURED"
+    }, 503, cors);
+  }
+  if (!turnstileToken || turnstileToken.length > 2048) {
+    return reply({
+      error: "Please complete the security check and try again.",
+      code: "TURNSTILE_TOKEN_REQUIRED"
+    }, 403, cors);
+  }
+
+  let expectedHostname = url.hostname;
+  if (origin) {
+    try {
+      expectedHostname = new URL(origin).hostname;
+    } catch {
+      return reply({ error: "Origin not allowed" }, 403, cors);
+    }
+    if (origin === "capacitor://localhost") expectedHostname = "localhost";
+  }
+
+  try {
+    const verificationResponse = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret: turnstileSecret,
+          response: turnstileToken,
+          remoteip: ip
+        }),
+        signal: AbortSignal.timeout(8000)
+      }
+    );
+
+    if (!verificationResponse.ok) {
+      throw new Error("Turnstile Siteverify returned a non-success status");
+    }
+
+    const verification = await verificationResponse.json();
+    if (
+      verification?.success !== true ||
+      verification.hostname !== expectedHostname
+    ) {
+      return reply({
+        error: "Security verification failed. Please try again.",
+        code: "TURNSTILE_VERIFICATION_FAILED"
+      }, 403, cors);
+    }
+  } catch (error) {
+    console.error("HK Turnstile: verification service unavailable");
+    return reply({
+      error: "Security verification is temporarily unavailable. Please try again.",
+      code: "TURNSTILE_UNAVAILABLE"
     }, 503, cors);
   }
 
