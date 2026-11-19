@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { scoreScienceAnswer } from "../science-evaluation/scoring.mjs";
 
 const datasetUrl = new URL("../science-evaluation/cases.json", import.meta.url);
 const dataset = JSON.parse(await readFile(datasetUrl, "utf8"));
@@ -49,24 +50,11 @@ for (const item of dataset.cases) {
     error = cause instanceof Error ? cause.message : String(cause);
   }
 
-  const required = item.required.map(pattern => new RegExp(pattern.slice(1, pattern.lastIndexOf("/")), pattern.slice(pattern.lastIndexOf("/") + 1)));
-  const forbidden = item.forbidden.map(pattern => new RegExp(pattern.slice(1, pattern.lastIndexOf("/")), pattern.slice(pattern.lastIndexOf("/") + 1)));
-  const requiredPassed = required.filter(pattern => pattern.test(reply)).length;
-  const forbiddenPassed = forbidden.filter(pattern => !pattern.test(reply)).length;
-  const requiredScore = required.length ? requiredPassed / required.length : 1;
-  const forbiddenScore = forbidden.length ? forbiddenPassed / forbidden.length : 1;
-  const score = (requiredScore * 0.8) + (forbiddenScore * 0.2);
-  const passed = !error && score >= dataset.scoring.minimum_case_score && forbiddenPassed === forbidden.length;
-
+  const score = scoreScienceAnswer(item, reply, dataset.scoring.minimum_case_score, error);
   results.push({
     id: item.id,
     category: item.category,
-    passed,
-    score: Number(score.toFixed(2)),
-    required: required.length,
-    required_passed: requiredPassed,
-    forbidden: forbidden.length,
-    forbidden_passed: forbiddenPassed,
+    ...score,
     error: error || undefined,
     reply: reply || undefined,
     reference_answer: item.reference_answer,
