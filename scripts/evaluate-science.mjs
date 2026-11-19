@@ -53,6 +53,8 @@ for (const item of dataset.cases) {
     forbidden_passed: forbiddenPassed,
     error: error || undefined,
     reply: reply || undefined,
+    reference_answer: item.reference_answer,
+    common_misconception: item.common_misconception,
     sources: item.sources
   });
 }
