@@ -145,6 +145,22 @@ test("rejects a Turnstile token issued for a different hostname", async () => {
   assert.equal((await response.json()).code, "TURNSTILE_VERIFICATION_FAILED");
 });
 
+test("rejects a valid token with the wrong Turnstile action", async () => {
+  const { env } = makeEnv();
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    success: true,
+    hostname: "hk-ai.pages.dev",
+    action: "login"
+  }), { status: 200 });
+  const response = await onRequest({
+    request: makeRequest(),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 403);
+  assert.equal((await response.json()).code, "TURNSTILE_VERIFICATION_FAILED");
+});
+
 test("fails closed when Cloudflare Siteverify is unavailable", async () => {
   const { env } = makeEnv();
   globalThis.fetch = async () => new Response("unavailable", { status: 503 });
