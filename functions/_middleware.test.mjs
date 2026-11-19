@@ -308,15 +308,26 @@ test("allows localhost only for its own same-origin local API", async () => {
   assert.equal(response.headers.get("Access-Control-Allow-Origin"), "http://localhost");
 });
 
-test("rejects localhost origin when calling the Production API", async () => {
-  const { env, calls } = makeEnv();
+test("allows Android Capacitor origin only with a production-hosted Turnstile token", async () => {
+  const { env, verificationCalls } = makeEnv();
   const response = await onRequest({
     request: makeRequest({ origin: "http://localhost" }),
     env,
-    next: async () => new Response("should not run")
+    next: async () => new Response(JSON.stringify({ ok: true }), { status: 200 })
   });
-  assert.equal(response.status, 403);
-  assert.equal(calls.length, 0);
+  assert.equal(response.status, 200);
+  assert.equal(verificationCalls[0].body.response, "test-turnstile-token");
+});
+
+test("allows iOS Capacitor origin only with a production-hosted Turnstile token", async () => {
+  const { env, verificationCalls } = makeEnv();
+  const response = await onRequest({
+    request: makeRequest({ origin: "capacitor://localhost" }),
+    env,
+    next: async () => new Response(JSON.stringify({ ok: true }), { status: 200 })
+  });
+  assert.equal(response.status, 200);
+  assert.equal(verificationCalls[0].body.response, "test-turnstile-token");
 });
 
 test("rejects arbitrary Cloudflare Pages preview origins", async () => {
