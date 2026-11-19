@@ -9,6 +9,22 @@ if (!endpoint) {
   process.exit(2);
 }
 
+let parsedEndpoint;
+try {
+  parsedEndpoint = new URL(endpoint);
+} catch {
+  console.error("HK_AI_EVAL_URL must be a valid absolute URL.");
+  process.exit(2);
+}
+if (parsedEndpoint.protocol !== "https:" && parsedEndpoint.hostname !== "localhost" && parsedEndpoint.hostname !== "127.0.0.1") {
+  console.error("Use HTTPS for remote evaluation endpoints.");
+  process.exit(2);
+}
+if (parsedEndpoint.hostname === "hk-ai.pages.dev") {
+  console.error("Refusing to send the evaluation set to the production hk-ai.pages.dev host. Use a staging preview or local endpoint.");
+  process.exit(2);
+}
+
 const timeoutMs = Number(process.env.HK_AI_EVAL_TIMEOUT_MS || 45000);
 const results = [];
 
@@ -63,7 +79,7 @@ const average = results.reduce((sum, item) => sum + item.score, 0) / results.len
 const passedCount = results.filter(item => item.passed).length;
 const report = {
   dataset_version: dataset.schema_version,
-  endpoint,
+  endpoint: `${parsedEndpoint.origin}${parsedEndpoint.pathname}`,
   total: results.length,
   passed: passedCount,
   failed: results.length - passedCount,
