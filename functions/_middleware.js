@@ -1,12 +1,8 @@
 const ALLOWED_ORIGINS = new Set([
   "https://hk-ai.pages.dev",
-  "https://feature-chat-image-generatio.hk-ai.pages.dev",
-  "capacitor://localhost",
-  "https://localhost",
-  "http://localhost"
+  "capacitor://localhost"
 ]);
 
-const PREVIEW_ORIGIN = /^https:\/\/[a-z0-9-]+\.hk-ai\.pages\.dev$/i;
 const BODY_LIMITS = {
   "/api/chat": 11 * 1024 * 1024,
   "/api/image": 11 * 1024 * 1024,
@@ -14,8 +10,37 @@ const BODY_LIMITS = {
   "/api/tts": 64 * 1024
 };
 
-function isAllowedOrigin(origin) {
-  return ALLOWED_ORIGINS.has(origin) || PREVIEW_ORIGIN.test(origin);
+function isJsonContentType(value) {
+  if (typeof value !== "string") return false;
+  const mediaType = value.split(";", 1)[0].trim().toLowerCase();
+  return mediaType === "application/json";
+}
+
+function isAllowedOrigin(origin, requestUrl) {
+  // Explicitly trusted production and native-app origins are allowed.
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+
+  // Android Capacitor uses http://localhost while calling the production API.
+  if (origin === "http://localhost" && requestUrl.hostname === "hk-ai.pages.dev") {
+    return true;
+  }
+
+  // Local development is allowed only when the request is same-origin.
+  // A localhost page must never be trusted when calling the Production API.
+  if (
+    origin === requestUrl.origin &&
+    (requestUrl.hostname === "localhost" || requestUrl.hostname === "127.0.0.1")
+  ) {
+    return requestUrl.protocol === "http:" || requestUrl.protocol === "https:";
+  }
+
+  // A Pages preview may call only its own same-origin API.
+  return (
+    origin === requestUrl.origin &&
+    requestUrl.protocol === "https:" &&
+    requestUrl.hostname.endsWith(".hk-ai.pages.dev") &&
+    requestUrl.hostname !== "hk-ai.pages.dev"
+  );
 }
 
 function secure(headers) {
@@ -69,7 +94,7 @@ export async function onRequest({ request, env, next }) {
   if (!url.pathname.startsWith("/api/")) return next();
 
   const origin = request.headers.get("Origin");
-  if (origin && !isAllowedOrigin(origin)) {
+  if (origin && !isAllowedOrigin(origin, url)) {
     return reply({ error: "Origin not allowed" }, 403);
   }
 
@@ -79,7 +104,7 @@ export async function onRequest({ request, env, next }) {
     cors.set("Vary", "Origin");
   }
   cors.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  cors.set("Access-Control-Allow-Headers", "Content-Type");
+  cors.set("Access-Control-Allow-Headers", "Content-Type, CF-Turnstile-Response");
   cors.set("Access-Control-Max-Age", "86400");
 
   if (request.method === "OPTIONS") {
@@ -105,19 +130,8 @@ export async function onRequest({ request, env, next }) {
     }
   }
 
-  if (!request.headers.get("Content-Type")?.toLowerCase().includes("application/json")) {
+  if (!isJsonContentType(request.headers.get("Content-Type"))) {
     return reply({ error: "Content-Type must be application/json" }, 415, cors);
-  }
-
-  // Enforce the limit on the actual streamed bytes as well as Content-Length.
-  // This covers chunked requests and callers that omit or understate the header.
-  try {
-    if (await bodyExceedsLimit(request, maxBodySize)) {
-      return reply({ error: "Request body too large" }, 413, cors);
-    }
-  } catch (error) {
-    console.error("HK API middleware: request body could not be validated");
-    return reply({ error: "Request body could not be validated." }, 400, cors);
   }
 
   // Origin checks are not authentication. Rate limiting is therefore enforced
@@ -196,6 +210,88 @@ export async function onRequest({ request, env, next }) {
       error: "The rate limiter is temporarily unavailable.",
       code: "RATE_LIMITER_UNAVAILABLE"
     }, 503, cors);
+  }
+
+  // Require a fresh Turnstile token for every API request. Rate limiting runs
+  // first so abusive traffic cannot freely consume Siteverify requests.
+  const turnstileSecret = env.TURNSTILE_SECRET_KEY;
+  const turnstileToken = request.headers.get("CF-Turnstile-Response");
+  if (!turnstileSecret) {
+    console.error("HK Turnstile: secret binding missing");
+    return reply({
+      error: "Security verification is not configured.",
+      code: "TURNSTILE_NOT_CONFIGURED"
+    }, 503, cors);
+  }
+  if (!turnstileToken || turnstileToken.length > 2048) {
+    return reply({
+      error: "Please complete the security check and try again.",
+      code: "TURNSTILE_TOKEN_REQUIRED"
+    }, 403, cors);
+  }
+
+  let expectedHostname = url.hostname;
+  if (origin) {
+    try {
+      expectedHostname = new URL(origin).hostname;
+    } catch {
+      return reply({ error: "Origin not allowed" }, 403, cors);
+    }
+    if (
+      origin === "capacitor://localhost" ||
+      (origin === "http://localhost" && url.hostname === "hk-ai.pages.dev")
+    ) {
+      expectedHostname = "hk-ai.pages.dev";
+    }
+  }
+
+  try {
+    const verificationResponse = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret: turnstileSecret,
+          response: turnstileToken,
+          remoteip: ip
+        }),
+        signal: AbortSignal.timeout(8000)
+      }
+    );
+
+    if (!verificationResponse.ok) {
+      throw new Error("Turnstile Siteverify returned a non-success status");
+    }
+
+    const verification = await verificationResponse.json();
+    if (
+      verification?.success !== true ||
+      verification.action !== "api" ||
+      verification.hostname !== expectedHostname
+    ) {
+      return reply({
+        error: "Security verification failed. Please try again.",
+        code: "TURNSTILE_VERIFICATION_FAILED"
+      }, 403, cors);
+    }
+  } catch (error) {
+    console.error("HK Turnstile: verification service unavailable");
+    return reply({
+      error: "Security verification is temporarily unavailable. Please try again.",
+      code: "TURNSTILE_UNAVAILABLE"
+    }, 503, cors);
+  }
+
+  // Enforce the limit on the actual streamed bytes as well as Content-Length.
+  // This covers chunked requests and callers that omit or understate the header.
+  try {
+    if (await bodyExceedsLimit(request, maxBodySize)) {
+      return reply({ error: "Request body too large" }, 413, cors);
+    }
+  } catch (error) {
+    console.error("HK API middleware: request body could not be validated");
+    return reply({ error: "Request body could not be validated." }, 400, cors);
   }
 
   const response = await next();

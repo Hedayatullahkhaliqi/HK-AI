@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HK.AI Security Verification</title>
+<style>
+html,body{margin:0;padding:0;background:transparent;color:#eef5fb;font-family:system-ui,sans-serif}
+#widget{display:flex;justify-content:center;min-height:65px}
+</style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+</head>
+<body>
+<div id="widget"></div>
+<script>
+"use strict";
+const allowedParents=new Set([
+  "capacitor://localhost",
+  "http://localhost"
+]);
+const requestedParent=new URLSearchParams(location.search).get("parent");
+const parentOrigin=allowedParents.has(requestedParent)?requestedParent:"";
+let widgetId=null;
+function startWidget(){
+  if(!window.turnstile||widgetId!==null)return;
+  widgetId=turnstile.render("#widget",{
+    sitekey:"0x4AAAAAAGIrHDZwJfCcBFdA",
+    action:"api",
+    theme:"dark",
+    callback(token){
+      if(parentOrigin){
+        parent.postMessage({type:"HK_TURNSTILE_TOKEN",token},parentOrigin);
+      }
+    },
+    "error-callback"(){
+      if(parentOrigin)parent.postMessage({type:"HK_TURNSTILE_ERROR"},parentOrigin);
+    }
+  });
+}
+window.addEventListener("message",event=>{
+  if(event.source!==parent||!allowedParents.has(event.origin))return;
+  if(event.data?.type==="HK_TURNSTILE_RESET"&&widgetId!==null){
+    turnstile.reset(widgetId);
+  }
+});
+let attempts=0;
+const ready=setInterval(()=>{
+  if(window.turnstile){clearInterval(ready);startWidget();}
+  else if(++attempts>200)clearInterval(ready);
+},50);
+</script>
+</body>
+</html>
