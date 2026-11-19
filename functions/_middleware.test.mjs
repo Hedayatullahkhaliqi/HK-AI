@@ -24,7 +24,7 @@ function makeRequest({
   });
 }
 
-function makeEnv({ allowed = true, status = 200, malformed = false } = {}) {
+function makeEnv({ allowed = true, status = 200, malformed = false, hostname = "hk-ai.pages.dev" } = {}) {
   const calls = [];
   const binding = {
     idFromName(name) {
@@ -54,7 +54,7 @@ function makeEnv({ allowed = true, status = 200, malformed = false } = {}) {
     verificationCalls.push({ url, body: JSON.parse(init.body) });
     return new Response(JSON.stringify({
       success: true,
-      hostname: "hk-ai.pages.dev",
+      hostname,
       action: "api"
     }), { status: 200 });
   };
@@ -260,8 +260,8 @@ test("rejects disallowed browser origins", async () => {
 });
 
 test("allows a Pages preview to call only its own same-origin API", async () => {
-  const { env } = makeEnv();
   const previewOrigin = "https://security-early-rate-limit-re.hk-ai.pages.dev";
+  const { env } = makeEnv({ hostname: "security-early-rate-limit-re.hk-ai.pages.dev" });
   const response = await onRequest({
     request: makeRequest({ origin: previewOrigin, requestHost: "security-early-rate-limit-re.hk-ai.pages.dev" }),
     env,
@@ -294,7 +294,7 @@ test("rejects the legacy preview origin when calling the Production API", async 
 });
 
 test("allows localhost only for its own same-origin local API", async () => {
-  const { env } = makeEnv();
+  const { env } = makeEnv({ hostname: "localhost" });
   const response = await onRequest({
     request: makeRequest({
       origin: "http://localhost",
