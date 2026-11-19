@@ -18,6 +18,8 @@ test("science evaluation dataset has unique IDs and complete source-backed cases
     assert.ok(item.question.trim().length > 10, item.id);
     assert.ok(["astronomy", "physics", "biology", "earth-science", "mathematics"].includes(item.category), item.id);
     assert.ok(item.required.length > 0, item.id);
+    assert.ok(item.reference_answer.trim().length > 20, item.id);
+    assert.ok(item.common_misconception.trim().length > 5, item.id);
     assert.ok(item.sources.length > 0, item.id);
     for (const source of item.sources) assert.match(source, /^https:\/\//);
     for (const pattern of [...item.required, ...item.forbidden]) {
