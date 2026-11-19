@@ -18,6 +18,8 @@ const allowedParents=new Set([
   "capacitor://localhost",
   "http://localhost"
 ]);
+const requestedParent=new URLSearchParams(location.search).get("parent");
+const parentOrigin=allowedParents.has(requestedParent)?requestedParent:"";
 let widgetId=null;
 function startWidget(){
   if(!window.turnstile||widgetId!==null)return;
@@ -26,13 +28,12 @@ function startWidget(){
     action:"api",
     theme:"dark",
     callback(token){
-      const parentOrigin=location.ancestorOrigins?.[0]||"";
-      if(allowedParents.has(parentOrigin)){
+      if(parentOrigin){
         parent.postMessage({type:"HK_TURNSTILE_TOKEN",token},parentOrigin);
       }
     },
     "error-callback"(){
-      parent.postMessage({type:"HK_TURNSTILE_ERROR"},"*");
+      if(parentOrigin)parent.postMessage({type:"HK_TURNSTILE_ERROR"},parentOrigin);
     }
   });
 }
@@ -42,8 +43,10 @@ window.addEventListener("message",event=>{
     turnstile.reset(widgetId);
   }
 });
+let attempts=0;
 const ready=setInterval(()=>{
   if(window.turnstile){clearInterval(ready);startWidget();}
+  else if(++attempts>200)clearInterval(ready);
 },50);
 </script>
 </body>
