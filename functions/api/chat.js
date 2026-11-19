@@ -1,4 +1,6 @@
 
+import { generateWithGemini } from "../lib/gemini.js";
+
 const MODEL = "@cf/zai-org/glm-4.7-flash";
 const VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
 
@@ -753,6 +755,15 @@ You are HK.AI — Hedayatullah Khaliqi AI.
         max_tokens: 2048,
         temperature: 0.3
       });
+    } else if (env.HK_AI_PROVIDER === "gemini") {
+      // Gemini is an optional text provider. Cloudflare AI remains the
+      // default provider, and image requests continue using the vision model.
+      const geminiReply = await generateWithGemini({
+        systemPrompt,
+        messages,
+        env
+      });
+      result = { response: geminiReply };
     } else {
       result = await env.AI.run(MODEL, {
         messages: modelMessages,
