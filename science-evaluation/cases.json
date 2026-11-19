@@ -182,8 +182,8 @@
       "sources": [
         "https://www.nist.gov/pml/owm/metric-si/si-units"
       ],
-      "reference_answer": "ابتدا داخل پرانتز: ۴ + ۲ = ۶؛ سپس ۱۲٫۵ × ۶ = ۷۵.",
-      "common_misconception": "حاصل: ابتدا داخل پرانتز، ۴ + ۲ = ۶؛ سپس ۱۲٫۵ × ۶ = ۷۵."
+      "reference_answer": "حاصل: ابتدا داخل پرانتز، ۴ + ۲ = ۶؛ سپس ۱۲٫۵ × ۶ = ۷۵.",
+      "common_misconception": "حاصل ۱۲٫۵ × (۴ + ۲) برابر ۶۵ یا ۸۰ است."
     }
   ]
 }
