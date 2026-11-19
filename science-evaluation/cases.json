@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "language": "Dari",
+  "description": "A small, versioned regression set for checking core scientific concepts in HK.AI. Regex checks are screening signals, not a substitute for expert review.",
+  "scoring": {
+    "minimum_case_score": 0.6,
+    "minimum_suite_average": 0.75
+  },
+  "cases": [
+    {
+      "id": "astro-earth-orbit",
+      "category": "astronomy",
+      "question": "آیا خورشید به دور زمین می‌چرخد؟",
+      "required": [
+        "/(زمین|Earth)/i",
+        "/(خورشید|Sun)/i",
+        "/(به دور|دوران|می‌چرخد|می‌گردد|orbit)/i"
+      ],
+      "forbidden": [
+        "/(خورشید)\\s+(به دور زمین)\\s+می‌چرخد/i"
+      ],
+      "sources": [
+        "https://science.nasa.gov/solar-system/"
+      ]
+    },
+    {
+      "id": "astro-mars-survival",
+      "category": "astronomy",
+      "question": "آیا انسان بدون لباس فضایی می‌تواند در سطح مریخ زنده بماند؟",
+      "required": [
+        "/(نمی‌تواند|نمی‌توانند|نمیتواند|ناممکن|cannot|can't)/i",
+        "/(فشار|اتمسفر|جو)/i",
+        "/(اکسیژن|oxygen)/i"
+      ],
+      "forbidden": [
+        "/می‌تواند بدون لباس فضایی.{0,40}زنده بماند/i"
+      ],
+      "sources": [
+        "https://science.nasa.gov/mars/facts/"
+      ]
+    },
+    {
+      "id": "astro-vague-light",
+      "category": "astronomy",
+      "question": "دیشب یک چراغ روشن و خاموش‌شونده نزدیک ماه دیدم؛ حتماً کدام سیاره بود؟",
+      "required": [
+        "/(نمی‌توان|نمی‌شود|مشخص|اطلاعات کافی|نامعلوم)/i",
+        "/(موقعیت|زمان|جهت|چشمک|حرکت)/i"
+      ],
+      "forbidden": [
+        "/(قطعاً|حتماً)\\s+(زهره|مشتری|زحل)/i"
+      ],
+      "sources": [
+        "https://science.nasa.gov/solar-system/planets/"
+      ]
+    },
+    {
+      "id": "physics-mars-pressure",
+      "category": "physics",
+      "question": "فشار جو مریخ تقریباً چند است؟",
+      "required": [
+        "/600\\s*(پاسکال|Pa)/i",
+        "/0[.,]6\\s*(کیلوپاسکال|kPa)/i"
+      ],
+      "forbidden": [
+        "/600\\s*(میلی‌بار|mbar)/i"
+      ],
+      "sources": [
+        "https://science.nasa.gov/mars/facts/"
+      ]
+    },
+    {
+      "id": "physics-speed",
+      "category": "physics",
+      "question": "اگر موتر در ۲ ساعت ۱۰۰ کیلومتر راه برود، سرعت متوسط آن چند کیلومتر در ساعت است؟",
+      "required": [
+        "/50/",
+        "/(کیلومتر در ساعت|km\\/h)/i"
+      ],
+      "forbidden": [
+        "/200\\s*(کیلومتر در ساعت|km\\/h)/i"
+      ],
+      "sources": [
+        "https://www.nist.gov/pml/owm/metric-si/si-units"
+      ]
+    },
+    {
+      "id": "earth-seasons",
+      "category": "earth-science",
+      "question": "آیا فصل تابستان به این دلیل است که زمین در تابستان به خورشید نزدیک‌تر می‌شود؟",
+      "required": [
+        "/(انحراف|کجی|میل)/i",
+        "/(محور زمین|محور)/i",
+        "/(زاویه|مستقیم‌تر|نور خورشید)/i"
+      ],
+      "forbidden": [
+        "/فقط به دلیل نزدیک‌تر شدن زمین به خورشید/i"
+      ],
+      "sources": [
+        "https://science.nasa.gov/earth/seasons/"
+      ]
+    },
+    {
+      "id": "earth-moon-phases",
+      "category": "astronomy",
+      "question": "آیا هلال ماه به این دلیل ایجاد می‌شود که سایهٔ زمین روی ماه می‌افتد؟",
+      "required": [
+        "/(نور خورشید|خورشید)/i",
+        "/(بخش روشن|قسمت روشن|روشنایی)/i",
+        "/(سایهٔ زمین|خسوف|ماه‌گرفتگی)/i"
+      ],
+      "forbidden": [
+        "/هلال ماه به دلیل سایه زمین/i"
+      ],
+      "sources": [
+        "https://science.nasa.gov/moon/moon-phases/"
+      ]
+    },
+    {
+      "id": "biology-antibiotics",
+      "category": "biology",
+      "question": "آیا آنتی‌بیوتیک‌ها ویروس زکام را از بین می‌برند؟",
+      "required": [
+        "/(خیر|نه|نمی‌توانند|موثر نیستند|اثر ندارند)/i",
+        "/(ویروس|ویروسی)/i",
+        "/(باکتری|باکتریایی)/i"
+      ],
+      "forbidden": [
+        "/آنتی‌بیوتیک.*ویروس.*از بین می‌برد/i"
+      ],
+      "sources": [
+        "https://www.cdc.gov/antibiotic-use/about/"
+      ]
+    },
+    {
+      "id": "biology-photosynthesis",
+      "category": "biology",
+      "question": "گیاهان برای فتوسنتز به چه چیزهایی نیاز دارند و چه چیزی تولید می‌کنند؟",
+      "required": [
+        "/(نور|نور خورشید)/i",
+        "/آب/",
+        "/(دی‌اکسید کربن|کربن دی‌اکسید|CO2)/i",
+        "/(اکسیژن|oxygen)/i"
+      ],
+      "forbidden": [],
+      "sources": [
+        "https://www.nationalgeographic.org/encyclopedia/photosynthesis/"
+      ]
+    },
+    {
+      "id": "math-decimal",
+      "category": "mathematics",
+      "question": "حاصل ۱۲٫۵ ضرب در (۴ جمع ۲) چند می‌شود؟",
+      "required": [
+        "/75(?:\\.0+)?/",
+        "/(حاصل|جواب|نتیجه)/i"
+      ],
+      "forbidden": [
+        "/65/",
+        "/80/"
+      ],
+      "sources": [
+        "https://www.nist.gov/pml/owm/metric-si/si-units"
+      ]
+    }
+  ]
+}
