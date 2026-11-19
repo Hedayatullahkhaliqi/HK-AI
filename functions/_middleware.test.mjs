@@ -15,6 +15,7 @@ function makeRequest({
   const headers = new Headers({ "Content-Type": contentType });
   if (origin) headers.set("Origin", origin);
   if (ip) headers.set("CF-Connecting-IP", ip);
+  headers.set("CF-Turnstile-Response", "test-turnstile-token");
   if (contentLength !== undefined) headers.set("Content-Length", String(contentLength));
   return new Request(`${requestProtocol}//${requestHost}${path}`, {
     method: "POST",
@@ -48,7 +49,20 @@ function makeEnv({ allowed = true, status = 200, malformed = false } = {}) {
       };
     }
   };
-  return { env: { HK_RATE_LIMITER: binding }, calls };
+  const verificationCalls = [];
+  globalThis.fetch = async (url, init) => {
+    verificationCalls.push({ url, body: JSON.parse(init.body) });
+    return new Response(JSON.stringify({
+      success: true,
+      hostname: "hk-ai.pages.dev",
+      action: "api"
+    }), { status: 200 });
+  };
+  return {
+    env: { HK_RATE_LIMITER: binding, TURNSTILE_SECRET_KEY: "test-secret" },
+    calls,
+    verificationCalls
+  };
 }
 
 test("allows a valid API request and applies security headers", async () => {
@@ -69,6 +83,78 @@ test("allows a valid API request and applies security headers", async () => {
   assert.equal(response.headers.get("X-Content-Type-Options"), "nosniff");
   assert.equal(response.headers.get("Access-Control-Allow-Origin"), "https://hk-ai.pages.dev");
   assert.equal(response.headers.get("X-RateLimit-Limit"), "30");
+});
+
+test("rejects API requests without a Turnstile token", async () => {
+  const { env } = makeEnv();
+  const request = makeRequest();
+  request.headers.delete("CF-Turnstile-Response");
+  const response = await onRequest({
+    request,
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 403);
+  assert.equal((await response.json()).code, "TURNSTILE_TOKEN_REQUIRED");
+});
+
+test("fails closed when the Turnstile secret is missing", async () => {
+  const { env } = makeEnv();
+  delete env.TURNSTILE_SECRET_KEY;
+  const response = await onRequest({
+    request: makeRequest(),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).code, "TURNSTILE_NOT_CONFIGURED");
+});
+
+test("validates each token with Cloudflare Siteverify and forwards only valid requests", async () => {
+  const { env, verificationCalls } = makeEnv();
+  let nextCalled = false;
+  const response = await onRequest({
+    request: makeRequest(),
+    env,
+    next: async () => {
+      nextCalled = true;
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+  });
+  assert.equal(response.status, 200);
+  assert.equal(nextCalled, true);
+  assert.equal(verificationCalls.length, 1);
+  assert.equal(verificationCalls[0].url, "https://challenges.cloudflare.com/turnstile/v0/siteverify");
+  assert.equal(verificationCalls[0].body.secret, "test-secret");
+  assert.equal(verificationCalls[0].body.response, "test-turnstile-token");
+  assert.equal(verificationCalls[0].body.remoteip, "203.0.113.10");
+});
+
+test("rejects a Turnstile token issued for a different hostname", async () => {
+  const { env } = makeEnv();
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    success: true,
+    hostname: "attacker.example"
+  }), { status: 200 });
+  const response = await onRequest({
+    request: makeRequest(),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 403);
+  assert.equal((await response.json()).code, "TURNSTILE_VERIFICATION_FAILED");
+});
+
+test("fails closed when Cloudflare Siteverify is unavailable", async () => {
+  const { env } = makeEnv();
+  globalThis.fetch = async () => new Response("unavailable", { status: 503 });
+  const response = await onRequest({
+    request: makeRequest(),
+    env,
+    next: async () => new Response("should not run")
+  });
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).code, "TURNSTILE_UNAVAILABLE");
 });
 
 test("accepts application/json with a charset parameter", async () => {
