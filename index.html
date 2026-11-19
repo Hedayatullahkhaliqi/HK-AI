@@ -1441,6 +1441,20 @@ let turnstileWidgetId=null;
 let turnstileToken="";
 let turnstileWaiter=null;
 let turnstileLoading=null;
+let turnstileFrame=null;
+const useTurnstileBridge=location.protocol==="capacitor:"||
+  (location.protocol==="http:"&&location.hostname==="localhost"&&!!window.Capacitor);
+
+window.addEventListener("message",event=>{
+  if(!turnstileFrame||event.origin!=="https://hk-ai.pages.dev"||event.source!==turnstileFrame.contentWindow)return;
+  if(event.data?.type==="HK_TURNSTILE_TOKEN"&&typeof event.data.token==="string"){
+    turnstileToken=event.data.token;
+    if(turnstileWaiter){turnstileWaiter.resolve(turnstileToken);turnstileWaiter=null;}
+  }else if(event.data?.type==="HK_TURNSTILE_ERROR"&&turnstileWaiter){
+    turnstileWaiter.reject(new Error("Security check failed. Please try again."));
+    turnstileWaiter=null;
+  }
+});
 
 function loadTurnstile(){
   if(window.turnstile)return Promise.resolve();
@@ -1458,6 +1472,23 @@ function loadTurnstile(){
 }
 
 async function getTurnstileToken(){
+  if(useTurnstileBridge){
+    if(turnstileToken)return turnstileToken;
+    return new Promise((resolve,reject)=>{
+      turnstileWaiter={resolve,reject};
+      if(!turnstileFrame){
+        turnstileFrame=document.createElement("iframe");
+        turnstileFrame.title="HK.AI security verification";
+        turnstileFrame.width="100%";
+        turnstileFrame.height="70";
+        turnstileFrame.style.border="0";
+        turnstileFrame.src="https://hk-ai.pages.dev/turnstile-bridge.html?parent="+encodeURIComponent(location.origin);
+        $("turnstile-widget").append(turnstileFrame);
+      }else{
+        turnstileFrame.contentWindow.postMessage({type:"HK_TURNSTILE_RESET"}, "https://hk-ai.pages.dev");
+      }
+    });
+  }
   await loadTurnstile();
   if(turnstileToken)return turnstileToken;
   return new Promise((resolve,reject)=>{
@@ -1503,7 +1534,9 @@ async function apiFetch(url,options={}){
     return await fetch(url,{...options,headers});
   }finally{
     turnstileToken="";
-    if(window.turnstile&&turnstileWidgetId!==null){
+    if(useTurnstileBridge&&turnstileFrame){
+      turnstileFrame.contentWindow.postMessage({type:"HK_TURNSTILE_RESET"},"https://hk-ai.pages.dev");
+    }else if(window.turnstile&&turnstileWidgetId!==null){
       try{window.turnstile.reset(turnstileWidgetId)}catch(error){console.warn("Turnstile reset:",error)}
     }
   }
