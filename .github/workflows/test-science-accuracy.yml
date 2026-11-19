@@ -1,0 +1,32 @@
+name: Test HK.AI scientific accuracy safeguards
+
+on:
+  push:
+    branches: [quality/science-accuracy-clean]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: science-accuracy-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Run scientific accuracy regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run scientific accuracy tests
+        run: node --test functions/science-accuracy.test.mjs
+      - name: Run existing regression tests
+        run: npm run test:rate-limiter
