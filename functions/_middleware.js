@@ -20,6 +20,11 @@ function isAllowedOrigin(origin, requestUrl) {
   // Explicitly trusted production and native-app origins are allowed.
   if (ALLOWED_ORIGINS.has(origin)) return true;
 
+  // Android Capacitor uses http://localhost while calling the production API.
+  if (origin === "http://localhost" && requestUrl.hostname === "hk-ai.pages.dev") {
+    return true;
+  }
+
   // Local development is allowed only when the request is same-origin.
   // A localhost page must never be trusted when calling the Production API.
   if (
@@ -232,7 +237,12 @@ export async function onRequest({ request, env, next }) {
     } catch {
       return reply({ error: "Origin not allowed" }, 403, cors);
     }
-    if (origin === "capacitor://localhost") expectedHostname = "localhost";
+    if (
+      origin === "capacitor://localhost" ||
+      (origin === "http://localhost" && url.hostname === "hk-ai.pages.dev")
+    ) {
+      expectedHostname = "hk-ai.pages.dev";
+    }
   }
 
   try {
