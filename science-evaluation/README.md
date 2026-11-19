@@ -10,7 +10,7 @@ HK_AI_EVAL_URL="https://YOUR-STAGING-HOST/api/chat" npm run eval:science
 
 Optional timeout: `HK_AI_EVAL_TIMEOUT_MS=60000`.
 
-The runner sends each question to the configured endpoint and checks for required concepts and forbidden misconceptions. It prints the answer text, per-case score, and reference links. A failing case is a prompt for human review, not proof that every part of the answer is wrong.
+The runner sends each question to the configured endpoint and checks for required concepts and forbidden misconceptions. It prints the answer text, a short reference answer, a common misconception to watch for, per-case score, and reference links. A failing case is a prompt for human review, not proof that every part of the answer is wrong.
 
 ## Important limitations
 
